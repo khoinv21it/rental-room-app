@@ -81,7 +81,9 @@ export const useAuthStore = create<AuthState>()(
 
             // simple role check example
             const roles: string[] = response.roles ?? [];
-            if (!roles.includes("Administrators")) {
+            const allowedRoles = ["Administrators", "Landlords", "Users"];
+            const hasAllowed = roles.some((r) => allowedRoles.includes(r));
+            if (!hasAllowed) {
               set({
                 access_token: undefined,
                 refresh_token: undefined,
@@ -89,9 +91,9 @@ export const useAuthStore = create<AuthState>()(
                 error: "No permission",
               });
               if (onError)
-                onError("You do not have permission to access admin area.");
+                onError("You do not have permission to access this area.");
               return Promise.reject(
-                "You do not have permission to access admin area."
+                "You do not have permission to access this area."
               );
             }
 

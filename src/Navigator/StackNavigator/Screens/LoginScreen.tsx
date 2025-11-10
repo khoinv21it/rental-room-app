@@ -11,6 +11,8 @@ import {
   Platform,
   ScrollView,
   StatusBar,
+  ToastAndroid,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Controller, useForm } from "react-hook-form";
@@ -22,6 +24,15 @@ const LoginScreen: React.FC = () => {
   const [remember, setRemember] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
+  const showError = (msg: string) => {
+    if (!msg) return;
+    if (Platform.OS === "android") {
+      ToastAndroid.show(msg, ToastAndroid.LONG);
+    } else {
+      Alert.alert("Lỗi", msg);
+    }
+  };
+
   const login = useAuthStore((s) => s.login);
   const storeError = useAuthStore((s) => s.error);
 
@@ -31,31 +42,46 @@ const LoginScreen: React.FC = () => {
   });
 
   const onSubmit = async (data: FormValues) => {
+    console.log("Login submit data:", data);
     setGeneralError(null);
-    await login({
-      username: data.username,
-      password: data.password,
-      onSuccess: () => {
-        reset();
-        navigation.navigate("HomeScreen");
-      },
-      onError: (err: any) => {
-        const message =
-          typeof err === "string"
-            ? err
-            : err?.response?.data?.message ||
-              err?.message ||
-              "Đăng nhập thất bại";
-        setGeneralError(message);
-      },
-    });
+    try {
+      await login({
+        username: data.username,
+        password: data.password,
+        onSuccess: () => {
+          console.log(
+            "Login onSuccess - store state:",
+            useAuthStore.getState()
+          );
+          reset();
+          navigation.navigate("HomeScreen");
+        },
+        onError: (err: any) => {
+          console.log("Login onError callback:", err);
+          const message =
+            typeof err === "string"
+              ? err
+              : err?.response?.data?.message ||
+                err?.message ||
+                "Đăng nhập thất bại";
+          setGeneralError(message);
+          showError(message);
+        },
+      });
+    } catch (e) {
+      console.log("Login threw exception:", e);
+      const emsg = typeof e === "string" ? e : JSON.stringify(e);
+      setGeneralError(emsg);
+      showError(emsg);
+    }
 
     // also show any latest store error
     const latest = useAuthStore.getState().error;
+    console.log("Latest store error after login attempt:", latest);
     if (latest) {
-      setGeneralError(
-        typeof latest === "string" ? latest : JSON.stringify(latest)
-      );
+      const lmsg = typeof latest === "string" ? latest : JSON.stringify(latest);
+      setGeneralError(lmsg);
+      showError(lmsg);
     }
   };
 
@@ -79,6 +105,8 @@ const LoginScreen: React.FC = () => {
 
             <Text style={styles.title}>Chào mừng đến với RentalRoom</Text>
             <Text style={styles.subtitle}>Đăng nhập để tiếp tục</Text>
+
+            {/* Using native Toast (Android) or Alert (iOS) to show errors */}
 
             <View style={styles.form}>
               <Controller
@@ -155,15 +183,6 @@ const LoginScreen: React.FC = () => {
                   <Text style={styles.forgot}>Quên mật khẩu?</Text>
                 </TouchableOpacity>
               </View>
-
-              {generalError || storeError ? (
-                <Text style={{ color: "#ff8a80", marginBottom: 8 }}>
-                  {generalError ??
-                    (typeof storeError === "string"
-                      ? storeError
-                      : storeError?.message ?? JSON.stringify(storeError))}
-                </Text>
-              ) : null}
 
               <TouchableOpacity
                 style={styles.loginBtn}
@@ -304,6 +323,9 @@ const styles = StyleSheet.create({
   },
   noAcc: { color: "#cbd5df" },
   signUp: { color: "#fff", fontWeight: "700" },
+  banner: {
+    // banner styles removed in favor of native Toast/Alert
+  },
 });
 
 export default LoginScreen;
