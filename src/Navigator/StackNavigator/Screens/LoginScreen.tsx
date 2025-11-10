@@ -1,88 +1,166 @@
+import { GOOGLE_OAUTH_CLIENT_ID } from "@env";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigation } from "@react-navigation/native";
-import React, { useState } from "react";
+import * as Google from "expo-auth-session/providers/google";
+import React, { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
   Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Controller, useForm } from "react-hook-form";
-import useAuthStore from "../../../Stores/useAuthStore";
 import Toast from "react-native-toast-message";
 import Icon from "react-native-vector-icons/Feather";
+import * as yup from "yup";
+import useAuthStore from "../../../Stores/useAuthStore";
+
+const schema = yup
+  .object({
+    username: yup
+      .string()
+      .min(3, "Username must be at least 3 characters")
+      .required("Please enter phone number or email"),
+    password: yup
+      .string()
+      .min(6, "Password must be at least 6 characters")
+      .required("Please enter your password"),
+  })
+  .required();
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const [secure, setSecure] = useState(true);
   const [remember, setRemember] = useState(false);
-  const [generalError, setGeneralError] = useState<string | null>(null);
+  const [isInProgress, setIsInProgress] = useState(false);
+
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: GOOGLE_OAUTH_CLIENT_ID,
+    androidClientId: GOOGLE_OAUTH_CLIENT_ID,
+    iosClientId: GOOGLE_OAUTH_CLIENT_ID,
+    scopes: ["profile", "email"],
+    selectAccount: true,
+  });
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { id_token } = response.params;
+      console.log("Google Sign-In Response:", response);
+      handleGoogleSignIn(id_token);
+    } else if (response?.type === "error") {
+      console.error("Google Sign-In Error:", response.error);
+      showError(
+        "Google Sign-in failed: " + response.error?.message || "Unknown error"
+      );
+    }
+  }, [response]);
+  // // Get auth state from store
+  // const accessToken = useAuthStore((s) => s.access_token);
+
+  // // Check if user is already logged in
+  // React.useEffect(() => {
+  //   if (accessToken) {
+  //     navigation.replace("HomeScreen");
+  //   }
+  // }, [accessToken, navigation]);
 
   const showError = (msg: string) => {
     if (!msg) return;
-    // Use react-native-toast-message for consistent cross-platform toasts
     Toast.show({
       type: "error",
-      text1: "Lỗi",
+      position: "top",
+      text1: "Authentication Error",
       text2: msg,
       visibilityTime: 4000,
+      autoHide: true,
+      topOffset: 50,
+      bottomOffset: 40,
+      props: {
+        style: {
+          borderLeftColor: "#FF392B",
+          borderLeftWidth: 4,
+          backgroundColor: "rgba(255, 57, 43, 0.1)",
+        },
+        contentContainerStyle: {
+          paddingHorizontal: 15,
+        },
+        text1Style: {
+          fontSize: 16,
+          fontWeight: "600",
+          color: "#FF392B",
+        },
+        text2Style: {
+          fontSize: 14,
+          color: "#FF392B",
+        },
+      },
     });
   };
 
   const login = useAuthStore((s) => s.login);
   const storeError = useAuthStore((s) => s.error);
 
-  type FormValues = { username: string; password: string };
-  const { control, handleSubmit, reset } = useForm<FormValues>({
+  type FormValues = yup.InferType<typeof schema>;
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
     defaultValues: { username: "", password: "" },
+    resolver: yupResolver(schema),
+    mode: "onBlur", // Validate when field loses focus
+    reValidateMode: "onChange", // Re-validate on change
+    criteriaMode: "all", // Show all validation errors
   });
 
   const onSubmit = async (data: FormValues) => {
-    console.log("Login submit data:", data);
-    setGeneralError(null);
     try {
       await login({
         username: data.username,
         password: data.password,
         onSuccess: () => {
-          console.log(
-            "Login onSuccess - store state:",
-            useAuthStore.getState()
-          );
           reset();
-          navigation.navigate("HomeScreen");
+          navigation.replace("HomeScreen");
         },
-        onError: (err: any) => {
-          console.log("Login onError callback:", err);
-          const message =
-            typeof err === "string"
-              ? err
-              : err?.response?.data?.message || err?.message || "Login failed";
-          setGeneralError(message);
-          showError(message);
+        onError: () => {
+          // Get error message from the store
+          const storeError = useAuthStore.getState().error;
+          showError(storeError);
         },
       });
-    } catch (e) {
-      console.log("Login threw exception:", e);
-      const emsg = typeof e === "string" ? e : JSON.stringify(e);
-      setGeneralError(emsg);
-      showError(emsg);
+    } catch (error: any) {
+      // For unexpected errors not handled by the store
+      const errorMessage = "An unexpected error occurred. Please try again.";
+      showError(errorMessage);
     }
+  };
 
-    // also show any latest store error
-    const latest = useAuthStore.getState().error;
-    console.log("Latest store error after login attempt:", latest);
-    // Only show store error if we didn't already set a generalError above
-    if (!generalError && latest) {
-      const lmsg = typeof latest === "string" ? latest : JSON.stringify(latest);
-      setGeneralError(lmsg);
-      showError(lmsg);
+  const handleGoogleSignIn = async (id_token: string) => {
+    try {
+      console.log("Google Sign-In Response - ID Token:", id_token);
+
+      // Send the token to your backend
+      await useAuthStore.getState().loginWithGoogle({
+        token: id_token,
+        onSuccess: () => {
+          navigation.replace("HomeScreen");
+        },
+        onError: (error) => {
+          showError(error);
+        },
+      });
+    } catch (error: any) {
+      console.error("Google Sign-in error:", error);
+      showError("Google Sign-in failed: " + (error.message || "Unknown error"));
     }
   };
 
@@ -113,15 +191,23 @@ const LoginScreen: React.FC = () => {
               <Controller
                 control={control}
                 name="username"
-                rules={{ required: "Vui lòng nhập email hoặc số điện thoại" }}
                 render={({ field: { onChange, value }, fieldState }) => (
                   <>
                     <TextInput
-                      placeholder="Nhập Username"
+                      placeholder="Enter Username"
                       placeholderTextColor="#9aa0a6"
-                      style={styles.input}
+                      style={[
+                        styles.input,
+                        fieldState.error && {
+                          borderColor: "#ff6666",
+                          borderWidth: 1,
+                        },
+                      ]}
                       value={value}
                       onChangeText={onChange}
+                      onBlur={() => {
+                        onChange(value);
+                      }} // Trigger validation on blur
                       keyboardType="email-address"
                       autoCapitalize="none"
                     />
@@ -141,26 +227,28 @@ const LoginScreen: React.FC = () => {
                   </>
                 )}
               />
-
               <Controller
                 control={control}
                 name="password"
-                rules={{
-                  required: "Please enter password",
-                  minLength: {
-                    value: 6,
-                    message: "Password must be at least 6 characters",
-                  },
-                }}
                 render={({ field: { onChange, value }, fieldState }) => (
                   <>
                     <View style={styles.passwordRow}>
                       <TextInput
-                        placeholder="Mật khẩu"
+                        placeholder="Password"
                         placeholderTextColor="#9aa0a6"
-                        style={[styles.input, { flex: 1 }]}
+                        style={[
+                          styles.input,
+                          { flex: 1 },
+                          fieldState.error && {
+                            borderColor: "#ff6666",
+                            borderWidth: 1,
+                          },
+                        ]}
                         value={value}
                         onChangeText={onChange}
+                        onBlur={() => {
+                          onChange(value);
+                        }} // Trigger validation on blur
                         secureTextEntry={secure}
                       />
                       <TouchableOpacity
@@ -190,7 +278,6 @@ const LoginScreen: React.FC = () => {
                   </>
                 )}
               />
-
               <View style={styles.rowBetween}>
                 <TouchableOpacity
                   style={styles.remember}
@@ -211,27 +298,21 @@ const LoginScreen: React.FC = () => {
                   <Text style={styles.forgot}>Forgot password?</Text>
                 </TouchableOpacity>
               </View>
-
               <TouchableOpacity
                 style={styles.loginBtn}
                 onPress={handleSubmit(onSubmit)}
               >
                 <Text style={styles.loginText}>Login</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={styles.googleBtn}
-                onPress={() => {
-                  // TODO: Integrate Google Sign-In
-                  navigation.navigate("HomeScreen");
-                }}
+                onPress={() => promptAsync()}
               >
                 <View style={styles.googleIcon}>
                   <Text style={styles.googleG}>G</Text>
                 </View>
                 <Text style={styles.googleText}>Sign in with Google</Text>
               </TouchableOpacity>
-
               <View style={styles.signUpRow}>
                 <Text style={styles.noAcc}>Don't have an account?</Text>
                 <TouchableOpacity
@@ -283,7 +364,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     paddingHorizontal: 14,
     borderRadius: 8,
-    marginBottom: 12,
+    marginBottom: 4, // Reduced to make room for error
   },
   passwordRow: {
     flexDirection: "row",
@@ -354,12 +435,16 @@ const styles = StyleSheet.create({
   fieldError: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 6,
-    marginBottom: 6,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+    backgroundColor: "rgba(255,77,77,0.1)",
+    paddingVertical: 4,
+    borderRadius: 4,
   },
   fieldErrorText: {
     color: "#ff6666",
-    fontSize: 13,
+    fontSize: 12,
+    flex: 1,
   },
   banner: {
     // banner styles removed in favor of native Toast/Alert
