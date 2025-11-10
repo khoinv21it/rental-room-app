@@ -29,7 +29,7 @@ const LoginScreen: React.FC = () => {
     if (Platform.OS === "android") {
       ToastAndroid.show(msg, ToastAndroid.LONG);
     } else {
-      Alert.alert("Lỗi", msg);
+      Alert.alert("Error", msg);
     }
   };
 
@@ -61,9 +61,7 @@ const LoginScreen: React.FC = () => {
           const message =
             typeof err === "string"
               ? err
-              : err?.response?.data?.message ||
-                err?.message ||
-                "Đăng nhập thất bại";
+              : err?.response?.data?.message || err?.message || "Login failed";
           setGeneralError(message);
           showError(message);
         },
@@ -103,8 +101,8 @@ const LoginScreen: React.FC = () => {
               resizeMode="contain"
             />
 
-            <Text style={styles.title}>Chào mừng đến với RentalRoom</Text>
-            <Text style={styles.subtitle}>Đăng nhập để tiếp tục</Text>
+            <Text style={styles.title}>Welcome to Ant</Text>
+            <Text style={styles.subtitle}>Login to continue</Text>
 
             {/* Using native Toast (Android) or Alert (iOS) to show errors */}
 
@@ -112,10 +110,10 @@ const LoginScreen: React.FC = () => {
               <Controller
                 control={control}
                 name="username"
-                rules={{ required: "Vui lòng nhập email hoặc số điện thoại" }}
+                rules={{ required: "Please enter email or phone number" }}
                 render={({ field: { onChange, value } }) => (
                   <TextInput
-                    placeholder="Email hoặc số điện thoại"
+                    placeholder="Email or phone number"
                     placeholderTextColor="#9aa0a6"
                     style={styles.input}
                     value={value}
@@ -130,16 +128,16 @@ const LoginScreen: React.FC = () => {
                 control={control}
                 name="password"
                 rules={{
-                  required: "Vui lòng nhập mật khẩu",
+                  required: "Please enter password",
                   minLength: {
                     value: 6,
-                    message: "Mật khẩu tối thiểu 6 ký tự",
+                    message: "Password must be at least 6 characters",
                   },
                 }}
                 render={({ field: { onChange, value }, fieldState }) => (
                   <View style={styles.passwordRow}>
                     <TextInput
-                      placeholder="Mật khẩu"
+                      placeholder="Password"
                       placeholderTextColor="#9aa0a6"
                       style={[styles.input, { flex: 1 }]}
                       value={value}
@@ -151,7 +149,7 @@ const LoginScreen: React.FC = () => {
                       style={styles.showBtn}
                     >
                       <Text style={styles.showText}>
-                        {secure ? "Hiện" : "Ẩn"}
+                        {secure ? "Show" : "Hide"}
                       </Text>
                     </TouchableOpacity>
                     {fieldState.error && (
@@ -174,13 +172,13 @@ const LoginScreen: React.FC = () => {
                       remember ? styles.checkboxChecked : null,
                     ]}
                   />
-                  <Text style={styles.rememberText}>Ghi nhớ đăng nhập</Text>
+                  <Text style={styles.rememberText}>Remember me</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => navigation.navigate("LoginHelp")}
                 >
-                  <Text style={styles.forgot}>Quên mật khẩu?</Text>
+                  <Text style={styles.forgot}>Forgot password?</Text>
                 </TouchableOpacity>
               </View>
 
@@ -188,28 +186,28 @@ const LoginScreen: React.FC = () => {
                 style={styles.loginBtn}
                 onPress={handleSubmit(onSubmit)}
               >
-                <Text style={styles.loginText}>Đăng nhập</Text>
+                <Text style={styles.loginText}>Login</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.googleBtn}
                 onPress={() => {
-                  // TODO: tích hợp Google Sign-In
+                  // TODO: Integrate Google Sign-In
                   navigation.navigate("HomeScreen");
                 }}
               >
                 <View style={styles.googleIcon}>
                   <Text style={styles.googleG}>G</Text>
                 </View>
-                <Text style={styles.googleText}>Đăng nhập với Google</Text>
+                <Text style={styles.googleText}>Sign in with Google</Text>
               </TouchableOpacity>
 
               <View style={styles.signUpRow}>
-                <Text style={styles.noAcc}>Chưa có tài khoản?</Text>
+                <Text style={styles.noAcc}>Don't have an account?</Text>
                 <TouchableOpacity
                   onPress={() => navigation.navigate("Register")}
                 >
-                  <Text style={styles.signUp}> Đăng ký ngay</Text>
+                  <Text style={styles.signUp}> Sign up now</Text>
                 </TouchableOpacity>
               </View>
             </View>
