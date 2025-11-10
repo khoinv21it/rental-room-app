@@ -49,6 +49,7 @@ const LoginScreen: React.FC = () => {
         setGeneralError(message);
       },
     });
+    console.log("Login attempted");
 
     // also show any latest store error
     const latest = useAuthStore.getState().error;
