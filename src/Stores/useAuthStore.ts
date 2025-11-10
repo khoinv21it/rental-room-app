@@ -30,6 +30,11 @@ export interface AuthState {
     onSuccess?: () => void;
     onError?: (err: any) => void;
   }) => Promise<void>;
+  loginWithGoogle: (opts: {
+    token: string;
+    onSuccess?: () => void;
+    onError?: (err: any) => void;
+  }) => Promise<void>;
   logOut: () => Promise<void>;
 }
 
@@ -100,26 +105,109 @@ export const useAuthStore = create<AuthState>()(
 
             if (onSuccess) onSuccess();
           } catch (error: any) {
+            // Log the full error for debugging
+            console.log('Auth store error details:', {
+              error,
+              response: error?.response,
+              data: error?.response?.data,
+              status: error?.response?.status
+            });
+
             // Map common HTTP errors to user-friendly messages
             let message = "Đăng nhập thất bại";
             if (error?.response) {
               const status = error.response.status;
               const data = error.response.data;
-              if (status === 401) {
-                message = "Sai tên đăng nhập hoặc mật khẩu.";
-              } else if (status === 403) {
-                message = data?.message ?? "Bạn không có quyền truy cập.";
-              } else if (status === 404) {
-                message = "Tài khoản không tồn tại.";
-              } else if (status === 422) {
-                message = data?.message ?? "Dữ liệu gửi lên không hợp lệ.";
-              } else {
-                message = data?.message ?? error.message ?? message;
-              }
-            } else {
-              message = error?.message ?? String(error) ?? message;
+              
+              // Always check errors array first since that's what the server is sending
+              if (Array.isArray(data?.errors) && data.errors.length > 0) {
+                // Use the error message directly from the server
+                message = data.errors[0];
+                console.log('Using error from server:', message);
+              } 
+            } else if (error?.message) {
+              // Network or other errors
+              message = error.message;
+            }
+            
+            // Additional debug logging
+            console.log('Final error message:', message);
+
+            set({
+              error: message,
+              access_token: undefined,
+              refresh_token: undefined,
+              loggedInUser: undefined,
+            });
+            if (onError) onError(message);
+          }
+        },
+
+        loginWithGoogle: async (opts: {
+          token: string;
+          onSuccess?: () => void;
+          onError?: (err: any) => void;
+        }) => {
+          const { token, onSuccess, onError } = opts;
+          try {
+            set({ loading: true, error: null });
+
+            const response: any = await apiClient.post("/auth/google-login", {
+              token,
+            });
+            console.log("Google login response:", response);
+
+            set({
+              access_token: response.accessToken ?? response.access_token ?? null,
+              refresh_token: response.refreshToken ?? response.refresh_token ?? null,
+              loggedInUser: response.userProfile
+                ? {
+                    id: response.id ?? "",
+                    username: response.username ?? "",
+                    isActive: response.isActive ?? 1,
+                    roles: response.roles ?? [],
+                    userProfile: response.userProfile,
+                  }
+                : undefined,
+              loading: false,
+              error: null,
+            });
+
+            const roles: string[] = response.roles ?? [];
+            const allowedRoles = ["Administrators", "Landlords", "Users"];
+            const hasAllowed = roles.some((r) => allowedRoles.includes(r));
+            if (!hasAllowed) {
+              set({
+                access_token: undefined,
+                refresh_token: undefined,
+                loggedInUser: undefined,
+                error: "No permission",
+              });
+              if (onError) onError("You do not have permission to access this area.");
+              return Promise.reject("You do not have permission to access this area.");
             }
 
+            if (onSuccess) onSuccess();
+          } catch (error: any) {
+            console.log('Google login error details:', {
+              error,
+              response: error?.response,
+              data: error?.response?.data,
+              status: error?.response?.status
+            });
+
+            let message = "Google login failed";
+            if (error?.response) {
+              const data = error.response.data;
+              if (Array.isArray(data?.errors) && data.errors.length > 0) {
+                message = data.errors[0];
+              } else if (data?.message) {
+                message = data.message;
+              }
+            }
+
+            console.log('Final Google login error message:', message);
+            
             set({
               error: message,
               access_token: undefined,

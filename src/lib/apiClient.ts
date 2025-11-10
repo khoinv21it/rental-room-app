@@ -51,8 +51,8 @@ apiClient.interceptors.response.use(
       | InternalAxiosRequestConfig
       | undefined;
 
-    // Don't intercept login request here
-    if (originalRequest?.url === "/auth/login") {
+    // Don't intercept login requests here
+    if (originalRequest?.url === "/auth/login" || originalRequest?.url === "/auth/google-login") {
       return Promise.reject(error);
     }
 

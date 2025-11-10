@@ -1,14 +1,15 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Toast from "react-native-toast-message";
 import StackNavigator from "./src/Navigator/StackNavigator";
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <StackNavigator />
-    </NavigationContainer>
+    <>
+      <NavigationContainer>
+        <StackNavigator />
+      </NavigationContainer>
+      <Toast />
+    </>
   );
 }
 
