@@ -59,6 +59,7 @@ export const useAuthStore = create<AuthState>()(
               username,
               password,
             });
+            console.log("Login response:", response);
 
             // adapt response fields if your backend differs
             set({
