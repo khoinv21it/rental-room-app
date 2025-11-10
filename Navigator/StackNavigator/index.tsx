@@ -6,7 +6,10 @@ const Stack = createNativeStackNavigator();
 
 const StackNavigator = () => {
   return (
-    <Stack.Navigator initialRouteName="LoginScreen">
+    <Stack.Navigator 
+    initialRouteName="LoginScreen" 
+    screenOptions={{ headerShown: false, headerStyle: { backgroundColor: '#f4511e' }, headerTintColor: '#fff' }}
+    >
       <Stack.Screen
         name="LoginScreen"
         component={LoginScreen}

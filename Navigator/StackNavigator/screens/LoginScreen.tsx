@@ -3,7 +3,7 @@ import React from "react";
 import { View, Text, StyleSheet, Button } from "react-native";
 
 const LoginScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
