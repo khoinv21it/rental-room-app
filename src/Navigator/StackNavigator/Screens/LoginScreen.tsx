@@ -11,12 +11,12 @@ import {
   Platform,
   ScrollView,
   StatusBar,
-  ToastAndroid,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Controller, useForm } from "react-hook-form";
 import useAuthStore from "../../../Stores/useAuthStore";
+import Toast from "react-native-toast-message";
+import Icon from "react-native-vector-icons/Feather";
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -26,11 +26,13 @@ const LoginScreen: React.FC = () => {
 
   const showError = (msg: string) => {
     if (!msg) return;
-    if (Platform.OS === "android") {
-      ToastAndroid.show(msg, ToastAndroid.LONG);
-    } else {
-      Alert.alert("Error", msg);
-    }
+    // Use react-native-toast-message for consistent cross-platform toasts
+    Toast.show({
+      type: "error",
+      text1: "Lỗi",
+      text2: msg,
+      visibilityTime: 4000,
+    });
   };
 
   const login = useAuthStore((s) => s.login);
@@ -76,7 +78,8 @@ const LoginScreen: React.FC = () => {
     // also show any latest store error
     const latest = useAuthStore.getState().error;
     console.log("Latest store error after login attempt:", latest);
-    if (latest) {
+    // Only show store error if we didn't already set a generalError above
+    if (!generalError && latest) {
       const lmsg = typeof latest === "string" ? latest : JSON.stringify(latest);
       setGeneralError(lmsg);
       showError(lmsg);
@@ -110,17 +113,32 @@ const LoginScreen: React.FC = () => {
               <Controller
                 control={control}
                 name="username"
-                rules={{ required: "Please enter email or phone number" }}
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    placeholder="Email or phone number"
-                    placeholderTextColor="#9aa0a6"
-                    style={styles.input}
-                    value={value}
-                    onChangeText={onChange}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
+                rules={{ required: "Vui lòng nhập email hoặc số điện thoại" }}
+                render={({ field: { onChange, value }, fieldState }) => (
+                  <>
+                    <TextInput
+                      placeholder="Nhập Username"
+                      placeholderTextColor="#9aa0a6"
+                      style={styles.input}
+                      value={value}
+                      onChangeText={onChange}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                    {fieldState.error && (
+                      <View style={styles.fieldError}>
+                        <Icon
+                          name="alert-circle"
+                          size={16}
+                          color="#ff6666"
+                          style={{ marginRight: 8 }}
+                        />
+                        <Text style={styles.fieldErrorText}>
+                          {fieldState.error.message}
+                        </Text>
+                      </View>
+                    )}
+                  </>
                 )}
               />
 
@@ -135,29 +153,41 @@ const LoginScreen: React.FC = () => {
                   },
                 }}
                 render={({ field: { onChange, value }, fieldState }) => (
-                  <View style={styles.passwordRow}>
-                    <TextInput
-                      placeholder="Password"
-                      placeholderTextColor="#9aa0a6"
-                      style={[styles.input, { flex: 1 }]}
-                      value={value}
-                      onChangeText={onChange}
-                      secureTextEntry={secure}
-                    />
-                    <TouchableOpacity
-                      onPress={() => setSecure((s) => !s)}
-                      style={styles.showBtn}
-                    >
-                      <Text style={styles.showText}>
-                        {secure ? "Show" : "Hide"}
-                      </Text>
-                    </TouchableOpacity>
+                  <>
+                    <View style={styles.passwordRow}>
+                      <TextInput
+                        placeholder="Mật khẩu"
+                        placeholderTextColor="#9aa0a6"
+                        style={[styles.input, { flex: 1 }]}
+                        value={value}
+                        onChangeText={onChange}
+                        secureTextEntry={secure}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setSecure((s) => !s)}
+                        style={styles.showBtn}
+                      >
+                        <Icon
+                          name={secure ? "eye-off" : "eye"}
+                          size={20}
+                          color="#9aa0a6"
+                        />
+                      </TouchableOpacity>
+                    </View>
                     {fieldState.error && (
-                      <Text style={{ color: "#ff6666", marginTop: 6 }}>
-                        {fieldState.error.message}
-                      </Text>
+                      <View style={styles.fieldError}>
+                        <Icon
+                          name="alert-circle"
+                          size={16}
+                          color="#ff6666"
+                          style={{ marginRight: 8 }}
+                        />
+                        <Text style={styles.fieldErrorText}>
+                          {fieldState.error.message}
+                        </Text>
+                      </View>
                     )}
-                  </View>
+                  </>
                 )}
               />
 
@@ -321,6 +351,16 @@ const styles = StyleSheet.create({
   },
   noAcc: { color: "#cbd5df" },
   signUp: { color: "#fff", fontWeight: "700" },
+  fieldError: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+    marginBottom: 6,
+  },
+  fieldErrorText: {
+    color: "#ff6666",
+    fontSize: 13,
+  },
   banner: {
     // banner styles removed in favor of native Toast/Alert
   },

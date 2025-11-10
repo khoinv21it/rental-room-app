@@ -99,14 +99,34 @@ export const useAuthStore = create<AuthState>()(
             }
 
             if (onSuccess) onSuccess();
-          } catch (error) {
+          } catch (error: any) {
+            // Map common HTTP errors to user-friendly messages
+            let message = "Đăng nhập thất bại";
+            if (error?.response) {
+              const status = error.response.status;
+              const data = error.response.data;
+              if (status === 401) {
+                message = "Sai tên đăng nhập hoặc mật khẩu.";
+              } else if (status === 403) {
+                message = data?.message ?? "Bạn không có quyền truy cập.";
+              } else if (status === 404) {
+                message = "Tài khoản không tồn tại.";
+              } else if (status === 422) {
+                message = data?.message ?? "Dữ liệu gửi lên không hợp lệ.";
+              } else {
+                message = data?.message ?? error.message ?? message;
+              }
+            } else {
+              message = error?.message ?? String(error) ?? message;
+            }
+
             set({
-              error,
+              error: message,
               access_token: undefined,
               refresh_token: undefined,
               loggedInUser: undefined,
             });
-            if (onError) onError(error);
+            if (onError) onError(message);
           }
         },
 
