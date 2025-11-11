@@ -35,11 +35,7 @@
         }
       ]
     ],
-    "scheme": "rental-room-app",
-    "extra": {
-      "eas": {
-        "projectId": "3442b704-f199-48f9-b3ce-d96f840616f9"
-      }
-    }
+    "scheme": "rental-room-app"
+    
   }
 }
