@@ -3,10 +3,10 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 // import HomeScreen from "../StackNavigator/Screens/HomeScreen";
 import { View, Text } from "react-native";
 import { MaterialCommunityIcons as Icon } from "@expo/vector-icons";
-import ManageScreen from "./Screens/ManageScreen";
-import HomeScreen from "./Screens/HomeScreen";
-import FavoriteScreen from "./Screens/FavoriteScreen";
-import ProfileScreen from "./Screens/ProfileScreen";
+import ManageScreen from "./screens/ManageScreen";
+import HomeScreen from "./screens/HomeScreen";
+import FavoriteScreen from "./screens/FavoriteScreen";
+import ProfileScreen from "./screens/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
 
