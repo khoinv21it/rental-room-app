@@ -1,6 +1,6 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LoginScreen from "./Screens/LoginScreen";
-import HomeScreen from "./Screens/HomeScreen";
+import TabNavigator from "../TabNavigator";
 
 const Stack = createNativeStackNavigator();
 
@@ -10,7 +10,7 @@ const StackNavigator = () => {
       initialRouteName="LoginScreen"
       screenOptions={{
         headerShown: false,
-        headerStyle: { backgroundColor: "#f4511e" },
+        headerStyle: { backgroundColor: "#152238" },
         headerTintColor: "#fff",
       }}
     >
@@ -21,7 +21,7 @@ const StackNavigator = () => {
       />
       <Stack.Screen
         name="HomeScreen"
-        component={HomeScreen}
+        component={TabNavigator}
         options={{ headerShown: true }}
       />
     </Stack.Navigator>
