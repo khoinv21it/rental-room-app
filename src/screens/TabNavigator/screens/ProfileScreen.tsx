@@ -113,6 +113,10 @@ const ProfileScreen = ({ navigation }: Props) => {
     // Navigate to edit profile screen
     navigation.navigate("EditProfileScreen", {
       userProfile: userProfile || authStore.loggedInUser?.userProfile,
+      onProfileUpdated: (updatedProfile: UserProfile) => {
+        setUserProfile(updatedProfile);
+        authStore.updateUserProfile(updatedProfile);
+      },
     });
   };
 

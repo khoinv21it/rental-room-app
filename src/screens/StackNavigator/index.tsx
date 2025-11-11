@@ -11,6 +11,7 @@ export type RootStackParamList = {
   HomeScreen: undefined;
   EditProfileScreen: {
     userProfile?: UserProfile;
+    onProfileUpdated?: (profile: UserProfile) => void;
   };
 };
 
