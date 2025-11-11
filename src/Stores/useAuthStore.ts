@@ -36,6 +36,7 @@ export interface AuthState {
     onSuccess?: () => void;
     onError?: (err: any) => void;
   }) => Promise<void>;
+  updateUserProfile: (profile: UserProfile) => void;
   logOut: () => Promise<void>;
 }
 
@@ -217,6 +218,15 @@ export const useAuthStore = create<AuthState>()(
             });
             if (onError) onError(message);
           }
+        },
+
+        updateUserProfile: (profile: UserProfile) => {
+          set((state) => ({
+            loggedInUser: state.loggedInUser ? {
+              ...state.loggedInUser,
+              userProfile: profile
+            } : state.loggedInUser
+          }));
         },
 
         logOut: async () => {

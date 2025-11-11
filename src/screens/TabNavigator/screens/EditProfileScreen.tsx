@@ -3,10 +3,13 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
+  Alert,
   FlatList,
   Image,
   Keyboard,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,6 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import Icon from "react-native-vector-icons/Feather";
 import * as yup from "yup";
+import * as ImagePicker from "expo-image-picker";
 import useAuthStore from "../../../Stores/useAuthStore";
 import { RootStackParamList } from "../../StackNavigator";
 import { URL_IMAGE } from "../../../Services/Constants";
@@ -27,6 +31,7 @@ import {
   getProvinces,
   getWards,
 } from "../../../Services/AddressService";
+import { updateUserProfile } from "../../../Services/ProfileService";
 
 type Props = NativeStackScreenProps<RootStackParamList, "EditProfileScreen">;
 
@@ -44,13 +49,21 @@ const schema = yup.object({
     .string()
     .required("Email is required")
     .email("Please enter a valid email"),
-  province: yup.string().required("Province is required"),
-  district: yup.string().required("District is required"),
-  ward: yup.string().required("Ward is required"),
-  address: yup.string().required("Address is required"),
+  province: yup.string().optional(),
+  district: yup.string().optional(),
+  ward: yup.string().optional(),
+  address: yup.string().optional(),
 });
 
-type FormData = yup.InferType<typeof schema>;
+interface FormData {
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+  province?: string;
+  district?: string;
+  ward?: string;
+  address?: string;
+}
 
 const EditProfileScreen = ({ navigation, route }: Props) => {
   const authStore = useAuthStore();
@@ -61,14 +74,18 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
   const [showProvinceModal, setShowProvinceModal] = useState(false);
   const [showDistrictModal, setShowDistrictModal] = useState(false);
   const [showWardModal, setShowWardModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedWardId, setSelectedWardId] = useState<string>("");
 
   useEffect(() => {
     // Fetch provinces when component mounts
     const fetchProvinces = async () => {
       try {
+        console.log("Fetching provinces...");
         const response = await getProvinces();
         const data = response.data || response;
         setProvinces(data as Province[]);
+        console.log("Provinces set successfully, count:", data?.length);
       } catch (error) {
         console.error("Failed to fetch provinces:", error);
       }
@@ -102,29 +119,34 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
     setValue("province", province.name);
     setValue("district", ""); // Reset district
     setValue("ward", ""); // Reset ward
+    setSelectedWardId(""); // Reset ward ID
     setDistricts([]);
     setWards([]);
+    setShowProvinceModal(false);
     fetchDistricts(province.id.toString());
   };
 
   const handleDistrictSelect = (district: District) => {
     setValue("district", district.name);
     setValue("ward", ""); // Reset ward
+    setSelectedWardId(""); // Reset ward ID
     setWards([]);
+    setShowDistrictModal(false);
     fetchWards(district.id.toString());
   };
 
   const handleWardSelect = (ward: Ward) => {
     setValue("ward", ward.name);
+    setSelectedWardId(ward.id.toString()); // Lưu ward ID
+    setShowWardModal(false);
   };
 
   const {
     control,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<FormData>({
-    resolver: yupResolver(schema),
     mode: "onBlur",
   });
 
@@ -144,6 +166,26 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
       );
       setValue("district", profile.address?.ward?.district?.name || "");
       setValue("ward", profile.address?.ward?.name || "");
+
+      // Set initial ward ID if available
+      if (profile.address?.ward?.id) {
+        setSelectedWardId(profile.address.ward.id.toString());
+      }
+
+      // Set initial image if available
+      if (profile.avatar) {
+        setSelectedImage(URL_IMAGE + profile.avatar);
+      }
+
+      // Auto-fetch districts if province exists
+      if (profile.address?.ward?.district?.province?.id) {
+        fetchDistricts(profile.address.ward.district.province.id.toString());
+      }
+
+      // Auto-fetch wards if district exists
+      if (profile.address?.ward?.district?.id) {
+        fetchWards(profile.address.ward.district.id.toString());
+      }
     }
   }, [route.params?.userProfile, authStore.loggedInUser, setValue]);
 
@@ -188,24 +230,92 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
 
   const onSubmit = async (data: FormData) => {
     Keyboard.dismiss();
+
+    // Custom validation for address fields - if any is filled, all must be filled
+    const addressFields = [
+      data.province,
+      data.district,
+      data.ward,
+      data.address,
+    ];
+    const filledFields = addressFields.filter(
+      (field) => field && field.trim() !== ""
+    );
+
+    if (filledFields.length > 0 && filledFields.length < 4) {
+      showToast(
+        "error",
+        "Address Incomplete",
+        "If you fill any address field, all address fields (Province, District, Ward, Address) must be completed"
+      );
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Here you would call your API to update profile
-      console.log("Updating profile with data:", data);
+      // Tạo object profile đúng chuẩn API
+      const profile = {
+        id: authStore.loggedInUser?.userProfile?.id,
+        fullName: data.fullName,
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        address: {
+          street: data.address || "",
+          wardId: selectedWardId || "",
+        },
+      };
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Tạo FormData object để gửi lên API
+      const formData = new FormData();
+      formData.append("profile", JSON.stringify(profile));
+
+      // Thêm file avatar nếu có
+      if (selectedImage && selectedImage.startsWith("file://")) {
+        const file = {
+          uri: selectedImage,
+          type: "image/jpeg",
+          name: "avatar.jpg",
+        };
+        formData.append("avatar", file as any);
+      }
+
+      // Gọi hàm updateUserProfile
+      const profileData = {
+        profile: profile,
+        avatar:
+          selectedImage && selectedImage.startsWith("file://")
+            ? {
+                uri: selectedImage,
+                type: "image/jpeg",
+                name: "avatar.jpg",
+              }
+            : null,
+      };
+
+      console.log("Calling updateUserProfile with:", profileData);
+      const result = await updateUserProfile(profileData);
+
+      console.log("Update result:", result);
+
+      // Call callback if provided
+      if (
+        route.params?.onProfileUpdated &&
+        typeof route.params.onProfileUpdated === "function"
+      ) {
+        route.params.onProfileUpdated(result.data || result);
+      }
 
       showToast("success", "Success", "Profile updated successfully");
       navigation.goBack();
     } catch (error: any) {
-      console.error("Update profile error:", error);
-      showToast(
-        "error",
-        "Update Failed",
-        error.message || "Failed to update profile"
-      );
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to update profile";
+
+      showToast("error", "Update Failed", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -216,295 +326,524 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
   };
 
   const handleUploadImage = () => {
-    // Handle image upload logic
-    console.log("Upload image pressed");
+    Alert.alert("Select Image", "Choose an option", [
+      {
+        text: "Camera",
+        onPress: openCamera,
+      },
+      {
+        text: "Gallery",
+        onPress: openImageLibrary,
+      },
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+    ]);
+  };
+
+  const openCamera = async () => {
+    try {
+      const permissionResult =
+        await ImagePicker.requestCameraPermissionsAsync();
+
+      if (permissionResult.granted === false) {
+        showToast(
+          "error",
+          "Permission denied",
+          "Camera permission is required to take photos"
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setSelectedImage(result.assets[0].uri);
+        showToast("success", "Success", "Image selected successfully");
+      }
+    } catch (error) {
+      console.error("Camera error:", error);
+      showToast("error", "Error", "Failed to open camera");
+    }
+  };
+
+  const openImageLibrary = async () => {
+    try {
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (permissionResult.granted === false) {
+        showToast(
+          "error",
+          "Permission denied",
+          "Gallery permission is required to select photos"
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setSelectedImage(result.assets[0].uri);
+        showToast("success", "Success", "Image selected successfully");
+      }
+    } catch (error) {
+      console.error("Image library error:", error);
+      showToast("error", "Error", "Failed to open gallery");
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
-            <Icon name="x" size={24} color="#64748b" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Edit Personal Information</Text>
-          <View style={styles.placeholder} />
-        </View>
-
-        {/* Avatar Section */}
-        <View style={styles.avatarSection}>
-          <View style={styles.avatarContainer}>
-            {route.params?.userProfile?.avatar ? (
-              <Image
-                source={{
-                  uri: URL_IMAGE + (route.params?.userProfile?.avatar || ""),
-                }} // Replace with actual avatar
-                style={styles.avatar}
-              />
-            ) : (
-              <Icon name="user" size={128} color="#64748b" />
-            )}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
+              <Icon name="x" size={24} color="#64748b" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Edit Personal Information</Text>
+            <View style={styles.placeholder} />
           </View>
-          <TouchableOpacity
-            style={styles.uploadButton}
-            onPress={handleUploadImage}
-          >
-            <Icon name="upload" size={16} color="#64748b" />
-            <Text style={styles.uploadText}>Upload Image</Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Form */}
-        <View style={styles.form}>
-          {/* Full Name */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-              <Text style={styles.required}>* </Text>Full Name
-            </Text>
-            <Controller
-              control={control}
-              name="fullName"
-              render={({ field: { onChange, value, onBlur } }) => (
-                <View style={styles.inputContainer}>
-                  <Icon
-                    name="user"
-                    size={16}
-                    color="#64748b"
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={[styles.input, errors.fullName && styles.inputError]}
-                    placeholder="Enter your full name"
-                    placeholderTextColor="#9ca3af"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                  />
-                </View>
+          {/* Avatar Section */}
+          <View style={styles.avatarSection}>
+            <View style={styles.avatarContainer}>
+              {selectedImage ? (
+                <Image source={{ uri: selectedImage }} style={styles.avatar} />
+              ) : route.params?.userProfile?.avatar ? (
+                <Image
+                  source={{
+                    uri: URL_IMAGE + (route.params?.userProfile?.avatar || ""),
+                  }}
+                  style={styles.avatar}
+                />
+              ) : (
+                <Icon name="user" size={128} color="#64748b" />
               )}
-            />
-            {errors.fullName && (
-              <Text style={styles.errorText}>{errors.fullName.message}</Text>
-            )}
+            </View>
+            <TouchableOpacity
+              style={styles.uploadButton}
+              onPress={handleUploadImage}
+            >
+              <Icon name="upload" size={16} color="#64748b" />
+              <Text style={styles.uploadText}>Upload Image</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Phone Number */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Phone Number</Text>
-            <Controller
-              control={control}
-              name="phoneNumber"
-              render={({ field: { onChange, value, onBlur } }) => (
-                <View style={styles.inputContainer}>
-                  <Icon
-                    name="phone"
-                    size={16}
-                    color="#64748b"
-                    style={styles.inputIcon}
+          {/* Form */}
+          <View style={styles.form}>
+            {/* Full Name */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                <Text style={styles.required}>* </Text>Full Name
+              </Text>
+              <Controller
+                control={control}
+                name="fullName"
+                rules={{
+                  required: "Full name is required",
+                  minLength: {
+                    value: 2,
+                    message: "Full name must be at least 2 characters",
+                  },
+                }}
+                render={({ field: { onChange, value, onBlur } }) => (
+                  <View style={styles.inputContainer}>
+                    <Icon
+                      name="user"
+                      size={16}
+                      color="#64748b"
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[
+                        styles.input,
+                        errors.fullName && styles.inputError,
+                      ]}
+                      placeholder="Enter your full name"
+                      placeholderTextColor="#9ca3af"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                    />
+                  </View>
+                )}
+              />
+              {errors.fullName && (
+                <Text style={styles.errorText}>{errors.fullName.message}</Text>
+              )}
+            </View>
+
+            {/* Phone Number */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Phone Number</Text>
+              <Controller
+                control={control}
+                name="phoneNumber"
+                rules={{
+                  required: "Phone number is required",
+                  pattern: {
+                    value: /^[0-9]{10,11}$/,
+                    message: "Phone number must be 10-11 digits",
+                  },
+                }}
+                render={({ field: { onChange, value, onBlur } }) => (
+                  <View style={styles.inputContainer}>
+                    <Icon
+                      name="phone"
+                      size={16}
+                      color="#64748b"
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[
+                        styles.input,
+                        errors.phoneNumber && styles.inputError,
+                      ]}
+                      placeholder="Enter your phone number"
+                      placeholderTextColor="#9ca3af"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+                )}
+              />
+              {errors.phoneNumber && (
+                <Text style={styles.errorText}>
+                  {errors.phoneNumber.message}
+                </Text>
+              )}
+            </View>
+
+            {/* Email */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                <Text style={styles.required}>* </Text>Email
+              </Text>
+              <Controller
+                control={control}
+                name="email"
+                rules={{
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Please enter a valid email",
+                  },
+                }}
+                render={({ field: { onChange, value, onBlur } }) => (
+                  <View style={styles.inputContainer}>
+                    <Icon
+                      name="mail"
+                      size={16}
+                      color="#64748b"
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[styles.input, errors.email && styles.inputError]}
+                      placeholder="Enter your email"
+                      placeholderTextColor="#9ca3af"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
+                )}
+              />
+              {errors.email && (
+                <Text style={styles.errorText}>{errors.email.message}</Text>
+              )}
+            </View>
+
+            {/* Location Section */}
+            <View style={styles.locationSection}>
+              {/* Province and District Row */}
+              <View style={styles.locationRow}>
+                {/* Province */}
+                <View style={styles.locationItem}>
+                  <Text style={styles.inputLabel}>Province</Text>
+                  <Controller
+                    control={control}
+                    name="province"
+                    render={({ field: { onChange, value, onBlur } }) => (
+                      <TouchableOpacity
+                        style={[
+                          styles.dropdown,
+                          errors.province && styles.inputError,
+                        ]}
+                        onPress={() => {
+                          console.log(
+                            "Province button pressed, provinces count:",
+                            provinces.length
+                          );
+                          setShowProvinceModal(true);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.dropdownText,
+                            !value && styles.placeholderText,
+                          ]}
+                        >
+                          {value || "Select Province"}
+                        </Text>
+                        <Icon name="chevron-down" size={16} color="#64748b" />
+                      </TouchableOpacity>
+                    )}
                   />
+                  {errors.province && (
+                    <Text style={styles.errorText}>
+                      {errors.province.message}
+                    </Text>
+                  )}
+                </View>
+
+                {/* District */}
+                <View style={styles.locationItem}>
+                  <Text style={styles.inputLabel}>District</Text>
+                  <Controller
+                    control={control}
+                    name="district"
+                    render={({ field: { onChange, value, onBlur } }) => (
+                      <TouchableOpacity
+                        style={[
+                          styles.dropdown,
+                          errors.district && styles.inputError,
+                        ]}
+                        onPress={() => setShowDistrictModal(true)}
+                      >
+                        <Text
+                          style={[
+                            styles.dropdownText,
+                            !value && styles.placeholderText,
+                          ]}
+                        >
+                          {value || "Select District"}
+                        </Text>
+                        <Icon name="chevron-down" size={16} color="#64748b" />
+                      </TouchableOpacity>
+                    )}
+                  />
+                  {errors.district && (
+                    <Text style={styles.errorText}>
+                      {errors.district.message}
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              {/* Ward Row - Full Width */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Ward</Text>
+                <Controller
+                  control={control}
+                  name="ward"
+                  render={({ field: { onChange, value, onBlur } }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.dropdown,
+                        errors.ward && styles.inputError,
+                      ]}
+                      onPress={() => setShowWardModal(true)}
+                    >
+                      <Text
+                        style={[
+                          styles.dropdownText,
+                          !value && styles.placeholderText,
+                        ]}
+                      >
+                        {value || "Select Ward"}
+                      </Text>
+                      <Icon name="chevron-down" size={16} color="#64748b" />
+                    </TouchableOpacity>
+                  )}
+                />
+                {errors.ward && (
+                  <Text style={styles.errorText}>{errors.ward.message}</Text>
+                )}
+              </View>
+            </View>
+
+            {/* Address */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Address</Text>
+              <Controller
+                control={control}
+                name="address"
+                render={({ field: { onChange, value, onBlur } }) => (
                   <TextInput
                     style={[
                       styles.input,
-                      errors.phoneNumber && styles.inputError,
+                      styles.addressInput,
+                      errors.address && styles.inputError,
                     ]}
-                    placeholder="Enter your phone number"
+                    placeholder="Enter your address"
                     placeholderTextColor="#9ca3af"
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    keyboardType="phone-pad"
+                    multiline
                   />
-                </View>
-              )}
-            />
-            {errors.phoneNumber && (
-              <Text style={styles.errorText}>{errors.phoneNumber.message}</Text>
-            )}
-          </View>
-
-          {/* Email */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-              <Text style={styles.required}>* </Text>Email
-            </Text>
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, value, onBlur } }) => (
-                <View style={styles.inputContainer}>
-                  <Icon
-                    name="mail"
-                    size={16}
-                    color="#64748b"
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={[styles.input, errors.email && styles.inputError]}
-                    placeholder="Enter your email"
-                    placeholderTextColor="#9ca3af"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
-              )}
-            />
-            {errors.email && (
-              <Text style={styles.errorText}>{errors.email.message}</Text>
-            )}
-          </View>
-
-          {/* Location Section */}
-          <View style={styles.locationSection}>
-            {/* Province and District Row */}
-            <View style={styles.locationRow}>
-              {/* Province */}
-              <View style={styles.locationItem}>
-                <Text style={styles.inputLabel}>Province</Text>
-                <Controller
-                  control={control}
-                  name="province"
-                  render={({ field: { onChange, value, onBlur } }) => (
-                    <TouchableOpacity
-                      style={[
-                        styles.dropdown,
-                        errors.province && styles.inputError,
-                      ]}
-                      onPress={() => setShowProvinceModal(true)}
-                    >
-                      <Text
-                        style={[
-                          styles.dropdownText,
-                          !value && styles.placeholderText,
-                        ]}
-                      >
-                        {value || "Select Province"}
-                      </Text>
-                      <Icon name="chevron-down" size={16} color="#64748b" />
-                    </TouchableOpacity>
-                  )}
-                />
-                {errors.province && (
-                  <Text style={styles.errorText}>
-                    {errors.province.message}
-                  </Text>
-                )}
-              </View>
-
-              {/* District */}
-              <View style={styles.locationItem}>
-                <Text style={styles.inputLabel}>District</Text>
-                <Controller
-                  control={control}
-                  name="district"
-                  render={({ field: { onChange, value, onBlur } }) => (
-                    <TouchableOpacity
-                      style={[
-                        styles.dropdown,
-                        errors.district && styles.inputError,
-                      ]}
-                      onPress={() => setShowDistrictModal(true)}
-                    >
-                      <Text
-                        style={[
-                          styles.dropdownText,
-                          !value && styles.placeholderText,
-                        ]}
-                      >
-                        {value || "Select District"}
-                      </Text>
-                      <Icon name="chevron-down" size={16} color="#64748b" />
-                    </TouchableOpacity>
-                  )}
-                />
-                {errors.district && (
-                  <Text style={styles.errorText}>
-                    {errors.district.message}
-                  </Text>
-                )}
-              </View>
-            </View>
-
-            {/* Ward Row - Full Width */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Ward</Text>
-              <Controller
-                control={control}
-                name="ward"
-                render={({ field: { onChange, value, onBlur } }) => (
-                  <TouchableOpacity
-                    style={[styles.dropdown, errors.ward && styles.inputError]}
-                    onPress={() => setShowWardModal(true)}
-                  >
-                    <Text
-                      style={[
-                        styles.dropdownText,
-                        !value && styles.placeholderText,
-                      ]}
-                    >
-                      {value || "Select Ward"}
-                    </Text>
-                    <Icon name="chevron-down" size={16} color="#64748b" />
-                  </TouchableOpacity>
                 )}
               />
-              {errors.ward && (
-                <Text style={styles.errorText}>{errors.ward.message}</Text>
+              {errors.address && (
+                <Text style={styles.errorText}>{errors.address.message}</Text>
               )}
             </View>
           </View>
 
-          {/* Address */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Address</Text>
-            <Controller
-              control={control}
-              name="address"
-              render={({ field: { onChange, value, onBlur } }) => (
-                <TextInput
-                  style={[
-                    styles.input,
-                    styles.addressInput,
-                    errors.address && styles.inputError,
-                  ]}
-                  placeholder="Enter your address"
-                  placeholderTextColor="#9ca3af"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  multiline
-                />
+          {/* Buttons */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancel}
+              disabled={isLoading}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.saveButton,
+                isLoading && styles.saveButtonDisabled,
+              ]}
+              onPress={handleSubmit(onSubmit)}
+              disabled={isLoading}
+            >
+              <Text style={styles.saveButtonText}>
+                {isLoading ? "Saving..." : "Save"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* Province Selection Modal */}
+      <Modal
+        visible={showProvinceModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowProvinceModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Province</Text>
+              <TouchableOpacity onPress={() => setShowProvinceModal(false)}>
+                <Icon name="x" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={provinces}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.listItem}
+                  onPress={() => {
+                    handleProvinceSelect(item);
+                    setShowProvinceModal(false);
+                  }}
+                >
+                  <Text style={styles.listItemText}>{item.name}</Text>
+                </TouchableOpacity>
               )}
+              style={styles.modalList}
             />
-            {errors.address && (
-              <Text style={styles.errorText}>{errors.address.message}</Text>
-            )}
           </View>
         </View>
+      </Modal>
 
-        {/* Buttons */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={handleCancel}
-            disabled={isLoading}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.saveButton, isLoading && styles.saveButtonDisabled]}
-            onPress={handleSubmit(onSubmit)}
-            disabled={isLoading}
-          >
-            <Text style={styles.saveButtonText}>
-              {isLoading ? "Saving..." : "Save"}
-            </Text>
-          </TouchableOpacity>
+      {/* District Selection Modal */}
+      <Modal
+        visible={showDistrictModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowDistrictModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select District</Text>
+              <TouchableOpacity onPress={() => setShowDistrictModal(false)}>
+                <Icon name="x" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={districts}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.listItem}
+                  onPress={() => {
+                    handleDistrictSelect(item);
+                    setShowDistrictModal(false);
+                  }}
+                >
+                  <Text style={styles.listItemText}>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+              style={styles.modalList}
+            />
+          </View>
         </View>
-      </ScrollView>
+      </Modal>
+
+      {/* Ward Selection Modal */}
+      <Modal
+        visible={showWardModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowWardModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Ward</Text>
+              <TouchableOpacity onPress={() => setShowWardModal(false)}>
+                <Icon name="x" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={wards}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.listItem}
+                  onPress={() => {
+                    handleWardSelect(item);
+                    setShowWardModal(false);
+                  }}
+                >
+                  <Text style={styles.listItemText}>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+              style={styles.modalList}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -513,6 +852,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#ffffff",
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   scrollContent: {
     padding: 16,
@@ -675,6 +1017,48 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#ffffff",
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#ffffff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+    maxHeight: "70%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#0f172a",
+  },
+  modalList: {
+    maxHeight: 300,
+  },
+  listItem: {
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
+  },
+  listItemText: {
+    fontSize: 16,
+    color: "#374151",
   },
 });
 
