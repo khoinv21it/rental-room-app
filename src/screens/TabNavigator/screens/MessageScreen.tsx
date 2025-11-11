@@ -1,14 +1,14 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import { View, Text } from "react-native";
+import React from "react";
 
-type Props = {}
+type Props = {};
 
 const MessageScreen = (props: Props) => {
   return (
     <View>
       <Text>MessageScreen</Text>
     </View>
-  )
-}
+  );
+};
 
-export default MessageScreen
+export default MessageScreen;

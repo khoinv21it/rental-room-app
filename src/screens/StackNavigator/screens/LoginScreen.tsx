@@ -61,15 +61,16 @@ const LoginScreen: React.FC = () => {
       );
     }
   }, [response]);
-  // // Get auth state from store
-  // const accessToken = useAuthStore((s) => s.access_token);
 
-  // // Check if user is already logged in
-  // React.useEffect(() => {
-  //   if (accessToken) {
-  //     navigation.replace("HomeScreen");
-  //   }
-  // }, [accessToken, navigation]);
+  // Get auth state from store
+  const accessToken = useAuthStore((s) => s.access_token);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    if (accessToken) {
+      navigation.replace("HomeScreen");
+    }
+  }, [accessToken, navigation]);
 
   const showError = (msg: string) => {
     if (!msg) return;

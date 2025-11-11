@@ -6,6 +6,7 @@ import apiClient from "../lib/apiClient";
 
 export interface UserProfile {
   // fill according to your backend
+  id: string;
   fullName?: string;
   avatar?: string;
 }

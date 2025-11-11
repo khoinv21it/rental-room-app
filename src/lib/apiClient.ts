@@ -56,6 +56,11 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Handle change password requests - return error response data instead of rejecting
+    if (originalRequest?.url === "/auth/change-password" && error.response?.status === 400) {
+      return error.response.data;
+    }
+
     if (error.response?.status === 401 || error.response?.status === 403) {
       // Clear auth and call logout handler (if provided)
       try {
