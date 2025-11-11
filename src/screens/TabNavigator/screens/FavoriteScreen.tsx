@@ -19,6 +19,7 @@ import {
 } from "../../../Services/FavoriteService";
 import useFavoriteStore from "../../../Stores/useFavoriteStore";
 import { MaterialCommunityIcons as Icon } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
 import { API_URL, URL_IMAGE } from "../../../Services/Constants";
 
 type Props = { navigation: any };
@@ -107,7 +108,7 @@ const RoomCard = ({ item, isFavorite, onToggle }: any) => {
     landlordProfile?.fullName ||
     landlordProfile?.name ||
     landlord?.name ||
-    "Host";
+    "Owner";
   const contactInfo = landlordProfile?.phoneNumber || landlordProfile?.email;
 
   // Resolve avatar from multiple possible places (matches backend examples)
@@ -423,6 +424,17 @@ const FavoriteScreen = ({ navigation }: Props) => {
           // optionally show toast
         } else {
           setRooms((r) => r.filter((it) => it.id !== id));
+          // show success toast when removing from favorites
+          try {
+            Toast.show({
+              type: "success",
+              text1: "Removed from favorites",
+              text2: "Room removed from your favorites.",
+              visibilityTime: 2000,
+            });
+          } catch (e) {
+            // ignore if toast fails
+          }
         }
       } else {
         const ok = await addFavorite(id);
@@ -465,6 +477,9 @@ const FavoriteScreen = ({ navigation }: Props) => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Favorite</Text>
+      </View>
       <FlatList
         data={rooms}
         keyExtractor={(item) => item.id}
@@ -538,6 +553,12 @@ export default FavoriteScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f8fafc" },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#f8fafc",
+  },
+  headerTitle: { fontSize: 20, fontWeight: "700", color: "#0f172a" },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   hint: { marginTop: 8, color: "#64748b" },
   card: {
