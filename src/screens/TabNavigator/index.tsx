@@ -117,11 +117,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 8,
     elevation: 4,
-    transform: [{ translateY: -8 }],
+    transform: [{ translateY: -6 }],
   },
   iconWrapperInactive: {
     backgroundColor: "transparent",
-    transform: [{ translateY: 0 }],
+    transform: [{ translateY: 16 }],
   },
   tabLabel: {
     fontSize: 11,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     maxWidth: 72,
     textAlign: "center",
     lineHeight: 14,
-    transform: [{ translateY: 0 }],
+    transform: [{ translateY: 8 }],
   },
   tabLabelActive: {
     color: "#e6f6ff", // near-white with cool tint
