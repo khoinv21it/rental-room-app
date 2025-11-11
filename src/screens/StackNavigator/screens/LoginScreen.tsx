@@ -21,6 +21,7 @@ import Toast from "react-native-toast-message";
 import { Feather as Icon } from "@expo/vector-icons";
 import * as yup from "yup";
 import useAuthStore from "../../../Stores/useAuthStore";
+// import * as AuthSession from "expo-auth-session";
 
 const schema = yup
   .object({
@@ -41,13 +42,22 @@ const LoginScreen: React.FC = () => {
   const [remember, setRemember] = useState(false);
   const [isInProgress, setIsInProgress] = useState(false);
 
+  // const redirectUri = AuthSession.makeRedirectUri({
+  //   useProxy: false,
+  // } as any);
+
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId: GOOGLE_OAUTH_CLIENT_ID,
     androidClientId: GOOGLE_OAUTH_CLIENT_ID,
     iosClientId: GOOGLE_OAUTH_CLIENT_ID,
     scopes: ["profile", "email"],
     selectAccount: true,
+    // redirectUri,
   });
+
+  // useEffect(() => {
+  //   console.log("👉 Redirect URI:", redirectUri);
+  // }, []);
 
   useEffect(() => {
     if (response?.type === "success") {
