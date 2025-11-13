@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 // import HomeScreen from "../StackNavigator/Screens/HomeScreen";
 import { View, Text, StyleSheet } from "react-native";
@@ -8,10 +8,130 @@ import HomeScreen from "./screens/HomeScreen";
 import FavoriteScreen from "./screens/FavoriteScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 import MessageScreen from "./screens/MessageScreen";
+import useAuthStore from "../../Stores/useAuthStore";
+import { db } from "../../lib/firebase";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
 
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
+  const currentUser = useAuthStore((s: any) => s.loggedInUser);
+  const userId = currentUser?.id;
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!userId) {
+      setUnreadCount(0);
+      return;
+    }
+
+    let currentReadTimestamps = new Map<string, Date>();
+    // keep latest messages snapshot docs so we can recompute when readStatuses changes
+    let lastMessagesDocs: any[] = [];
+
+    const computeUnread = (messagesDocs: any[], readMap: Map<string, Date>) => {
+      const unreadBySender = new Map<string, number>();
+      messagesDocs.forEach((d: any) => {
+        const data: any = d.data();
+        const senderId = data.senderId;
+        if (!senderId || senderId === userId) return;
+        const createdAt =
+          typeof data.createdAt?.toDate === "function"
+            ? data.createdAt.toDate()
+            : data.createdAt?.seconds
+            ? new Date(data.createdAt.seconds * 1000)
+            : new Date(0);
+        const lastRead = readMap.get(senderId) || null;
+        if (!lastRead || createdAt > lastRead) {
+          const cur = unreadBySender.get(senderId) || 0;
+          unreadBySender.set(senderId, cur + 1);
+        }
+      });
+      const total = Array.from(unreadBySender.values()).reduce(
+        (s, v) => s + v,
+        0
+      );
+      setUnreadCount(total);
+    };
+
+    const readStatusQ = query(
+      collection(db, "readStatuses"),
+      where("userId", "==", userId)
+    );
+    const unsubRead = onSnapshot(
+      readStatusQ,
+      (snap) => {
+        const map = new Map<string, Date>();
+        snap.forEach((d) => {
+          const data: any = d.data();
+          if (data.conversationId && data.lastRead) {
+            const ts =
+              typeof data.lastRead?.toDate === "function"
+                ? data.lastRead.toDate()
+                : data.lastRead?.seconds
+                ? new Date(data.lastRead.seconds * 1000)
+                : null;
+            if (!ts) return;
+            const existing: Date | undefined = map.get(data.conversationId);
+            // keep the latest timestamp per conversationId
+            if (!existing || existing.getTime() < ts.getTime()) {
+              map.set(data.conversationId, ts);
+            }
+          }
+        });
+        currentReadTimestamps = map;
+        // recompute unread using the last messages snapshot so badge updates immediately
+        try {
+          computeUnread(lastMessagesDocs, currentReadTimestamps);
+        } catch (err) {
+          console.warn(
+            "failed to recompute unread on readStatuses update",
+            err
+          );
+        }
+      },
+      (err) => {
+        console.warn("readStatuses listener error", err);
+      }
+    );
+
+    const messagesQ = query(
+      collection(db, "messages"),
+      where("recipientId", "==", userId),
+      orderBy("createdAt", "desc")
+    );
+    const unsubMsg = onSnapshot(
+      messagesQ,
+      (snap) => {
+        // store latest messages docs and compute unread using current read timestamps
+        lastMessagesDocs = snap.docs;
+        try {
+          computeUnread(lastMessagesDocs, currentReadTimestamps);
+        } catch (err) {
+          console.warn("failed to compute unread on messages update", err);
+        }
+      },
+      (err) => {
+        console.warn("messages listener error", err);
+      }
+    );
+
+    return () => {
+      try {
+        unsubRead();
+      } catch (e) {}
+      try {
+        unsubMsg();
+      } catch (e) {}
+    };
+  }, [userId]);
+
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -51,6 +171,9 @@ const TabNavigator = () => {
                 ]}
               >
                 <Icon name={name} size={20} color={focused ? "#fff" : color} />
+                {route.name === "Message" && unreadCount > 0 && (
+                  <View style={styles.tabBadgeInside} pointerEvents="none" />
+                )}
               </View>
               <Text
                 numberOfLines={1}
@@ -136,5 +259,27 @@ const styles = StyleSheet.create({
     color: "#e6f6ff", // near-white with cool tint
     fontWeight: "600",
     transform: [{ translateY: -6 }],
+  },
+  tabBadge: {
+    position: "absolute",
+    top: 6,
+    right: 22,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#ef4444",
+    borderWidth: 1,
+    borderColor: "#fff",
+  },
+  tabBadgeInside: {
+    position: "absolute",
+    top: -1,
+    right: -1,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#ef4444",
+    borderWidth: 1,
+    borderColor: "#fff",
   },
 });
