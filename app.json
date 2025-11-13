@@ -13,7 +13,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      }
     },
     "android": {
       "package": "com.ant",
@@ -22,7 +27,13 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "USE_EXACT_ALARM"
+      ],
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -35,7 +46,12 @@
         }
       ]
     ],
-    "scheme": "rental-room-app"
-    
+    "scheme": "rental-room-app",
+    "extra": {
+      "eas": {
+        "projectId": "ca73dec2-946c-4968-a5e5-b15f9cca8420"
+      }
+    },
+    "owner": "nhan12163"
   }
 }

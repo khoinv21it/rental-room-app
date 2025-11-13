@@ -17,17 +17,25 @@ import {
   orderBy,
   onSnapshot,
 } from "firebase/firestore";
+import { useNotifications } from "../../hooks/useNotifications";
 
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
   const currentUser = useAuthStore((s: any) => s.loggedInUser);
   const userId = currentUser?.id;
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [messageUnreadCount, setMessageUnreadCount] = useState(0);
+  const { unreadCount: notificationUnreadCount } = useNotifications();
+
+  console.log("🔴 TabNavigator messageUnreadCount:", messageUnreadCount);
+  console.log(
+    "🔴 TabNavigator notificationUnreadCount:",
+    notificationUnreadCount
+  );
 
   useEffect(() => {
     if (!userId) {
-      setUnreadCount(0);
+      setMessageUnreadCount(0);
       return;
     }
 
@@ -57,7 +65,7 @@ const TabNavigator = () => {
         (s, v) => s + v,
         0
       );
-      setUnreadCount(total);
+      setMessageUnreadCount(total);
     };
 
     const readStatusQ = query(
@@ -171,7 +179,12 @@ const TabNavigator = () => {
                 ]}
               >
                 <Icon name={name} size={20} color={focused ? "#fff" : color} />
-                {route.name === "Message" && unreadCount > 0 && (
+                {/* Badge chấm đỏ khi có tin nhắn chưa đọc ở Message */}
+                {route.name === "Message" && messageUnreadCount > 0 && (
+                  <View style={styles.tabBadgeInside} pointerEvents="none" />
+                )}
+                {/* Badge chấm đỏ khi có thông báo chưa đọc ở Profile */}
+                {route.name === "Profile" && notificationUnreadCount > 0 && (
                   <View style={styles.tabBadgeInside} pointerEvents="none" />
                 )}
               </View>
@@ -259,17 +272,6 @@ const styles = StyleSheet.create({
     color: "#e6f6ff", // near-white with cool tint
     fontWeight: "600",
     transform: [{ translateY: -6 }],
-  },
-  tabBadge: {
-    position: "absolute",
-    top: 6,
-    right: 22,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#ef4444",
-    borderWidth: 1,
-    borderColor: "#fff",
   },
   tabBadgeInside: {
     position: "absolute",
