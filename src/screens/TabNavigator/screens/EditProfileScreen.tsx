@@ -43,8 +43,15 @@ const schema = yup.object({
     .min(2, "Full name must be at least 2 characters"),
   phoneNumber: yup
     .string()
-    .required("Phone number is required")
-    .matches(/^[0-9]{10,11}$/, "Phone number must be 10-11 digits"),
+    .optional()
+    .test(
+      "is-valid-phone",
+      "Phone number must be 10-11 digits",
+      function (value) {
+        if (!value || value.trim() === "") return true; // Allow empty
+        return /^[0-9]{10,11}$/.test(value);
+      }
+    ),
   email: yup
     .string()
     .required("Email is required")
@@ -57,7 +64,7 @@ const schema = yup.object({
 
 interface FormData {
   fullName: string;
-  phoneNumber: string;
+  phoneNumber?: string;
   email: string;
   province?: string;
   district?: string;
@@ -259,7 +266,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
         id: authStore.loggedInUser?.userProfile?.id,
         fullName: data.fullName,
         email: data.email,
-        phoneNumber: data.phoneNumber,
+        phoneNumber: data.phoneNumber || "",
         address: {
           street: data.address || "",
           wardId: selectedWardId || "",
@@ -500,13 +507,6 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
               <Controller
                 control={control}
                 name="phoneNumber"
-                rules={{
-                  required: "Phone number is required",
-                  pattern: {
-                    value: /^[0-9]{10,11}$/,
-                    message: "Phone number must be 10-11 digits",
-                  },
-                }}
                 render={({ field: { onChange, value, onBlur } }) => (
                   <View style={styles.inputContainer}>
                     <Icon
