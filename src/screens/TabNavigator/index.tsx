@@ -1,21 +1,144 @@
+import React, { useEffect, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import React from "react";
 // import HomeScreen from "../StackNavigator/Screens/HomeScreen";
+import { View, Text, StyleSheet } from "react-native";
 import { MaterialCommunityIcons as Icon } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
-import { useNotifications } from "../../hooks/useNotifications";
-import FavoriteScreen from "./screens/FavoriteScreen";
-import HomeScreen from "./screens/HomeScreen";
 import ManageScreen from "./screens/ManageScreen";
-import MessageScreen from "./screens/MessageScreen";
+import HomeScreen from "./screens/HomeScreen";
+import FavoriteScreen from "./screens/FavoriteScreen";
 import ProfileScreen from "./screens/ProfileScreen";
+import MessageScreen from "./screens/MessageScreen";
+import useAuthStore from "../../Stores/useAuthStore";
+import { db } from "../../lib/firebase";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
+import { useNotifications } from "../../hooks/useNotifications";
 
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
-  const { unreadCount } = useNotifications();
+  const currentUser = useAuthStore((s: any) => s.loggedInUser);
+  const userId = currentUser?.id;
+  const [messageUnreadCount, setMessageUnreadCount] = useState(0);
+  const { unreadCount: notificationUnreadCount } = useNotifications();
 
-  console.log("TabNavigator unreadCount:", unreadCount);
+  console.log("🔴 TabNavigator messageUnreadCount:", messageUnreadCount);
+  console.log(
+    "🔴 TabNavigator notificationUnreadCount:",
+    notificationUnreadCount
+  );
+
+  useEffect(() => {
+    if (!userId) {
+      setMessageUnreadCount(0);
+      return;
+    }
+
+    let currentReadTimestamps = new Map<string, Date>();
+    // keep latest messages snapshot docs so we can recompute when readStatuses changes
+    let lastMessagesDocs: any[] = [];
+
+    const computeUnread = (messagesDocs: any[], readMap: Map<string, Date>) => {
+      const unreadBySender = new Map<string, number>();
+      messagesDocs.forEach((d: any) => {
+        const data: any = d.data();
+        const senderId = data.senderId;
+        if (!senderId || senderId === userId) return;
+        const createdAt =
+          typeof data.createdAt?.toDate === "function"
+            ? data.createdAt.toDate()
+            : data.createdAt?.seconds
+            ? new Date(data.createdAt.seconds * 1000)
+            : new Date(0);
+        const lastRead = readMap.get(senderId) || null;
+        if (!lastRead || createdAt > lastRead) {
+          const cur = unreadBySender.get(senderId) || 0;
+          unreadBySender.set(senderId, cur + 1);
+        }
+      });
+      const total = Array.from(unreadBySender.values()).reduce(
+        (s, v) => s + v,
+        0
+      );
+      setMessageUnreadCount(total);
+    };
+
+    const readStatusQ = query(
+      collection(db, "readStatuses"),
+      where("userId", "==", userId)
+    );
+    const unsubRead = onSnapshot(
+      readStatusQ,
+      (snap) => {
+        const map = new Map<string, Date>();
+        snap.forEach((d) => {
+          const data: any = d.data();
+          if (data.conversationId && data.lastRead) {
+            const ts =
+              typeof data.lastRead?.toDate === "function"
+                ? data.lastRead.toDate()
+: data.lastRead?.seconds
+                ? new Date(data.lastRead.seconds * 1000)
+                : null;
+            if (!ts) return;
+            const existing: Date | undefined = map.get(data.conversationId);
+            // keep the latest timestamp per conversationId
+            if (!existing || existing.getTime() < ts.getTime()) {
+              map.set(data.conversationId, ts);
+            }
+          }
+        });
+        currentReadTimestamps = map;
+        // recompute unread using the last messages snapshot so badge updates immediately
+        try {
+          computeUnread(lastMessagesDocs, currentReadTimestamps);
+        } catch (err) {
+          console.warn(
+            "failed to recompute unread on readStatuses update",
+            err
+          );
+        }
+      },
+      (err) => {
+        console.warn("readStatuses listener error", err);
+      }
+    );
+
+    const messagesQ = query(
+      collection(db, "messages"),
+      where("recipientId", "==", userId),
+      orderBy("createdAt", "desc")
+    );
+    const unsubMsg = onSnapshot(
+      messagesQ,
+      (snap) => {
+        // store latest messages docs and compute unread using current read timestamps
+        lastMessagesDocs = snap.docs;
+        try {
+          computeUnread(lastMessagesDocs, currentReadTimestamps);
+        } catch (err) {
+          console.warn("failed to compute unread on messages update", err);
+        }
+      },
+      (err) => {
+        console.warn("messages listener error", err);
+      }
+    );
+
+    return () => {
+      try {
+        unsubRead();
+      } catch (e) {}
+      try {
+        unsubMsg();
+      } catch (e) {}
+    };
+  }, [userId]);
 
   return (
     <Tab.Navigator
@@ -56,11 +179,15 @@ const TabNavigator = () => {
                 ]}
               >
                 <Icon name={name} size={20} color={focused ? "#fff" : color} />
+                {/* Badge chấm đỏ khi có tin nhắn chưa đọc ở Message */}
+{route.name === "Message" && messageUnreadCount > 0 && (
+                  <View style={styles.tabBadgeInside} pointerEvents="none" />
+                )}
+                {/* Badge chấm đỏ khi có thông báo chưa đọc ở Profile */}
+                {route.name === "Profile" && notificationUnreadCount > 0 && (
+                  <View style={styles.tabBadgeInside} pointerEvents="none" />
+                )}
               </View>
-              {/* Badge chấm đỏ khi có thông báo chưa đọc ở Profile */}
-              {route.name === "Profile" && unreadCount > 0 && (
-                <View style={styles.badge} />
-              )}
               <Text
                 numberOfLines={1}
                 ellipsizeMode="tail"
@@ -78,9 +205,9 @@ const TabNavigator = () => {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Favorites" component={FavoriteScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Message" component={MessageScreen} />
       <Tab.Screen name="Manage" component={ManageScreen} />
+      <Tab.Screen name="Message" component={MessageScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 };
@@ -146,16 +273,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     transform: [{ translateY: -6 }],
   },
-  badge: {
+  tabBadgeInside: {
     position: "absolute",
-    top: 8,
-    right: 16,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#ef4444", // red badge
-    borderWidth: 2,
-    borderColor: "#0b1120",
-    zIndex: 10,
+    top: -1,
+    right: -1,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#ef4444",
+    borderWidth: 1,
+    borderColor: "#fff",
   },
 });
