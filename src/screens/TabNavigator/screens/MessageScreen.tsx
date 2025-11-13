@@ -65,7 +65,9 @@ const ConversationItem = ({ item, onPress }: any) => {
             resizeMode="cover"
           />
         ) : (
-          <View style={styles.convAvatarPlaceholder} />
+          <View style={styles.convAvatarPlaceholder}>
+            <Icon name="account" size={30} color="#9ca3af" />
+          </View>
         )}
         {unread > 0 && (
           <View style={styles.unreadBadge} pointerEvents="none">
@@ -91,7 +93,14 @@ const ConversationItem = ({ item, onPress }: any) => {
   );
 };
 
-const MessageBubble = ({ m, me, partnerAvatar, expanded, onToggle }: any) => {
+const MessageBubble = ({
+  m,
+  me,
+  partnerAvatar,
+  expanded,
+  onToggle,
+  showAvatar = true,
+}: any) => {
   const formatTime = (d: Date | string | number | undefined | null) => {
     if (!d) return "";
     const date = d instanceof Date ? d : new Date(d);
@@ -126,34 +135,39 @@ const MessageBubble = ({ m, me, partnerAvatar, expanded, onToggle }: any) => {
   // For messages from others we show a small avatar on the left
   if (!me) {
     return (
-      <View style={[styles.row, { alignItems: "flex-end" }]}>
-        {avatarUri ? (
-          <Image source={{ uri: avatarUri }} style={styles.avatarSmall} />
-        ) : (
-          <View style={styles.avatarSmallPlaceholder} />
-        )}
-        <View style={{ maxWidth: "85%" }}>
-          <Pressable onPress={onToggle}>
-            <View style={[styles.bubble, styles.bubbleThem]}>
-              {m.messageType === "image" && m.imageUrl ? (
-                <Image
-                  source={{ uri: m.imageUrl }}
-                  style={styles.messageImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <Text style={styles.bubbleTextThem}>{m.text}</Text>
-              )}
+      <View style={[styles.row, { alignItems: "flex-end", marginVertical: 6 }]}>
+        {/* Show avatar or placeholder space */}
+        {showAvatar ? (
+          avatarUri ? (
+            <Image source={{ uri: avatarUri }} style={styles.avatarSmall} />
+          ) : (
+            <View style={styles.avatarSmallPlaceholder}>
+              <Icon name="account" size={20} color="#9ca3af" />
             </View>
-            {expanded && (
-              <Text
-                style={[styles.timeText, { textAlign: "left", marginLeft: 8 }]}
-              >
-                {formatTime(m.createdAt)}
-              </Text>
+          )
+        ) : (
+          <View style={styles.avatarSmallSpacer} />
+        )}
+        <Pressable onPress={onToggle} style={{ flex: 1, maxWidth: "75%" }}>
+          <View style={[styles.bubble, styles.bubbleThem]}>
+            {m.messageType === "image" && m.imageUrl ? (
+              <Image
+                source={{ uri: m.imageUrl }}
+                style={styles.messageImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={styles.bubbleTextThem}>{m.text}</Text>
             )}
-          </Pressable>
-        </View>
+          </View>
+          {expanded && (
+            <Text
+              style={[styles.timeText, { textAlign: "left", marginLeft: 8 }]}
+            >
+              {formatTime(m.createdAt)}
+            </Text>
+          )}
+        </Pressable>
       </View>
     );
   }
@@ -542,7 +556,9 @@ const MessageScreen = () => {
                   style={styles.chatAvatarImg}
                 />
               ) : (
-                <View style={styles.chatAvatarPlaceholder} />
+                <View style={styles.chatAvatarPlaceholder}>
+                  <Icon name="account" size={24} color="#9ca3af" />
+                </View>
               )}
             </View>
             <Text style={styles.chatHeaderTitle} numberOfLines={1}>
@@ -594,6 +610,12 @@ const MessageScreen = () => {
                   ? item.createdAt.getTime()
                   : new Date(item.createdAt).getTime();
               const showSeparator = !prev || currTime - prevTime > SIX_HOURS_MS;
+
+              // Check if next message is from same sender
+              const next =
+                index < messages.length - 1 ? messages[index + 1] : null;
+              const isLastInGroup = !next || next.fromMe !== item.fromMe;
+
               return (
                 <>
                   {showSeparator && (
@@ -609,6 +631,7 @@ const MessageScreen = () => {
                     partnerAvatar={selected?.partner?.avatar}
                     expanded={expandedIds.has(item.id)}
                     onToggle={() => toggleExpanded(item.id)}
+                    showAvatar={isLastInGroup}
                   />
                 </>
               );
@@ -715,6 +738,8 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     backgroundColor: "#f3f4f6",
+    alignItems: "center",
+    justifyContent: "center",
   },
   chatHeaderTitle: {
     fontWeight: "700",
@@ -757,6 +782,9 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     backgroundColor: "#e5e7eb",
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
   },
   convTitle: {
     fontWeight: "700",
@@ -906,6 +934,12 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     backgroundColor: "#e5e7eb",
+    marginRight: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarSmallSpacer: {
+    width: 32,
     marginRight: 8,
   },
   dateSeparator: {
