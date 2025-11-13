@@ -40,3 +40,15 @@ export type UserProfile = {
     };
   };
 };
+
+// Notification
+export type Notification = {
+  id: string;
+  receiverId: string;
+  message: string;
+  createdAt: any; // Firebase Timestamp
+  isRead: boolean;
+  type?: string;
+  senderId?: string;
+  data?: any;
+};

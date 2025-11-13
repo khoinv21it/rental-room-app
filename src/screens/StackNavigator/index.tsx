@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LoginScreen from "./screens/LoginScreen";
 import TabNavigator from "../TabNavigator";
 import EditProfileScreen from "../TabNavigator/screens/EditProfileScreen";
+import NotificationScreen from "../TabNavigator/screens/NotificationScreen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UserProfile } from "../../types/types";
 
@@ -13,6 +14,7 @@ export type RootStackParamList = {
     userProfile?: UserProfile;
     onProfileUpdated?: (profile: UserProfile) => void;
   };
+  NotificationScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -41,6 +43,11 @@ const StackNavigator = () => {
         <Stack.Screen
           name="EditProfileScreen"
           component={EditProfileScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="NotificationScreen"
+          component={NotificationScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

@@ -1,24 +1,25 @@
-import React, { use, useEffect, useState } from "react";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   Image,
-  Modal,
-  TextInput,
-  Alert,
   Keyboard,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Icon from "react-native-vector-icons/Feather";
 import Toast from "react-native-toast-message";
-import useAuthStore from "../../../Stores/useAuthStore";
-import { UserProfile } from "../../../types/types";
-import { getUserProfile } from "../../../Services/ProfileService";
+import Icon from "react-native-vector-icons/Feather";
+import { db } from "../../../lib/firebase";
 import { changePassword } from "../../../Services/Auth";
 import { URL_IMAGE } from "../../../Services/Constants";
+import { getUserProfile } from "../../../Services/ProfileService";
+import useAuthStore from "../../../Stores/useAuthStore";
+import { UserProfile } from "../../../types/types";
 
 type Props = {
   navigation: any;
@@ -35,6 +36,7 @@ const ProfileScreen = ({ navigation }: Props) => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const authStore = useAuthStore();
 
   const showToast = (
@@ -108,6 +110,24 @@ const ProfileScreen = ({ navigation }: Props) => {
 
     fetchUserProfile();
   }, [authStore.loggedInUser]);
+
+  // Listen to unread notifications count
+  useEffect(() => {
+    const userId = authStore.loggedInUser?.id;
+    if (!userId) return;
+
+    const q = query(
+      collection(db, "notifications"),
+      where("receiverId", "==", userId),
+      where("isRead", "==", false)
+    );
+
+    const unsub = onSnapshot(q, (snapshot) => {
+      setUnreadNotificationCount(snapshot.docs.length);
+    });
+
+    return () => unsub();
+  }, [authStore.loggedInUser?.id]);
 
   const handleEditProfile = () => {
     // Navigate to edit profile screen
@@ -319,9 +339,23 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Icon name="chevron-right" size={16} color="#cbd5e1" />
               </TouchableOpacity>
               <View style={styles.fieldSeparator} />
-              <TouchableOpacity style={styles.actionField}>
+              <TouchableOpacity
+                style={styles.actionField}
+                onPress={() => navigation.navigate("NotificationScreen")}
+              >
                 <View style={styles.actionContent}>
-                  <Icon name="bell" size={16} color="#64748b" />
+                  <View style={styles.notificationIconWrapper}>
+                    <Icon name="bell" size={16} color="#64748b" />
+                    {unreadNotificationCount > 0 && (
+                      <View style={styles.notificationBadge}>
+                        <Text style={styles.notificationBadgeText}>
+                          {unreadNotificationCount > 99
+                            ? "99+"
+                            : unreadNotificationCount}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={styles.actionLabel}>Notifications</Text>
                 </View>
                 <Icon name="chevron-right" size={16} color="#cbd5e1" />
@@ -684,6 +718,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#ffffff",
+  },
+  notificationIconWrapper: {
+    position: "relative",
+    marginRight: 12,
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: -4,
+    right: -8,
+    backgroundColor: "#ef4444",
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#ffffff",
+  },
+  notificationBadgeText: {
+    color: "#ffffff",
+    fontSize: 10,
+    fontWeight: "600",
+    lineHeight: 12,
   },
 });
 
