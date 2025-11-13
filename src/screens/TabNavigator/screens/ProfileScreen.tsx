@@ -123,7 +123,8 @@ const ProfileScreen = ({ navigation }: Props) => {
     );
 
     const unsub = onSnapshot(q, (snapshot) => {
-      setUnreadNotificationCount(snapshot.docs.length);
+      const count = snapshot.docs.length;
+      setUnreadNotificationCount(count);
     });
 
     return () => unsub();

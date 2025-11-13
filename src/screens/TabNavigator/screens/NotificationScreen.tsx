@@ -36,7 +36,6 @@ const NotificationScreen = ({ navigation }: Props) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasMore, setHasMore] = useState(true);
 
   const notificationsPerPage = 10;
@@ -77,25 +76,7 @@ const NotificationScreen = ({ navigation }: Props) => {
           } as Notification)
       );
 
-      // Chỉ hiển thị popup cho notification thực sự mới (không phải lần đầu load)
-      if (!isInitialLoad) {
-        // Chỉ hiển thị popup nếu có document mới được thêm VÀ không phải từ cache
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === "added" && !change.doc.metadata.fromCache) {
-            showToast(
-              "success",
-              "New Notification",
-              change.doc.data().message as string
-            );
-          }
-        });
-      } else {
-        console.log("Initial load, skipping notification popup");
-        setIsInitialLoad(false);
-      }
-
       setNotifications(data);
-      // Reset pagination when new notifications come
       setCurrentPage(1);
       setDisplayedNotifications(data.slice(0, notificationsPerPage));
       setHasMore(data.length > notificationsPerPage);
@@ -104,7 +85,7 @@ const NotificationScreen = ({ navigation }: Props) => {
     });
 
     return () => unsub();
-  }, [userId, isInitialLoad]);
+  }, [userId]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 

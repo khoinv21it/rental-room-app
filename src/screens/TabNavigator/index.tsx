@@ -8,10 +8,15 @@ import HomeScreen from "./screens/HomeScreen";
 import FavoriteScreen from "./screens/FavoriteScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 import MessageScreen from "./screens/MessageScreen";
+import { useNotifications } from "../../hooks/useNotifications";
 
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
+  const { unreadCount } = useNotifications();
+
+  console.log("🔴 TabNavigator unreadCount:", unreadCount);
+
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -52,6 +57,10 @@ const TabNavigator = () => {
               >
                 <Icon name={name} size={20} color={focused ? "#fff" : color} />
               </View>
+              {/* Badge chấm đỏ khi có thông báo chưa đọc ở Profile */}
+              {route.name === "Profile" && unreadCount > 0 && (
+                <View style={styles.badge} />
+              )}
               <Text
                 numberOfLines={1}
                 ellipsizeMode="tail"
@@ -136,5 +145,17 @@ const styles = StyleSheet.create({
     color: "#e6f6ff", // near-white with cool tint
     fontWeight: "600",
     transform: [{ translateY: -6 }],
+  },
+  badge: {
+    position: "absolute",
+    top: 8,
+    right: 16,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#ef4444", // red badge
+    borderWidth: 2,
+    borderColor: "#0b1120",
+    zIndex: 10,
   },
 });
