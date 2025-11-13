@@ -14,13 +14,6 @@ import {
 } from "@env";
 
 const firebaseConfig = {
-  // apiKey: "AIzaSyAQlyKAIkkMoXN88jKwIFsjeWzNq4zowoY",
-  // authDomain: "chatweb-78d98.firebaseapp.com",
-  // projectId: "chatweb-78d98",
-  // storageBucket: "chatweb-78d98.firebasestorage.app",
-  // messagingSenderId: "604423699850",
-  // appId: "1:604423699850:web:225895d6000ae8e04b5c73",
-  // measurementId: "G-BQBB733K6T"
   apiKey: FIREBASE_API_KEY,
   authDomain: FIREBASE_AUTH_DOMAIN,
   projectId: FIREBASE_PROJECT_ID,
