@@ -45,7 +45,7 @@ export const useNotifications = () => {
           
           Toast.show({
             type: 'info',
-            text1: data.title || 'Thông báo mới',
+            text1: data.title || 'The new notification',
             text2: data.message || '',
             position: 'top',
             visibilityTime: 4000,

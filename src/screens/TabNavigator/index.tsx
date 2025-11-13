@@ -1,21 +1,21 @@
-import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import React from "react";
 // import HomeScreen from "../StackNavigator/Screens/HomeScreen";
-import { View, Text, StyleSheet } from "react-native";
 import { MaterialCommunityIcons as Icon } from "@expo/vector-icons";
-import ManageScreen from "./screens/ManageScreen";
-import HomeScreen from "./screens/HomeScreen";
-import FavoriteScreen from "./screens/FavoriteScreen";
-import ProfileScreen from "./screens/ProfileScreen";
-import MessageScreen from "./screens/MessageScreen";
+import { StyleSheet, Text, View } from "react-native";
 import { useNotifications } from "../../hooks/useNotifications";
+import FavoriteScreen from "./screens/FavoriteScreen";
+import HomeScreen from "./screens/HomeScreen";
+import ManageScreen from "./screens/ManageScreen";
+import MessageScreen from "./screens/MessageScreen";
+import ProfileScreen from "./screens/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
   const { unreadCount } = useNotifications();
 
-  console.log("🔴 TabNavigator unreadCount:", unreadCount);
+  console.log("TabNavigator unreadCount:", unreadCount);
 
   return (
     <Tab.Navigator
