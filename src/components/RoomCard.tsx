@@ -52,7 +52,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
       {/* Image Container */}
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: URL_IMAGE + room.images[0].url }}
+          source={{ uri: URL_IMAGE + (room.images?.[0]?.url || "") }}
           style={styles.image}
         />
 
@@ -65,10 +65,12 @@ const RoomCard: React.FC<RoomCardProps> = ({
         )} */}
 
         {/* Image Count */}
-        {room.images.length > 1 && (
+        {(room.images?.length || 0) > 1 && (
           <View style={styles.imageCount}>
             <Ionicons name="images" size={12} color="#fff" />
-            <Text style={styles.imageCountText}>{room.images.length}</Text>
+            <Text style={styles.imageCountText}>
+              {room.images?.length || 0}
+            </Text>
           </View>
         )}
 
@@ -79,7 +81,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
             size={20}
             color={isFavorited ? "#FF6B6B" : "#fff"}
           />
-          {room.favoriteCount && (
+          {(room.favoriteCount ?? 0) > 0 && (
             <Text style={styles.favoriteCount}>{room.favoriteCount}</Text>
           )}
         </TouchableOpacity>
@@ -89,22 +91,23 @@ const RoomCard: React.FC<RoomCardProps> = ({
       <View style={styles.content}>
         {/* Title */}
         <Text style={styles.title} numberOfLines={2}>
-          {room.title}
+          {room.title || "Untitled Room"}
         </Text>
 
         {/* Location */}
         <View style={styles.locationContainer}>
           <Ionicons name="location" size={14} color="#666" />
           <Text style={styles.address} numberOfLines={1}>
-            {room.address.street +
-              " " +
-              room.address.ward.name +
-              ", " +
-              room.address.ward.district.name +
-              ", " +
-              room.address.ward.district.province.name}
+            {[
+              room.address?.street,
+              room.address?.ward?.name,
+              room.address?.ward?.district?.name,
+              room.address?.ward?.district?.province?.name,
+            ]
+              .filter(Boolean)
+              .join(", ") || "No address available"}
           </Text>
-          <Text style={styles.area}>• {room.area}m²</Text>
+          <Text style={styles.area}>• {room.area || 0}m²</Text>
         </View>
 
         {/* Description */}
@@ -115,7 +118,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
           <View style={styles.priceContainer}>
             <Text style={styles.priceLabel}>Price per month</Text>
             <Text style={styles.price}>
-              {formatPrice(room.priceMonth)}{" "}
+              {formatPrice(room.priceMonth || 0)}{" "}
               <Text style={styles.currency}>VND</Text>
             </Text>
           </View>
@@ -129,16 +132,24 @@ const RoomCard: React.FC<RoomCardProps> = ({
         <View style={styles.ownerContainer}>
           <View style={styles.ownerInfo}>
             <View style={styles.avatar}>
-              <Image
-                source={{
-                  uri: URL_IMAGE + room.landlord.landlordProfile.avatar,
-                }}
-                style={styles.image}
-              />
+              {room.landlord?.landlordProfile?.avatar ? (
+                <Image
+                  source={{
+                    uri: URL_IMAGE + room.landlord.landlordProfile.avatar,
+                  }}
+                  style={styles.avatarImage}
+                />
+              ) : (
+                <Text style={styles.avatarText}>
+                  {room.landlord?.landlordProfile?.fullName
+                    ?.charAt(0)
+                    ?.toUpperCase() || "U"}
+                </Text>
+              )}
             </View>
             <View>
               <Text style={styles.ownerName}>
-                {room.landlord.landlordProfile.fullName}
+                {room.landlord?.landlordProfile?.fullName || "Unknown Owner"}
               </Text>
             </View>
           </View>
@@ -147,8 +158,9 @@ const RoomCard: React.FC<RoomCardProps> = ({
             <View style={styles.onlineStatus} />
             <Text style={styles.contactText}>Contact</Text>
             <Text style={styles.phoneNumber}>
-              {room.landlord.landlordProfile.phoneNumber ||
-                room.landlord.landlordProfile.email}
+              {room.landlord?.landlordProfile?.phoneNumber ||
+                room.landlord?.landlordProfile?.email ||
+                "No contact"}
             </Text>
           </View>
         </View>
@@ -266,7 +278,6 @@ const styles = StyleSheet.create({
     color: "#666",
     fontWeight: "500",
   },
-  /* description and amenities removed to keep card compact */
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -322,6 +333,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 8,
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
   avatarText: {
     color: "#fff",
