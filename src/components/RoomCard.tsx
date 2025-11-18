@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,10 +6,13 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ListRoom } from "../types/types";
 import { URL_IMAGE } from "../Services/Constants";
+import { addFavorite, removeFavorite } from "../Services/FavoriteService";
+import useFavoriteStore from "../Stores/useFavoriteStore";
 
 const { width } = Dimensions.get("window");
 
@@ -43,8 +46,38 @@ const RoomCard: React.FC<RoomCardProps> = ({
   onFavorite,
   isFavorited = false,
 }) => {
+  const favoriteIds = useFavoriteStore((s) => s.favoriteRoomIds);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+
+  // Check if room is favorited from store
+  const isFav = favoriteIds.has(room.id);
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN").format(price);
+  };
+
+  const handleToggleFavorite = async (e: any) => {
+    e.stopPropagation(); // Prevent card press
+
+    if (isTogglingFavorite) return;
+
+    setIsTogglingFavorite(true);
+    try {
+      if (isFav) {
+        await removeFavorite(room.id);
+      } else {
+        await addFavorite(room.id);
+      }
+
+      // Call parent callback if provided
+      if (onFavorite) {
+        onFavorite();
+      }
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
+    } finally {
+      setIsTogglingFavorite(false);
+    }
   };
 
   return (
@@ -75,12 +108,20 @@ const RoomCard: React.FC<RoomCardProps> = ({
         )}
 
         {/* Favorite Button */}
-        <TouchableOpacity style={styles.favoriteButton} onPress={onFavorite}>
-          <Ionicons
-            name={isFavorited ? "heart" : "heart-outline"}
-            size={20}
-            color={isFavorited ? "#FF6B6B" : "#fff"}
-          />
+        <TouchableOpacity
+          style={styles.favoriteButton}
+          onPress={handleToggleFavorite}
+          disabled={isTogglingFavorite}
+        >
+          {isTogglingFavorite ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Ionicons
+              name={isFav ? "heart" : "heart-outline"}
+              size={20}
+              color={isFav ? "#FF6B6B" : "#fff"}
+            />
+          )}
           {(room.favoriteCount ?? 0) > 0 && (
             <Text style={styles.favoriteCount}>{room.favoriteCount}</Text>
           )}
