@@ -1,10 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, StatusBar, StyleSheet } from "react-native";
+import {
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  RefreshControl,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import RoomSection from "../../../components/RoomSection";
 import SearchBar from "../../../components/SearchBar";
 import { fetchRoomNormal, fetchRoomVip } from "../../../Services/RoomService";
 import { ListRoom } from "../../../types/types";
+import {
+  normalize,
+  fontSize,
+  spacing,
+  layout,
+  isSmallDevice,
+} from "../../../utils/responsive";
 
 interface PaginatedResponse {
   data: ListRoom[];
@@ -35,6 +47,9 @@ const HomeScreen: React.FC = () => {
   const [normalPage, setNormalPage] = useState(0);
   const [normalTotalPages, setNormalTotalPages] = useState(1);
   const [normalLoading, setNormalLoading] = useState(false);
+
+  // Refresh state
+  const [refreshing, setRefreshing] = useState(false);
 
   const PAGE_SIZE = 6;
 
@@ -128,6 +143,23 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  // Refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Reset to first page for both sections
+      setVipPage(0);
+      setNormalPage(0);
+
+      // Fetch fresh data for both sections
+      await Promise.all([fetchVipRooms(0), fetchNormalRooms(0)]);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f9ff" />
@@ -156,6 +188,14 @@ const HomeScreen: React.FC = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#007AFF"]} // Android
+            tintColor={"#007AFF"} // iOS
+          />
+        }
       >
         {/* Search Bar */}
         <SearchBar
@@ -217,8 +257,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: layout.screenPadding,
+    paddingVertical: spacing.lg,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
@@ -227,42 +267,42 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   welcomeText: {
-    fontSize: 14,
+    fontSize: fontSize.base,
     color: "#666",
-    marginBottom: 2,
+    marginBottom: spacing.xs,
   },
   userName: {
-    fontSize: 18,
+    fontSize: fontSize.lg,
     fontWeight: "600",
     color: "#1a1a1a",
   },
   logoutButton: {
-    padding: 8,
-    borderRadius: 8,
+    padding: spacing.md,
+    borderRadius: normalize(8),
     backgroundColor: "#f5f5f5",
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100, // Add bottom padding to avoid tab bar overlap
+    paddingBottom: isSmallDevice ? normalize(80) : normalize(100),
   },
   title: {
-    fontSize: 28,
+    fontSize: isSmallDevice ? fontSize["2xl"] : fontSize["3xl"],
     fontWeight: "700",
-    marginBottom: 8,
-    marginTop: 20,
+    marginBottom: spacing.md,
+    marginTop: spacing["2xl"],
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: fontSize.md,
     color: "#666",
   },
   userInfo: {
-    marginTop: 20,
+    marginTop: spacing["2xl"],
     alignItems: "center",
   },
   userEmail: {
-    fontSize: 16,
+    fontSize: fontSize.md,
     color: "#888",
   },
 });
