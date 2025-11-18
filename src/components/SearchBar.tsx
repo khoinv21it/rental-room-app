@@ -12,6 +12,9 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  Switch,
+  Pressable,
+  GestureResponderEvent,
 } from "react-native";
 import * as Location from "expo-location";
 import { GOONG_API_KEY } from "@env";
@@ -34,6 +37,8 @@ import { Province, District, Ward } from "../types/types";
 import {
   getUserPreferences,
   updateUserPreferences,
+  getEmailNotifications,
+  setEmailNotifications as updateEmailNotifications,
 } from "../Services/ProfileService";
 import useAuthStore from "../Stores/useAuthStore";
 import useLocationStore from "../Stores/useLocationStore";
@@ -103,11 +108,21 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [districtLabel, setDistrictLabel] = useState("");
   const [wardLabel, setWardLabel] = useState("");
 
+  // Email notifications state
+  const [emailNotifications, setEmailNotifications] = useState(false);
+  const [loadingEmailNotifications, setLoadingEmailNotifications] =
+    useState(false);
+  const [showEmailPopup, setShowEmailPopup] = useState(false);
+
+  // Info popup state
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
+
   // Load provinces on mount
   useEffect(() => {
     loadProvinces();
     if (userId) {
       loadUserPreferences();
+      loadEmailNotificationSettings();
     }
   }, [userId]);
 
@@ -256,6 +271,103 @@ const SearchBar: React.FC<SearchBarProps> = ({
       console.error("❌ [SearchBar] Error loading user preferences:", error);
     }
   };
+  // Load email notification settings
+  const loadEmailNotificationSettings = async () => {
+    if (!userId) return;
+
+    try {
+      setLoadingEmailNotifications(true);
+      console.log(
+        "📧 [SearchBar] Loading email notifications for userId:",
+        userId
+      );
+
+      const result = await getEmailNotifications(userId);
+      const emailNotificationsValue = result?.emailNotifications ?? false;
+
+      console.log(
+        "📧 [SearchBar] Email notifications:",
+        emailNotificationsValue
+      );
+      setEmailNotifications(emailNotificationsValue);
+    } catch (error) {
+      console.error("❌ [SearchBar] Error loading email notifications:", error);
+      setEmailNotifications(false);
+    } finally {
+      setLoadingEmailNotifications(false);
+    }
+  };
+
+  // Toggle email notifications
+  const handleEmailNotificationsToggle = async (newValue: boolean) => {
+    console.log("🔔 [SearchBar] Switch toggled! New value:", newValue);
+    console.log("🔔 [SearchBar] Current userId:", userId);
+
+    if (!userId) {
+      Alert.alert(
+        "Login Required",
+        "Please log in to manage email notifications."
+      );
+      return;
+    }
+
+    try {
+      setLoadingEmailNotifications(true);
+
+      console.log("🔔 [SearchBar] Toggling email notifications to:", newValue);
+      console.log("🔔 [SearchBar] User ID:", userId);
+
+      const response = await updateEmailNotifications(userId, newValue);
+
+      console.log(
+        "🔔 [SearchBar] Response from updateEmailNotifications:",
+        response
+      );
+      console.log("🔔 [SearchBar] Response type:", typeof response);
+      console.log(
+        "🔔 [SearchBar] Response.emailNotifications:",
+        (response as any)?.emailNotifications
+      );
+
+      const updatedValue = response?.emailNotifications ?? newValue;
+
+      console.log("🔔 [SearchBar] Final updatedValue:", updatedValue);
+
+      setEmailNotifications(updatedValue);
+
+      Alert.alert(
+        "Success",
+        `Email notifications ${
+          updatedValue ? "enabled" : "disabled"
+        } successfully!`
+      );
+
+      console.log(
+        "✅ [SearchBar] Email notifications updated successfully to:",
+        updatedValue
+      );
+    } catch (error) {
+      console.error(
+        "❌ [SearchBar] Error updating email notifications:",
+        error
+      );
+      console.error(
+        "❌ [SearchBar] Error details:",
+        JSON.stringify(error, null, 2)
+      );
+
+      Alert.alert(
+        "Error",
+        "Failed to update email notifications. Please try again."
+      );
+
+      // Revert to previous state on error
+      await loadEmailNotificationSettings();
+    } finally {
+      setLoadingEmailNotifications(false);
+    }
+  };
+
   // Save current location as preference (like getCurrentLocation in web)
   const saveUserPreferences = async () => {
     if (!userId) {
@@ -616,13 +728,116 @@ const SearchBar: React.FC<SearchBarProps> = ({
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity style={styles.advancedButton}>
-              <Ionicons name="information" size={16} color="#666" />
-            </TouchableOpacity>
+            <View style={styles.infoButtonWrapper}>
+              <TouchableOpacity
+                style={styles.advancedButton}
+                onPress={() => setShowInfoPopup(!showInfoPopup)}
+              >
+                <Ionicons name="information" size={16} color="#666" />
+              </TouchableOpacity>
 
-            <TouchableOpacity style={styles.messageButton}>
-              <Ionicons name="mail" size={16} color="#666" />
-            </TouchableOpacity>
+              {/* Info Popup - Float above icon */}
+              {showInfoPopup && (
+                <>
+                  {/* Backdrop overlay to close popup */}
+                  <Pressable
+                    style={styles.popupBackdrop}
+                    onPress={() => setShowInfoPopup(false)}
+                  />
+
+                  {/* Popup content */}
+                  <View style={styles.infoPopup}>
+                    <View style={styles.infoPopupContent}>
+                      <View style={styles.infoPopupHeader}>
+                        <Text style={styles.infoPopupTitleText}>
+                          ℹ️ Search Area Info
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => setShowInfoPopup(false)}
+                        >
+                          <Ionicons name="close" size={18} color="#666" />
+                        </TouchableOpacity>
+                      </View>
+
+                      <View style={styles.infoPopupBody}>
+                        <Text style={styles.infoPopupLabel}>Current Area:</Text>
+                        <Text style={styles.infoPopupValue}>{displayArea}</Text>
+
+                        <Text style={styles.infoPopupDescription}>
+                          {`You can:\n• Use the 📍 button to save your current GPS location\n• Use the 🔍 Search button to search by address\n• The system will find rooms near your saved location`}
+                        </Text>
+                      </View>
+                    </View>
+                    {/* Triangle pointer */}
+                    <View style={styles.infoPopupArrow} />
+                  </View>
+                </>
+              )}
+            </View>
+
+            <View style={styles.emailButtonWrapper}>
+              <TouchableOpacity
+                style={[
+                  styles.emailButton,
+                  emailNotifications && styles.emailButtonActive,
+                ]}
+                onPress={() => setShowEmailPopup(!showEmailPopup)}
+                disabled={!userId}
+              >
+                <Ionicons
+                  name={emailNotifications ? "mail" : "mail-outline"}
+                  size={16}
+                  color={emailNotifications ? "#4A90E2" : "#666"}
+                />
+              </TouchableOpacity>
+
+              {/* Email Notifications Popup - Float above icon */}
+              {showEmailPopup && userId && (
+                <>
+                  {/* Backdrop overlay to close popup */}
+                  <Pressable
+                    style={styles.popupBackdrop}
+                    onPress={() => setShowEmailPopup(false)}
+                  />
+
+                  {/* Popup content */}
+                  <View style={styles.emailPopup}>
+                    <View style={styles.emailPopupContent}>
+                      <View style={styles.emailPopupHeader}>
+                        <Text style={styles.emailPopupTitleText}>
+                          📧 Email Notifications
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => setShowEmailPopup(false)}
+                        >
+                          <Ionicons name="close" size={18} color="#666" />
+                        </TouchableOpacity>
+                      </View>
+
+                      <View style={styles.emailSwitchRow}>
+                        <Text style={styles.emailSwitchLabel}>
+                          {emailNotifications ? "Enabled" : "Disabled"}
+                        </Text>
+                        {loadingEmailNotifications ? (
+                          <ActivityIndicator size="small" color="#4A90E2" />
+                        ) : (
+                          <Switch
+                            value={emailNotifications}
+                            onValueChange={handleEmailNotificationsToggle}
+                            disabled={loadingEmailNotifications || !userId}
+                            trackColor={{ false: "#D1D5DB", true: "#4A90E2" }}
+                            thumbColor={emailNotifications ? "#fff" : "#f4f3f4"}
+                            ios_backgroundColor="#D1D5DB"
+                          />
+                        )}
+                      </View>
+                    </View>
+                    {/* Triangle pointer */}
+                    <View style={styles.emailPopupArrow} />
+                  </View>
+                </>
+              )}
+            </View>
           </View>
         </View>
       )}
@@ -752,6 +967,7 @@ const styles = StyleSheet.create({
   },
   filtersContainer: {
     gap: spacing.md,
+    overflow: "visible",
   },
   toggleButton: {
     backgroundColor: "#fff",
@@ -781,6 +997,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.md,
     alignItems: "center",
+    overflow: "visible",
   },
   filterButtonFull: {
     flex: 1,
@@ -894,6 +1111,11 @@ const styles = StyleSheet.create({
     shadowRadius: normalize(2),
     elevation: 1,
   },
+  messageButtonActive: {
+    backgroundColor: "#E8F2FF",
+    borderWidth: 1,
+    borderColor: "#4A90E2",
+  },
   disabledText: {
     color: "#ccc",
   },
@@ -936,6 +1158,190 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: "#f0f0f0",
+  },
+  emailButton: {
+    backgroundColor: "#fff",
+    borderRadius: normalize(6),
+    padding: spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: normalize(36),
+    minHeight: normalize(36),
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: normalize(2),
+    elevation: 1,
+  },
+  emailButtonActive: {
+    backgroundColor: "#E8F2FF",
+    borderWidth: 1,
+    borderColor: "#4A90E2",
+  },
+  emailButtonWrapper: {
+    position: "relative",
+  },
+  popupBackdrop: {
+    position: "absolute",
+    top: -1000,
+    left: -1000,
+    right: -1000,
+    bottom: -1000,
+    backgroundColor: "transparent",
+    zIndex: 999,
+  },
+  emailPopup: {
+    position: "absolute",
+    bottom: normalize(44),
+    right: 0,
+    minWidth: normalize(240),
+    zIndex: 1000,
+  },
+  emailPopupContent: {
+    backgroundColor: "#fff",
+    borderRadius: normalize(8),
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: normalize(8),
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: "rgba(74, 144, 226, 0.1)",
+  },
+  emailPopupArrow: {
+    position: "absolute",
+    bottom: normalize(-6),
+    right: normalize(12),
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 6,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderTopColor: "#fff",
+  },
+  emailPopupHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  emailPopupTitle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  emailPopupTitleText: {
+    fontSize: fontSize.sm,
+    color: "#333",
+    fontWeight: "600",
+  },
+  emailPopupBody: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+  },
+  emailPopupDescription: {
+    fontSize: fontSize.sm,
+    color: "#666",
+    lineHeight: 20,
+    marginBottom: spacing.lg,
+  },
+  emailSwitchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  emailSwitchLabel: {
+    fontSize: fontSize.sm,
+    color: "#333",
+    fontWeight: "500",
+  },
+  // Info popup styles
+  infoButtonWrapper: {
+    position: "relative",
+  },
+  infoPopup: {
+    position: "absolute",
+    bottom: normalize(44),
+    right: 0,
+    minWidth: normalize(280),
+    maxWidth: normalize(320),
+    zIndex: 1000,
+  },
+  infoPopupContent: {
+    backgroundColor: "#fff",
+    borderRadius: normalize(8),
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: normalize(8),
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: "rgba(74, 144, 226, 0.1)",
+  },
+  infoPopupArrow: {
+    position: "absolute",
+    bottom: normalize(-6),
+    right: normalize(12),
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 6,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderTopColor: "#fff",
+  },
+  infoPopupHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  infoPopupTitleText: {
+    fontSize: fontSize.sm,
+    color: "#333",
+    fontWeight: "600",
+  },
+  infoPopupBody: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  infoPopupLabel: {
+    fontSize: fontSize.xs,
+    color: "#4A90E2",
+    fontWeight: "600",
+    marginBottom: spacing.xs,
+    textTransform: "uppercase",
+  },
+  infoPopupValue: {
+    fontSize: fontSize.sm,
+    color: "#333",
+    fontWeight: "500",
+    marginBottom: spacing.md,
+  },
+  infoPopupDescription: {
+    fontSize: fontSize.sm,
+    color: "#666",
+    lineHeight: 20,
   },
 });
 

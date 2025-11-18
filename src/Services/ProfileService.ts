@@ -83,12 +83,45 @@ export async function getEmailNotifications(userId: string) {
 
     console.log("📧 [getEmailNotifications] Raw response:", res);
 
-    // Handle different response formats
-    const data = (res as any)?.data || res;
-    const raw = data?.emailNotifications;
+    // apiClient might return the data directly or wrapped in { data: ... }
+    // Try different paths to find the value
+    let raw: any;
 
-    console.log("📧 [getEmailNotifications] emailNotifications value:", raw);
-    console.log("📧 [getEmailNotifications] type:", typeof raw);
+    // Check if response is directly the boolean/value
+    if (
+      typeof res === "boolean" ||
+      typeof res === "number" ||
+      typeof res === "string"
+    ) {
+      raw = res;
+    }
+    // Check if response has data property
+    else if ((res as any)?.data !== undefined) {
+      const data = (res as any).data;
+      // Check if data.emailNotifications exists
+      if (data?.emailNotifications !== undefined) {
+        raw = data.emailNotifications;
+      }
+      // Check if data itself is the value
+      else if (
+        typeof data === "boolean" ||
+        typeof data === "number" ||
+        typeof data === "string"
+      ) {
+        raw = data;
+      }
+      // Check if data.enabled exists (alternative backend field name)
+      else if (data?.enabled !== undefined) {
+        raw = data.enabled;
+      }
+    }
+    // Check if response has emailNotifications property directly
+    else if ((res as any)?.emailNotifications !== undefined) {
+      raw = (res as any).emailNotifications;
+    }
+
+    console.log("📧 [getEmailNotifications] Extracted value:", raw);
+    console.log("📧 [getEmailNotifications] Type:", typeof raw);
 
     // Normalize various backend representations: boolean, number (1/0), string
     let emailNotifications = false;
@@ -103,7 +136,7 @@ export async function getEmailNotifications(userId: string) {
         normalized === "true" ||
         normalized === "yes" ||
         normalized === "on";
-    } else if (raw == null) {
+    } else if (raw == null || raw === undefined) {
       emailNotifications = false;
     } else {
       // Fallback: convert truthy values to boolean
@@ -134,13 +167,32 @@ export async function setEmailNotifications(userId: string, enabled: boolean) {
       { enabled }
     );
 
-    console.log("✅ [setEmailNotifications] Updated successfully:", res);
+    console.log("✅ [setEmailNotifications] Raw response:", res);
 
-    // Return normalized response
-    const data = (res as any)?.data || res;
-    return {
-      emailNotifications: data?.emailNotifications ?? data?.enabled ?? enabled,
-    };
+    // Extract the updated value from response
+    let updatedValue = enabled; // Default to requested value
+
+    // Try different paths to find the confirmed value from backend
+    if (typeof res === "boolean") {
+      updatedValue = res;
+    } else if ((res as any)?.data !== undefined) {
+      const data = (res as any).data;
+      if (data?.emailNotifications !== undefined) {
+        updatedValue = Boolean(data.emailNotifications);
+      } else if (data?.enabled !== undefined) {
+        updatedValue = Boolean(data.enabled);
+      } else if (typeof data === "boolean") {
+        updatedValue = data;
+      }
+    } else if ((res as any)?.emailNotifications !== undefined) {
+      updatedValue = Boolean((res as any).emailNotifications);
+    } else if ((res as any)?.enabled !== undefined) {
+      updatedValue = Boolean((res as any).enabled);
+    }
+
+    console.log("✅ [setEmailNotifications] Confirmed value:", updatedValue);
+
+    return { emailNotifications: updatedValue };
   } catch (error) {
     console.error("❌ [setEmailNotifications] Error:", error);
     throw error;
