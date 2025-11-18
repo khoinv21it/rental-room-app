@@ -5,11 +5,13 @@ import EditProfileScreen from "../TabNavigator/screens/EditProfileScreen";
 import NotificationScreen from "../TabNavigator/screens/NotificationScreen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UserProfile } from "../../types/types";
+import TestLogin from "./screens/TestLogin";
 
 // Define the param list for the stack navigator
 export type RootStackParamList = {
   LoginScreen: undefined;
   HomeScreen: undefined;
+  TestLogin: undefined;
   EditProfileScreen: {
     userProfile?: UserProfile;
     onProfileUpdated?: (profile: UserProfile) => void;
@@ -48,6 +50,11 @@ const StackNavigator = () => {
         <Stack.Screen
           name="NotificationScreen"
           component={NotificationScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="TestLogin"
+          component={TestLogin}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

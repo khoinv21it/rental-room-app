@@ -52,3 +52,53 @@ export type Notification = {
   senderId?: string;
   data?: any;
 };
+// Image
+export type Image = {
+  id: string;
+  url: string;
+};
+export type LandLorForListRoom = {
+  id: string;
+  landlordProfile: {
+    id: string;
+    fullName?: string;
+    avatar?: string;
+    phoneNumber?: string;
+    email?: string;
+  }
+}
+// Room
+export type ListRoom = {
+  id: string;
+  images: Image[];
+  title: string;
+  priceMonth: number;
+  area: number;
+  address: {
+    id: string;
+    street: string;
+    ward: {
+      id: number;
+      name: string;
+      district: {
+        id: number;
+        name: string;
+        province: {
+          id: number;
+          name: string;
+        };
+      };
+    };
+  };
+  landlord: LandLorForListRoom;
+  favoriteCount?: number;
+};
+
+export type PaginatedResponse<T> = {
+  data: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  totalRecords: number;
+};
