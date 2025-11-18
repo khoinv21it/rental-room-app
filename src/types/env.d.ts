@@ -12,6 +12,9 @@ declare module '@env' {
   export const FIREBASE_APP_ID: string;
   export const FIREBASE_MEASUREMENT_ID: string;
   export const GOOGLE_WEB_CLIENT_ID: string;
+  // map
+  export const GOONG_API_KEY: string;
+  export const GOONG_MAPS_API_KEY: string;
   
 
   // Thêm các biến môi trường khác nếu cần
