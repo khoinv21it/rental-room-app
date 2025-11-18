@@ -1,22 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React from "react";
 import {
-  Dimensions,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { RootStackParamList } from "../screens/StackNavigator";
 import {
-  normalize,
   fontSize,
-  spacing,
-  layout,
   isSmallDevice,
+  layout,
+  normalize,
+  spacing,
 } from "../utils/responsive";
 
-const { width } = Dimensions.get("window");
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface SearchBarProps {
   searchText: string;
@@ -45,6 +47,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
+  const navigation = useNavigation<NavigationProp>();
+
+  const onMapPress = () => {
+    // Navigate to Map Screen
+    navigation.navigate("MapScreen");
+  };
   return (
     <View style={styles.container}>
       {/* Current Search Area */}
@@ -76,7 +84,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           value={searchText}
           onChangeText={onSearchChange}
         />
-        <TouchableOpacity style={styles.mapButton}>
+        <TouchableOpacity style={styles.mapButton} onPress={onMapPress}>
           <Ionicons name="map" size={16} color="#4A90E2" />
           <Text style={styles.mapButtonText}>View Map</Text>
         </TouchableOpacity>

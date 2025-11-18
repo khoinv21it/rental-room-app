@@ -17,7 +17,12 @@
       "infoPlist": {
         "UIBackgroundModes": [
           "remote-notification"
-        ]
+        ],
+        "NSLocationWhenInUseUsageDescription": "This app uses location to show nearby rental properties on the map.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app uses location to show nearby rental properties on the map."
+      },
+      "config": {
+        "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
       }
     },
     "android": {
@@ -31,9 +36,16 @@
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
-        "USE_EXACT_ALARM"
+        "USE_EXACT_ALARM",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
       ],
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -6,6 +6,7 @@ import NotificationScreen from "../TabNavigator/screens/NotificationScreen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UserProfile } from "../../types/types";
 import TestLogin from "./screens/TestLogin";
+import MapScreen from "./screens/MapScreen";
 
 // Define the param list for the stack navigator
 export type RootStackParamList = {
@@ -17,6 +18,7 @@ export type RootStackParamList = {
     onProfileUpdated?: (profile: UserProfile) => void;
   };
   NotificationScreen: undefined;
+  MapScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -55,6 +57,11 @@ const StackNavigator = () => {
         <Stack.Screen
           name="TestLogin"
           component={TestLogin}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="MapScreen"
+          component={MapScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
