@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, StatusBar, StyleSheet } from "react-native";
+import {
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  RefreshControl,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import RoomSection from "../../../components/RoomSection";
 import SearchBar from "../../../components/SearchBar";
@@ -35,6 +40,9 @@ const HomeScreen: React.FC = () => {
   const [normalPage, setNormalPage] = useState(0);
   const [normalTotalPages, setNormalTotalPages] = useState(1);
   const [normalLoading, setNormalLoading] = useState(false);
+
+  // Refresh state
+  const [refreshing, setRefreshing] = useState(false);
 
   const PAGE_SIZE = 6;
 
@@ -128,6 +136,23 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  // Refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Reset to first page for both sections
+      setVipPage(0);
+      setNormalPage(0);
+
+      // Fetch fresh data for both sections
+      await Promise.all([fetchVipRooms(0), fetchNormalRooms(0)]);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f9ff" />
@@ -156,6 +181,14 @@ const HomeScreen: React.FC = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#007AFF"]} // Android
+            tintColor={"#007AFF"} // iOS
+          />
+        }
       >
         {/* Search Bar */}
         <SearchBar
