@@ -90,7 +90,7 @@ const MapScreen: React.FC = () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
-          "The location not permission",
+          "Permission Denied",
           "The app needs location access to show your current location on the map."
         );
         setIsLocating(false);
