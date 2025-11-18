@@ -10,6 +10,13 @@ import RoomSection from "../../../components/RoomSection";
 import SearchBar from "../../../components/SearchBar";
 import { fetchRoomNormal, fetchRoomVip } from "../../../Services/RoomService";
 import { ListRoom } from "../../../types/types";
+import {
+  normalize,
+  fontSize,
+  spacing,
+  layout,
+  isSmallDevice,
+} from "../../../utils/responsive";
 
 interface PaginatedResponse {
   data: ListRoom[];
@@ -250,8 +257,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: layout.screenPadding,
+    paddingVertical: spacing.lg,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
@@ -260,42 +267,42 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   welcomeText: {
-    fontSize: 14,
+    fontSize: fontSize.base,
     color: "#666",
-    marginBottom: 2,
+    marginBottom: spacing.xs,
   },
   userName: {
-    fontSize: 18,
+    fontSize: fontSize.lg,
     fontWeight: "600",
     color: "#1a1a1a",
   },
   logoutButton: {
-    padding: 8,
-    borderRadius: 8,
+    padding: spacing.md,
+    borderRadius: normalize(8),
     backgroundColor: "#f5f5f5",
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100, // Add bottom padding to avoid tab bar overlap
+    paddingBottom: isSmallDevice ? normalize(80) : normalize(100),
   },
   title: {
-    fontSize: 28,
+    fontSize: isSmallDevice ? fontSize["2xl"] : fontSize["3xl"],
     fontWeight: "700",
-    marginBottom: 8,
-    marginTop: 20,
+    marginBottom: spacing.md,
+    marginTop: spacing["2xl"],
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: fontSize.md,
     color: "#666",
   },
   userInfo: {
-    marginTop: 20,
+    marginTop: spacing["2xl"],
     alignItems: "center",
   },
   userEmail: {
-    fontSize: 16,
+    fontSize: fontSize.md,
     color: "#888",
   },
 });

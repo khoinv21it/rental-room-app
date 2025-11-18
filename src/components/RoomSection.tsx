@@ -9,6 +9,14 @@ import {
 } from "react-native";
 import RoomCard, { Room } from "./RoomCard";
 import { ListRoom } from "../types/types";
+import {
+  normalize,
+  fontSize,
+  spacing,
+  layout,
+  wp,
+  isSmallDevice,
+} from "../utils/responsive";
 
 interface SectionHeaderProps {
   title: string;
@@ -157,15 +165,15 @@ const RoomSection: React.FC<RoomSectionProps> = ({
 
 const styles = StyleSheet.create({
   sectionContainer: {
-    marginBottom: 24,
-    marginTop: 20,
+    marginBottom: spacing["3xl"],
+    marginTop: spacing["2xl"],
   },
   headerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingHorizontal: layout.screenPadding,
+    marginBottom: spacing.xl,
   },
   headerLeft: {
     flexDirection: "row",
@@ -173,74 +181,74 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: normalize(40),
+    height: normalize(40),
+    borderRadius: normalize(20),
     backgroundColor: "#FFF3E0",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
+    marginRight: spacing.lg,
   },
   title: {
-    fontSize: 20,
+    fontSize: isSmallDevice ? fontSize.lg : fontSize.xl,
     fontWeight: "700",
     color: "#1a1a1a",
-    marginBottom: 2,
+    marginBottom: spacing.xs,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: fontSize.base,
     color: "#666",
-    lineHeight: 20,
+    lineHeight: normalize(20),
   },
   viewAllButton: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#E8F2FF",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    gap: 4,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: normalize(16),
+    gap: spacing.sm,
   },
   viewAllText: {
-    fontSize: 12,
+    fontSize: fontSize.sm,
     color: "#4A90E2",
     fontWeight: "600",
   },
   scrollContainer: {
-    paddingLeft: 16,
+    paddingLeft: layout.screenPadding,
   },
   cardContainer: {
-    width: 280,
-    marginRight: 16,
+    width: isSmallDevice ? wp(75) : wp(70),
+    marginRight: spacing.xl,
   },
   firstCard: {
     marginLeft: 0,
   },
   lastCard: {
-    marginRight: 16,
+    marginRight: layout.screenPadding,
   },
   paginationContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    gap: 16,
+    paddingHorizontal: layout.screenPadding,
+    paddingTop: spacing.lg,
+    gap: spacing.xl,
   },
   pageButton: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#E8F2FF",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    gap: 4,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: normalize(6),
+    gap: spacing.sm,
   },
   pageButtonDisabled: {
     backgroundColor: "#f5f5f5",
   },
   pageButtonText: {
-    fontSize: 12,
+    fontSize: fontSize.sm,
     color: "#4A90E2",
     fontWeight: "600",
   },
@@ -248,7 +256,7 @@ const styles = StyleSheet.create({
     color: "#ccc",
   },
   pageInfo: {
-    fontSize: 14,
+    fontSize: fontSize.base,
     color: "#666",
     fontWeight: "500",
   },
