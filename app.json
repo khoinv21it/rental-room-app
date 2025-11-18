@@ -21,7 +21,7 @@
       }
     },
     "android": {
-      "package": "com.ant",
+      "package": "host.exp.exponent",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -39,19 +39,17 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      [
-        "@react-native-google-signin/google-signin",
-        {
-          "iosUrlScheme": "com.googleusercontent.apps._some_id_here_"
-        }
-      ]
+      "expo-web-browser"
     ],
     "scheme": "rental-room-app",
+    "experiments": {
+      "tsconfigPaths": true
+    },
     "extra": {
       "eas": {
         "projectId": "ca73dec2-946c-4968-a5e5-b15f9cca8420"
       }
     },
-    "owner": "khoinguyen010503"
+    "owner": "nhan12163"
   }
 }

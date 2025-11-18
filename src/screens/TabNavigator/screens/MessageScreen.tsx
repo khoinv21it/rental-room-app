@@ -210,6 +210,7 @@ const MessageScreen = () => {
   const [text, setText] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
   const flatRef = useRef<FlatList>(null);
   const recentlyMarkedAsRead = useRef<Set<string>>(new Set());
   const loadConversationsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -391,6 +392,7 @@ const MessageScreen = () => {
 
   const handleBackToList = () => {
     setSelected(null);
+    setSearchQuery(""); // Clear search when going back
     // refresh conversations to reflect read states
     loadConversations();
   };
@@ -532,12 +534,46 @@ const MessageScreen = () => {
     }
   }, [messages]);
 
+  // Filter conversations based on search query
+  const filteredConversations = conversations.filter((conv) => {
+    if (!searchQuery.trim()) return true;
+    const partnerName = (
+      conv.partner?.name ||
+      conv.partner?.fullName ||
+      ""
+    ).toLowerCase();
+    return partnerName.includes(searchQuery.toLowerCase());
+  });
+
   return (
     <View style={styles.container}>
       {/* Header for list or chat */}
       {!selected ? (
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Messages</Text>
+          <View style={styles.searchContainer}>
+            <Icon
+              name="magnify"
+              size={20}
+              color="#9ca3af"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search conversations..."
+              placeholderTextColor="#9ca3af"
+              style={styles.searchInput}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                style={styles.clearBtn}
+              >
+                <Icon name="close-circle" size={18} color="#9ca3af" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       ) : (
         <View style={styles.chatHeaderMobile}>
@@ -576,9 +612,18 @@ const MessageScreen = () => {
         <View style={styles.listContainer}>
           {loadingConvs ? (
             <ActivityIndicator style={{ marginTop: 20 }} />
+          ) : filteredConversations.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Icon name="message-text-outline" size={64} color="#d1d5db" />
+              <Text style={styles.emptyText}>
+                {searchQuery.trim()
+                  ? "No conversations found"
+                  : "No messages yet"}
+              </Text>
+            </View>
           ) : (
             <FlatList
-              data={conversations}
+              data={filteredConversations}
               keyExtractor={(i) => i.id}
               renderItem={({ item }) => (
                 <ConversationItem item={item} onPress={handleSelect} />
@@ -696,7 +741,40 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#111827",
+    color: "#0f172a",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f3f4f6",
+    borderRadius: 10,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    height: 44,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: "#0f172a",
+    padding: 0,
+  },
+  clearBtn: {
+    padding: 4,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 60,
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#9ca3af",
+    fontWeight: "500",
   },
   chatHeaderMobile: {
     flexDirection: "row",
@@ -788,7 +866,7 @@ const styles = StyleSheet.create({
   },
   convTitle: {
     fontWeight: "700",
-    color: "#111827",
+    color: "#0f172a",
     fontSize: 15,
   },
   convLast: {
@@ -797,7 +875,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   convLastUnread: {
-    color: "#111827",
+    color: "#0f172a",
     fontWeight: "700",
   },
   convTime: {
@@ -853,7 +931,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   bubbleTextThem: {
-    color: "#111827",
+    color: "#0f172a",
     fontSize: 15,
     lineHeight: 20,
   },
