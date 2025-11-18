@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
-  Dimensions,
   StyleSheet,
   Text,
   TextInput,
@@ -14,12 +15,13 @@ import {
 } from "react-native";
 import * as Location from "expo-location";
 import { GOONG_API_KEY } from "@env";
+import { RootStackParamList } from "../screens/StackNavigator";
 import {
-  normalize,
   fontSize,
-  spacing,
-  layout,
   isSmallDevice,
+  layout,
+  normalize,
+  spacing,
 } from "../utils/responsive";
 import {
   getProvinces,
@@ -35,7 +37,8 @@ import {
 } from "../Services/ProfileService";
 import useAuthStore from "../Stores/useAuthStore";
 import useLocationStore from "../Stores/useLocationStore";
-const { width } = Dimensions.get("window");
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface SearchBarProps {
   searchText: string;
@@ -479,6 +482,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
     </Modal>
   );
 
+  const navigation = useNavigation<NavigationProp>();
+
+  const onMapPress = () => {
+    // Navigate to Map Screen
+    navigation.navigate("MapScreen");
+  };
   return (
     <View style={styles.container}>
       {/* Current Search Area */}
@@ -510,7 +519,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           value={searchText}
           onChangeText={onSearchChange}
         />
-        <TouchableOpacity style={styles.mapButton}>
+        <TouchableOpacity style={styles.mapButton} onPress={onMapPress}>
           <Ionicons name="map" size={16} color="#4A90E2" />
           <Text style={styles.mapButtonText}>View Map</Text>
         </TouchableOpacity>

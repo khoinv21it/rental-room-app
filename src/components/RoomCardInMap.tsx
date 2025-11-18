@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { ListRoom } from "../types/types";
+import { ListRoom, ListRoomInMap } from "../types/types";
 import { URL_IMAGE } from "../Services/Constants";
 import { addFavorite, removeFavorite } from "../Services/FavoriteService";
 import useFavoriteStore from "../Stores/useFavoriteStore";
@@ -18,39 +18,17 @@ import {
   fontSize,
   spacing,
   layout,
-  wp,
-  hp,
   isSmallDevice,
 } from "../utils/responsive";
-import Toast from "react-native-toast-message";
 
-const { width } = Dimensions.get("window");
-
-export interface Room {
-  id: string;
-  title: string;
-  address: string;
-  area: number;
-  description: string;
-  price: number;
-  images: string[];
-  amenities: string[];
-  isVip?: boolean;
-  rating?: number;
-  ownerName: string;
-  ownerPhone: string;
-  postedDate: string;
-  favoriteCount?: number;
-}
-
-interface RoomCardProps {
-  room: ListRoom;
+interface RoomCardInMapProps {
+  room: ListRoomInMap;
   onPress: () => void;
   onFavorite?: () => void;
   isFavorited?: boolean;
 }
 
-const RoomCard: React.FC<RoomCardProps> = ({
+const RoomCardInMap: React.FC<RoomCardInMapProps> = ({
   room,
   onPress,
   onFavorite,
@@ -75,22 +53,8 @@ const RoomCard: React.FC<RoomCardProps> = ({
     try {
       if (isFav) {
         await removeFavorite(room.id);
-        Toast.show({
-          type: "success",
-          text1: "Removed from favorites",
-          text2: `${room.title || "Room"} has been removed from your favorites`,
-          position: "bottom",
-          visibilityTime: 2000,
-        });
       } else {
         await addFavorite(room.id);
-        Toast.show({
-          type: "success",
-          text1: "Added to favorites",
-          text2: `${room.title || "Room"} has been added to your favorites`,
-          position: "top",
-          visibilityTime: 2000,
-        });
       }
 
       // Call parent callback if provided
@@ -99,13 +63,6 @@ const RoomCard: React.FC<RoomCardProps> = ({
       }
     } catch (error) {
       console.error("Failed to toggle favorite:", error);
-      Toast.show({
-        type: "error",
-        text1: "Action failed",
-        text2: "Could not update favorites. Please try again.",
-        position: "top",
-        visibilityTime: 2000,
-      });
     } finally {
       setIsTogglingFavorite(false);
     }
@@ -116,7 +73,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
       {/* Image Container */}
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: URL_IMAGE + (room.images?.[0]?.url || "") }}
+          source={{ uri: URL_IMAGE + (room.imageUrl || "") }}
           style={styles.image}
         />
 
@@ -127,17 +84,6 @@ const RoomCard: React.FC<RoomCardProps> = ({
             <Text style={styles.vipText}>VIP</Text>
           </View>
         )} */}
-
-        {/* Image Count */}
-        {(room.images?.length || 0) > 1 && (
-          <View style={styles.imageCount}>
-            <Ionicons name="images" size={normalize(12)} color="#fff" />
-            <Text style={styles.imageCountText}>
-              {room.images?.length || 0}
-            </Text>
-          </View>
-        )}
-
         {/* Favorite Button */}
         <TouchableOpacity
           style={styles.favoriteButton}
@@ -153,9 +99,9 @@ const RoomCard: React.FC<RoomCardProps> = ({
               color={isFav ? "#FF6B6B" : "#fff"}
             />
           )}
-          {(room.favoriteCount ?? 0) > 0 && (
+          {/* {(room.favoriteCount ?? 0) > 0 && (
             <Text style={styles.favoriteCount}>{room.favoriteCount}</Text>
-          )}
+          )} */}
         </TouchableOpacity>
       </View>
 
@@ -170,14 +116,8 @@ const RoomCard: React.FC<RoomCardProps> = ({
         <View style={styles.locationContainer}>
           <Ionicons name="location" size={normalize(14)} color="#666" />
           <Text style={styles.address} numberOfLines={1}>
-            {[
-              room.address?.street,
-              room.address?.ward?.name,
-              room.address?.ward?.district?.name,
-              room.address?.ward?.district?.province?.name,
-            ]
-              .filter(Boolean)
-              .join(", ") || "No address available"}
+            {[room.fullAddress].filter(Boolean).join(", ") ||
+              "No address available"}
           </Text>
           <Text style={styles.area}>• {room.area || 0}m²</Text>
         </View>
@@ -198,43 +138,6 @@ const RoomCard: React.FC<RoomCardProps> = ({
           <TouchableOpacity style={styles.viewButton} onPress={onPress}>
             <Text style={styles.viewButtonText}>View room</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* Owner Info */}
-        <View style={styles.ownerContainer}>
-          <View style={styles.ownerInfo}>
-            <View style={styles.avatar}>
-              {room.landlord?.landlordProfile?.avatar ? (
-                <Image
-                  source={{
-                    uri: URL_IMAGE + room.landlord.landlordProfile.avatar,
-                  }}
-                  style={styles.avatarImage}
-                />
-              ) : (
-                <Text style={styles.avatarText}>
-                  {room.landlord?.landlordProfile?.fullName
-                    ?.charAt(0)
-                    ?.toUpperCase() || "U"}
-                </Text>
-              )}
-            </View>
-            <View>
-              <Text style={styles.ownerName}>
-                {room.landlord?.landlordProfile?.fullName || "Unknown Owner"}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.contactContainer}>
-            <View style={styles.onlineStatus} />
-            <Text style={styles.contactText}>Contact</Text>
-            <Text style={styles.phoneNumber}>
-              {room.landlord?.landlordProfile?.phoneNumber ||
-                room.landlord?.landlordProfile?.email ||
-                "No contact"}
-            </Text>
-          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -448,4 +351,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RoomCard;
+export default RoomCardInMap;

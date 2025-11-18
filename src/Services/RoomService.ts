@@ -261,3 +261,13 @@ export async function getRoomById(id: string) {
     throw error;
   }
 }
+
+export async function fetchRoomInMap(lat = 0, lng = 0) {
+  try {
+    const res = await apiClient.get(`/rooms/rooms-in-map?lat=${lat}&lng=${lng}`);
+    return res; 
+  } catch (error) {
+    console.error("fetchRoomInMap error:", error);
+    throw error;
+  }
+}

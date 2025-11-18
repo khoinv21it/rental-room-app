@@ -75,16 +75,16 @@ export type ListRoom = {
   priceMonth: number;
   area: number;
   address: {
-    id: string;
+    id?: string;
     street: string;
     ward: {
-      id: number;
+      id?: number;
       name: string;
       district: {
-        id: number;
+        id?: number;
         name: string;
         province: {
-          id: number;
+          id?: number;
           name: string;
         };
       };
@@ -92,6 +92,9 @@ export type ListRoom = {
   };
   landlord: LandLorForListRoom;
   favoriteCount?: number;
+  latitude?: number;
+  longitude?: number;
+  isVip?: boolean;
 };
 
 export type PaginatedResponse<T> = {
@@ -102,3 +105,16 @@ export type PaginatedResponse<T> = {
   totalPages: number;
   totalRecords: number;
 };
+
+export type ListRoomInMap = 
+    {
+        id: string,
+        title: string,
+        imageUrl: string,
+        area: number,
+        priceMonth: number,
+        postType: string,
+        fullAddress: string,
+        lng: number,
+        lat: number
+    };
