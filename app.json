@@ -21,7 +21,7 @@
       }
     },
     "android": {
-      "package": "com.ant",
+      "package": "host.exp.exponent",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -39,12 +39,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      [
-        "@react-native-google-signin/google-signin",
-        {
-          "iosUrlScheme": "com.googleusercontent.apps._some_id_here_"
-        }
-      ]
+      "expo-web-browser"
     ],
     "scheme": "rental-room-app",
     "extra": {

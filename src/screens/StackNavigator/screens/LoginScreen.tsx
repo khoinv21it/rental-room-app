@@ -1,4 +1,4 @@
-import { GOOGLE_OAUTH_CLIENT_ID } from "@env";
+import { GOOGLE_OAUTH_CLIENT_ID, GOOGLE_WEB_CLIENT_ID } from "@env";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigation } from "@react-navigation/native";
 import * as Google from "expo-auth-session/providers/google";
@@ -22,6 +22,10 @@ import { Feather as Icon } from "@expo/vector-icons";
 import * as yup from "yup";
 import useAuthStore from "../../../Stores/useAuthStore";
 // import * as AuthSession from "expo-auth-session";
+import * as WebBrowser from "expo-web-browser"; // Thêm import này
+
+// THÊM DÒNG NÀY NGAY SAU IMPORTS, TRƯỚC COMPONENT
+WebBrowser.maybeCompleteAuthSession();
 
 const schema = yup
   .object({
@@ -47,7 +51,7 @@ const LoginScreen: React.FC = () => {
   // } as any);
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: GOOGLE_OAUTH_CLIENT_ID,
+    webClientId: GOOGLE_WEB_CLIENT_ID,
     androidClientId: GOOGLE_OAUTH_CLIENT_ID,
     iosClientId: GOOGLE_OAUTH_CLIENT_ID,
     scopes: ["profile", "email"],
