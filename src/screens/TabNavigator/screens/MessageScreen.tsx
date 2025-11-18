@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: "#0f172a",
+    backgroundColor: "#3b82f6",
     borderBottomColor: "#e5e7eb",
     borderBottomWidth: 1,
     elevation: 2,
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: 20,
-    color: "#3b82f6",
+    color: "#fff",
     fontWeight: "600",
   },
   chatHeaderInfo: {
