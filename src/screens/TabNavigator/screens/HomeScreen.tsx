@@ -29,7 +29,9 @@ import {
   layout,
   isSmallDevice,
 } from "../../../utils/responsive";
-
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../StackNavigator";
 interface PaginatedResponse {
   data: ListRoom[];
   pageNumber: number;
@@ -39,6 +41,7 @@ interface PaginatedResponse {
   hasNext: boolean;
   hasPrevious: boolean;
 }
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen: React.FC = () => {
   // Get current user and location from stores
@@ -51,6 +54,7 @@ const HomeScreen: React.FC = () => {
     setLocation,
     setSavedPreferences,
   } = useLocationStore();
+  const navigation = useNavigation<NavigationProp>();
 
   // Search state
   const [searchText, setSearchText] = useState("");
@@ -409,6 +413,7 @@ const HomeScreen: React.FC = () => {
 
   const handleRoomPress = (roomId: string) => {
     console.log("Room pressed:", roomId);
+    navigation.navigate("RoomDetailScreen", { roomId });
     // Navigate to room detail screen
   };
 

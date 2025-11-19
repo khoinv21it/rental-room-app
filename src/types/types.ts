@@ -141,3 +141,55 @@ export interface UpdateRequestRoomDto {
   id: string;
   description: string;
 }
+
+export type RoomDetail = {
+   id: string,
+    title: string,
+    description: string,
+    priceMonth: number,
+    priceDeposit: number,
+    area: number,
+    roomLength: number,
+    roomWidth: number,
+    elecPrice: number,
+    waterPrice: number,
+    maxPeople: number,
+    postStartDate: string,
+    postEndDate: string,
+    address: {
+        id?: string;
+        street: string;
+        ward: {
+          id?: number;
+          name: string;
+          district: {
+            id?: number;
+            name: string;
+            province: {
+              id?: number;
+              name: string;
+            };
+          };
+        };
+      },
+    images: Image[],
+    convenients: Convenient[],
+    typepost: string,
+    userId: string,
+    favoriteCount: number,
+    viewCount: number,
+};
+
+export type Convenient = {
+  id: string;
+  name: string;
+}
+export type LandLordByRoomId = {
+    id: string;
+    fullName: string;
+    email: string;
+    avatar: string;
+    amountPost: number;
+    phone: string;
+    createDate: string;
+}

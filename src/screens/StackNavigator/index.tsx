@@ -11,6 +11,7 @@ import MyContractsScreen from "./screens/MyContractsScreen";
 import RentalHistoryScreen from "./screens/RentalHistoryScreen";
 import RequestStatusScreen from "./screens/RequestStatusScreen";
 import ResidentsScreen from "./screens/ResidentsScreen";
+import RoomDetailScreen from "./screens/RoomDetailScreen";
 
 // Define the param list for the stack navigator
 export type RootStackParamList = {
@@ -27,6 +28,11 @@ export type RootStackParamList = {
   RentalHistoryScreen: undefined;
   RequestStatusScreen: undefined;
   ResidentsScreen: undefined;
+  RoomDetailScreen:
+    | {
+        roomId?: string;
+      }
+    | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -90,6 +96,11 @@ const StackNavigator = () => {
         <Stack.Screen
           name="ResidentsScreen"
           component={ResidentsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="RoomDetailScreen"
+          component={RoomDetailScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

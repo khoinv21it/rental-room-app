@@ -11,6 +11,7 @@ import {
   Linking,
   Platform,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   fetchFavoriteRooms,
   fetchAndUpdateFavorites,
@@ -404,9 +405,12 @@ const FavoriteScreen = ({ navigation }: Props) => {
     [fetchAndUpdateFavorites]
   );
 
-  useEffect(() => {
-    load(0);
-  }, [load]);
+  // Auto-fetch when screen comes into focus (when user taps on tab)
+  useFocusEffect(
+    useCallback(() => {
+      load(0);
+    }, [load])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
