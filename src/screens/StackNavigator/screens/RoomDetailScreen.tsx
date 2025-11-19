@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
+
+import Toast from "react-native-toast-message";
 import {
   Image,
   ScrollView,
@@ -13,14 +15,21 @@ import {
   Modal,
   Dimensions,
 } from "react-native";
+import BookingModal from "../../../components/BookingModal";
 
 import { Video, ResizeMode } from "expo-av";
 import { RootStackParamList } from "../index";
-import { LandLordByRoomId, RoomDetail } from "../../../types/types";
+import {
+  LandLordByRoomId,
+  RequestBooking,
+  RoomDetail,
+} from "../../../types/types";
 import { fetchRoomDetail } from "../../../Services/RoomService";
 import { URL_IMAGE } from "../../../Services/Constants";
 import { getLandlordByRoomId } from "../../../Services/LandLordService";
 import RoomLocationMap from "../../../components/RoomLocationMap";
+import { creatBooking } from "../../../Services/BookingService";
+import useAuthStore from "../../../Stores/useAuthStore";
 
 type RoomDetailScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -74,21 +83,20 @@ export default function RoomDetailScreen() {
 
   // Lấy dữ liệu từ route params hoặc dùng sample data
   const roomId = route.params?.roomId;
-  console.log("RoomDetailScreen roomId:", roomId);
   // const thumbnails = roomData.images?.map((img: any) => img.url) || [];
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
   const [roomData, setRoomData] = useState<RoomDetail>();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [landlordData, setLandlordData] = useState<LandLordByRoomId>();
   const [isPlaying, setIsPlaying] = useState(false);
   const [showZoomModal, setShowZoomModal] = useState(false);
   const [zoomImageIndex, setZoomImageIndex] = useState(0);
-
+  const authorStore = useAuthStore();
   const thumbnails = roomData?.images?.map((img: any) => img.url) || [];
-  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
   // Helper function to check if file is video
   const isVideoFile = (filename: string | undefined) => {
@@ -170,6 +178,31 @@ export default function RoomDetailScreen() {
     };
     fetchLandlordData();
   }, [roomId]);
+
+  const handleBooking = async (booking: RequestBooking) => {
+    try {
+      console.log("Booking data:", booking);
+      const userId = authorStore.loggedInUser?.id;
+      const response = await creatBooking(booking, userId);
+      setShowBookingModal(false);
+      Toast.show({
+        type: "success",
+        text1: "Booking Successful",
+        text2: "Your booking has been submitted successfully.",
+      });
+      //   console.log("Booking response:", response);
+    } catch (error: any) {
+      //   console.error("Booking error:", error.response.data);
+      Toast.show({
+        type: "error",
+        text1: "Booking Failed",
+        text2:
+          error.response?.data ||
+          "An error occurred while submitting your booking.",
+      });
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -347,9 +380,23 @@ export default function RoomDetailScreen() {
                 <Text style={styles.metaText}>{roomData?.viewCount} views</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.bookingButton}>
+            <TouchableOpacity
+              style={styles.bookingButton}
+              onPress={() => setShowBookingModal(true)}
+            >
               <Text style={styles.bookingButtonText}>Booking</Text>
             </TouchableOpacity>
+            {/* Booking Modal */}
+            <BookingModal
+              visible={showBookingModal}
+              onClose={() => setShowBookingModal(false)}
+              onConfirm={(booking) => {
+                handleBooking(booking);
+              }}
+              roomId={roomData?.id || ""}
+              roomTitle={roomData?.title || ""}
+              pricePerMonth={roomData?.priceMonth || 0}
+            />
           </View>
 
           {/* Quick Specs */}
@@ -914,15 +961,21 @@ const styles = StyleSheet.create({
   },
   bookingButton: {
     marginTop: 16,
-    backgroundColor: "#qed8936",
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: "#ed8936",
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
   },
   bookingButtonText: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "bold",
+    letterSpacing: 0.5,
   },
   specItemValue: {
     fontSize: 16,

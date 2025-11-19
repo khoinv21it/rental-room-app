@@ -161,7 +161,7 @@ export type RoomDetail = {
 export type Convenient = {
   id: string;
   name: string;
-}
+};
 export type LandLordByRoomId = {
     id: string;
     fullName: string;
@@ -170,4 +170,10 @@ export type LandLordByRoomId = {
     amountPost: number;
     phone: string;
     createDate: string;
-}
+};
+export type RequestBooking = {
+  roomId: string;
+  rentalDate: string;
+  rentalExpires: string;
+  tenantCount: number;
+};
