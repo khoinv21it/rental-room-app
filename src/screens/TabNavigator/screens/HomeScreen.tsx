@@ -123,7 +123,7 @@ const HomeScreen: React.FC = () => {
                 lat: savedPreferences.latitude,
                 lng: savedPreferences.longitude,
               }
-            : null,
+          : null,
       });
 
       setVipLoading(true);
@@ -183,7 +183,7 @@ const HomeScreen: React.FC = () => {
         // Handle different response structures
         let rooms: ListRoom[] = [];
         let pages = 1;
-
+        
         if (response?.data && Array.isArray(response.data)) {
           // Standard paginated response with data property
           rooms = response.data;
@@ -233,7 +233,7 @@ const HomeScreen: React.FC = () => {
                 lat: savedPreferences.latitude,
                 lng: savedPreferences.longitude,
               }
-            : null,
+          : null,
       });
 
       setNormalLoading(true);
@@ -293,7 +293,7 @@ const HomeScreen: React.FC = () => {
         // Handle different response structures
         let rooms: ListRoom[] = [];
         let pages = 1;
-
+        
         if (response?.data && Array.isArray(response.data)) {
           // Standard paginated response with data property
           rooms = response.data;
