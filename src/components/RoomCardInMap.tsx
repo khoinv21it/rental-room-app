@@ -78,12 +78,12 @@ const RoomCardInMap: React.FC<RoomCardInMapProps> = ({
         />
 
         {/* VIP Badge */}
-        {/* {room.isVip && (
+        {room.postType == "Post VIP" && (
           <View style={styles.vipBadge}>
             <Ionicons name="star" size={normalize(12)} color="#fff" />
             <Text style={styles.vipText}>VIP</Text>
           </View>
-        )} */}
+        )}
         {/* Favorite Button */}
         <TouchableOpacity
           style={styles.favoriteButton}
