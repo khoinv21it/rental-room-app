@@ -347,6 +347,9 @@ export default function RoomDetailScreen() {
                 <Text style={styles.metaText}>{roomData?.viewCount} views</Text>
               </View>
             </View>
+            <TouchableOpacity style={styles.bookingButton}>
+              <Text style={styles.bookingButtonText}>Booking</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Quick Specs */}
@@ -908,6 +911,18 @@ const styles = StyleSheet.create({
   specItemLabel: {
     fontSize: 12,
     color: "#6b7280",
+  },
+  bookingButton: {
+    marginTop: 16,
+    backgroundColor: "#qed8936",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  bookingButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   specItemValue: {
     fontSize: 16,
