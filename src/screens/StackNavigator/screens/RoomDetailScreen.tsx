@@ -3,6 +3,7 @@ import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
 
 import Toast from "react-native-toast-message";
+import NearbyPlaces from "../../../components/NearbyPlaces";
 import {
   Image,
   ScrollView,
@@ -35,48 +36,7 @@ type RoomDetailScreenRouteProp = RouteProp<
   RootStackParamList,
   "RoomDetailScreen"
 >;
-const nearbyPlaces = [
-  {
-    category: "Dining",
-    count: 2,
-    icon: "🍽️",
-    places: ["Restaurant Phố Biển - 294m", "Seafood Restaurant - 450m"],
-  },
-  {
-    category: "Education",
-    count: 2,
-    icon: "🎓",
-    places: ["Thé School - 500m", "Hoa Hai Secondary School - 800m"],
-  },
-  {
-    category: "Shopping",
-    count: 3,
-    icon: "🛒",
-    places: [
-      "MM Mega Market Da Nang - 604m",
-      "Lotte Mart - 1.2km",
-      "Co.opmart - 1.5km",
-    ],
-  },
-  {
-    category: "Banking",
-    count: 3,
-    icon: "🏦",
-    places: ["ATM DongA Bank - 691m", "Vietcombank - 750m", "BIDV - 900m"],
-  },
-  {
-    category: "Healthcare",
-    count: 2,
-    icon: "🏥",
-    places: ["Da Nang Hospital - 739m", "General Clinic - 850m"],
-  },
-  {
-    category: "Entertainment",
-    count: 2,
-    icon: "🎪",
-    places: ["Park View Apartment - 793m", "Beach Park - 1.8km"],
-  },
-];
+
 export default function RoomDetailScreen() {
   const route = useRoute<RoomDetailScreenRouteProp>();
   const navigation = useNavigation();
@@ -86,7 +46,6 @@ export default function RoomDetailScreen() {
   // const thumbnails = roomData.images?.map((img: any) => img.url) || [];
 
   const [selectedImage, setSelectedImage] = useState(0);
-  const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [roomData, setRoomData] = useState<RoomDetail>();
@@ -379,6 +338,12 @@ export default function RoomDetailScreen() {
                 <Ionicons name="eye-outline" size={14} color="#6b7280" />
                 <Text style={styles.metaText}>{roomData?.viewCount} views</Text>
               </View>
+              <View style={styles.metaItem}>
+                <Ionicons name="heart-outline" size={14} color="#6b7280" />
+                <Text style={styles.metaText}>
+                  {roomData?.favoriteCount} favorites
+                </Text>
+              </View>
             </View>
             <TouchableOpacity
               style={styles.bookingButton}
@@ -473,51 +438,13 @@ export default function RoomDetailScreen() {
           </View>
 
           {/* Nearby Places */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="map-outline" size={24} color="#4f46e5" />
-              <Text style={styles.sectionTitle}>Nearby Places</Text>
-            </View>
-            <Text style={styles.nearbySubtitle}>15 places • Nearest: 294m</Text>
-
-            <View style={styles.nearbyList}>
-              {nearbyPlaces.map((item, idx) => (
-                <View key={idx} style={styles.nearbyCard}>
-                  <TouchableOpacity
-                    onPress={() =>
-                      setExpandedCategory(expandedCategory === idx ? null : idx)
-                    }
-                    style={styles.nearbyHeader}
-                  >
-                    <View style={styles.nearbyTitleRow}>
-                      <Text style={styles.nearbyIcon}>{item.icon}</Text>
-                      <Text style={styles.nearbyCategory}>{item.category}</Text>
-                      <View style={styles.nearbyBadge}>
-                        <Text style={styles.nearbyBadgeText}>{item.count}</Text>
-                      </View>
-                    </View>
-                    <Ionicons
-                      name={
-                        expandedCategory === idx ? "chevron-up" : "chevron-down"
-                      }
-                      size={20}
-                      color="#6b7280"
-                    />
-                  </TouchableOpacity>
-                  {expandedCategory === idx && (
-                    <View style={styles.nearbyPlaces}>
-                      {item.places.map((place, pIdx) => (
-                        <View key={pIdx} style={styles.nearbyPlaceItem}>
-                          <Text style={styles.nearbyPlaceBullet}>•</Text>
-                          <Text style={styles.nearbyPlaceText}>{place}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              ))}
-            </View>
-          </View>
+          {roomData?.id && roomData?.address && (
+            <NearbyPlaces
+              address={roomData.address}
+              roomId={roomData.id}
+              key={roomData.id}
+            />
+          )}
 
           {/* Map */}
           <RoomLocationMap
