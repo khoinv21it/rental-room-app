@@ -31,3 +31,13 @@ export async function fetchRoomInMap(lat = 0, lng = 0) {
     throw error;
   }
 }
+
+export async function fetchRoomDetail(roomId: string) {
+  try {
+    const res = await apiClient.get(`/rooms/${roomId}`);
+    return res; 
+  } catch (error) {
+    console.error("fetchRoomDetail error:", error);
+    throw error;
+  }
+}

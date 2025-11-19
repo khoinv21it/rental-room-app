@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { UserProfile } from "../../types/types";
 import TestLogin from "./screens/TestLogin";
 import MapScreen from "./screens/MapScreen";
+import RoomDetailScreen from "./screens/RoomDetailScreen";
 
 // Define the param list for the stack navigator
 export type RootStackParamList = {
@@ -19,6 +20,11 @@ export type RootStackParamList = {
   };
   NotificationScreen: undefined;
   MapScreen: undefined;
+  RoomDetailScreen:
+    | {
+        roomId?: string;
+      }
+    | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -62,6 +68,11 @@ const StackNavigator = () => {
         <Stack.Screen
           name="MapScreen"
           component={MapScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="RoomDetailScreen"
+          component={RoomDetailScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
