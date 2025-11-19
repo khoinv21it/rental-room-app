@@ -18,12 +18,12 @@ export type Ward = {
 };
 // User Profile
 export type UserProfile = {
-    id: string;
-    fullName?: string;
-    avatar?: string;
-    email?: string;
-    phoneNumber?: string;
-    address: {
+  id: string;
+  fullName?: string;
+  avatar?: string;
+  email?: string;
+  phoneNumber?: string;
+  address: {
     id: string;
     street: string;
     ward: {
@@ -65,8 +65,8 @@ export type LandLorForListRoom = {
     avatar?: string;
     phoneNumber?: string;
     email?: string;
-  }
-}
+  };
+};
 // Room
 export type ListRoom = {
   id: string;
@@ -106,19 +106,41 @@ export type PaginatedResponse<T> = {
   totalRecords: number;
 };
 
-export type ListRoomInMap = 
-    {
-        id: string,
-        title: string,
-        imageUrl: string,
-        area: number,
-        priceMonth: number,
-        postType: string,
-        fullAddress: string,
-        lng: number,
-        lat: number
-    };
+export type ListRoomInMap = {
+  id: string;
+  title: string;
+  imageUrl: string;
+  area: number;
+  priceMonth: number;
+  postType: string;
+  fullAddress: string;
+  lng: number;
+  lat: number;
+};
 
+// Requirement Types
+export interface RequirementDetail {
+  id: string;
+  roomTitle: string;
+  userName: string;
+  email: string;
+  description: string;
+  status: 0 | 1 | 2; // 0 = Not Processed, 1 = Completed, 2 = Rejected
+  imageUrl?: string;
+  createdDate: string;
+}
+
+export interface RequirementRequestRoomDto {
+  idRequirement?: string;
+  userId: string;
+  roomId: string;
+  description: string;
+}
+
+export interface UpdateRequestRoomDto {
+  id: string;
+  description: string;
+}
 
 export type RoomDetail = {
    id: string,
@@ -177,3 +199,4 @@ export type RequestBooking = {
   rentalExpires: string;
   tenantCount: number;
 };
+

@@ -22,6 +22,7 @@ import {
   hp,
   isSmallDevice,
 } from "../utils/responsive";
+import Toast from "react-native-toast-message";
 
 const { width } = Dimensions.get("window");
 
@@ -74,8 +75,22 @@ const RoomCard: React.FC<RoomCardProps> = ({
     try {
       if (isFav) {
         await removeFavorite(room.id);
+        Toast.show({
+          type: "success",
+          text1: "Removed from favorites",
+          text2: `${room.title || "Room"} has been removed from your favorites`,
+          position: "bottom",
+          visibilityTime: 2000,
+        });
       } else {
         await addFavorite(room.id);
+        Toast.show({
+          type: "success",
+          text1: "Added to favorites",
+          text2: `${room.title || "Room"} has been added to your favorites`,
+          position: "top",
+          visibilityTime: 2000,
+        });
       }
 
       // Call parent callback if provided
@@ -84,6 +99,13 @@ const RoomCard: React.FC<RoomCardProps> = ({
       }
     } catch (error) {
       console.error("Failed to toggle favorite:", error);
+      Toast.show({
+        type: "error",
+        text1: "Action failed",
+        text2: "Could not update favorites. Please try again.",
+        position: "top",
+        visibilityTime: 2000,
+      });
     } finally {
       setIsTogglingFavorite(false);
     }
