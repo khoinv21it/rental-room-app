@@ -481,9 +481,23 @@ const FavoriteScreen = ({ navigation }: Props) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Favorite</Text>
+      {/* Modern Header */}
+      <View style={styles.headerGradient}>
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <View>
+              <Text style={styles.headerTitle}>Favorites</Text>
+              <Text style={styles.headerSubtitle}>
+                {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'} saved
+              </Text>
+            </View>
+            <View style={styles.headerIcon}>
+              <Icon name="heart" size={24} color="#EF4444" />
+            </View>
+          </View>
+        </View>
       </View>
+
       <FlatList
         data={rooms}
         keyExtractor={(item) => item.id}
@@ -491,7 +505,8 @@ const FavoriteScreen = ({ navigation }: Props) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#4f8ef7"
+            tintColor="#EF4444"
+            colors={["#EF4444"]}
           />
         }
         renderItem={({ item }) => (
@@ -504,51 +519,68 @@ const FavoriteScreen = ({ navigation }: Props) => {
         contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
         ListEmptyComponent={() => (
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No favorite rooms</Text>
+            <View style={styles.emptyIconContainer}>
+              <Icon name="heart-outline" size={64} color="#E5E7EB" />
+            </View>
+            <Text style={styles.emptyTitle}>No favorite rooms yet</Text>
             <Text style={styles.emptySub}>
-              Explore rooms and add them to your favorites.
+              Explore amazing rooms and tap the heart icon to save them here
             </Text>
           </View>
         )}
       />
 
-      <View style={styles.pagination}>
-        <TouchableOpacity
-          onPress={() => {
-            if (page > 0) load(page - 1);
-          }}
-          disabled={page === 0}
-          style={[styles.pageBtn, page === 0 && styles.disabledBtn]}
-        >
-          <Text style={[styles.pageText, page === 0 && styles.disabledText]}>
-            Previous
-          </Text>
-        </TouchableOpacity>
+      {totalPages > 1 && (
+        <View style={styles.pagination}>
+          <TouchableOpacity
+            onPress={() => {
+              if (page > 0) load(page - 1);
+            }}
+            disabled={page === 0}
+            style={[styles.pageBtn, page === 0 && styles.disabledBtn]}
+          >
+            <Icon 
+              name="chevron-left" 
+              size={20} 
+              color={page === 0 ? "#CBD5E1" : "#1A1A2E"} 
+            />
+            <Text style={[styles.pageText, page === 0 && styles.disabledText]}>
+              Previous
+            </Text>
+          </TouchableOpacity>
 
-        <Text style={styles.pageInfo}>
-          {page + 1} / {totalPages || 1}
-        </Text>
+          <View style={styles.pageInfoContainer}>
+            <Text style={styles.pageInfo}>
+              {page + 1} / {totalPages || 1}
+            </Text>
+          </View>
 
-        <TouchableOpacity
-          onPress={() => {
-            if (page + 1 < (totalPages || 1)) load(page + 1);
-          }}
-          disabled={page + 1 >= (totalPages || 1)}
-          style={[
-            styles.pageBtn,
-            page + 1 >= (totalPages || 1) && styles.disabledBtn,
-          ]}
-        >
-          <Text
+          <TouchableOpacity
+            onPress={() => {
+              if (page + 1 < (totalPages || 1)) load(page + 1);
+            }}
+            disabled={page + 1 >= (totalPages || 1)}
             style={[
-              styles.pageText,
-              page + 1 >= (totalPages || 1) && styles.disabledText,
+              styles.pageBtn,
+              page + 1 >= (totalPages || 1) && styles.disabledBtn,
             ]}
           >
-            Next
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <Text
+              style={[
+                styles.pageText,
+                page + 1 >= (totalPages || 1) && styles.disabledText,
+              ]}
+            >
+              Next
+            </Text>
+            <Icon 
+              name="chevron-right" 
+              size={20} 
+              color={page + 1 >= (totalPages || 1) ? "#CBD5E1" : "#1A1A2E"} 
+            />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -556,29 +588,67 @@ const FavoriteScreen = ({ navigation }: Props) => {
 export default FavoriteScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8fafc" },
+  container: { flex: 1, backgroundColor: "#F5F7FA" },
+  // Modern Header
+  headerGradient: {
+    backgroundColor: "#fff",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    shadowColor: "#EF4444",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
   header: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#f8fafc",
+    paddingTop: 16,
+    paddingBottom: 16,
   },
-  headerTitle: { fontSize: 20, fontWeight: "700", color: "#0f172a" },
+  headerTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  headerTitle: { 
+    fontSize: 28, 
+    fontWeight: "800", 
+    color: "#1A1A2E",
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  headerIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#FEE2E2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   hint: { marginTop: 8, color: "#64748b" },
   card: {
-    flexDirection: "column", // stack cardRow above footer
+    flexDirection: "column",
     alignItems: "stretch",
     overflow: "hidden",
     backgroundColor: "#ffffff",
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 12,
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#e6eef7",
-    shadowColor: "#0f172a",
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   cardRow: {
     flexDirection: "row",
@@ -586,38 +656,35 @@ const styles = StyleSheet.create({
     width: "100%",
     minWidth: 0,
   },
-  // thumbnail wrapper keeps image and badge together and clips overflow
   thumbWrap: {
     position: "relative",
-    width: 108,
-    height: 78,
-    borderRadius: 10,
+    width: 120,
+    height: 90,
+    borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: "#f1f5f9",
-    marginRight: 12,
+    backgroundColor: "#F3F4F6",
+    marginRight: 14,
     alignSelf: "flex-start",
   },
   thumb: {
     width: "100%",
     height: "100%",
-    borderRadius: 0, // rounded handled by wrapper
-    backgroundColor: "#f1f5f9",
+    borderRadius: 0,
+    backgroundColor: "#F3F4F6",
   },
   thumbPlaceholder: {
-    backgroundColor: "#e2e8f0",
-    // placeholder fills the wrapper
-    borderRadius: 10,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 16,
   },
-  // small pill badge at bottom-right of thumbnail with icon + count
   imageBadge: {
     position: "absolute",
     right: 8,
     bottom: 8,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(15,23,42,0.75)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: "rgba(15,23,42,0.85)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 999,
     borderWidth: 0,
   },
@@ -627,14 +694,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginLeft: 4,
   },
-  // allow card body to shrink on small screens so it doesn't wrap below the thumbnail
   cardBody: {
     flex: 1,
-    paddingLeft: 14,
+    paddingLeft: 0,
     minWidth: 0,
     justifyContent: "space-between",
-    // ensure right column is at least as tall as thumbnail so footer stays next to image
-    minHeight: 78,
+    minHeight: 90,
   },
   rowTop: {
     flexDirection: "row",
@@ -642,55 +707,60 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   roomTitle: {
-    color: "#0f172a",
-    fontSize: 16,
+    color: "#1A1A2E",
+    fontSize: 17,
     fontWeight: "700",
     flex: 1,
     flexShrink: 1,
     marginRight: 8,
+    letterSpacing: 0.2,
   },
-  // clickable address style
-  addressLink: { color: "#0ea5ff" },
+  addressLink: { color: "#3B82F6" },
   roomTitleMultiline: {},
-  roomPriceSmall: { color: "#0ea5ff", fontWeight: "800", fontSize: 14 },
+  roomPriceSmall: { 
+    color: "#EF4444", 
+    fontWeight: "800", 
+    fontSize: 16,
+  },
   rowRight: { flexDirection: "row", alignItems: "center" },
   vipTop: {
-    backgroundColor: "#fffbeb",
+    backgroundColor: "#FEF3C7",
     borderWidth: 1,
-    borderColor: "#fcd34d",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
+    borderColor: "#FCD34D",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
     marginRight: 8,
   },
-  vipTopText: { color: "#92400e", fontSize: 12, fontWeight: "700" },
-  roomMeta: { color: "#64748b", fontSize: 12, marginTop: 6 },
-  // allow chips to wrap and not push content off-card
+  vipTopText: { color: "#92400E", fontSize: 12, fontWeight: "700" },
+  roomMeta: { color: "#6B7280", fontSize: 13, marginTop: 6, fontWeight: "500" },
   rowMeta: {
     flexDirection: "row",
-    marginTop: 8,
+    marginTop: 10,
     flexWrap: "wrap",
     alignItems: "center",
   },
   chip: {
-    backgroundColor: "#f1f5f9",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: "#F1F5F9",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#e6eef7",
+    borderColor: "#E2E8F0",
+    marginRight: 6,
+    marginTop: 6,
   },
-  chipText: { color: "#334155", fontSize: 12 },
+  chipText: { color: "#475569", fontSize: 12, fontWeight: "600" },
   vip: {
-    backgroundColor: "#fffbeb",
+    backgroundColor: "#FEF3C7",
     borderWidth: 1,
-    borderColor: "#fcd34d",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    borderColor: "#FCD34D",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
   },
-  vipText: { color: "#92400e", fontSize: 12, fontWeight: "700" },
-  roomPrice: { color: "#0ea5ff", fontWeight: "700", marginTop: 6 },
+  vipText: { color: "#92400E", fontSize: 12, fontWeight: "700" },
+  roomPrice: { color: "#EF4444", fontWeight: "700", marginTop: 6 },
   favBtn: {
     padding: 8,
     marginLeft: 8,
@@ -701,10 +771,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 12,
+    marginTop: 14,
     borderTopWidth: 1,
-    borderTopColor: "#eef2ff",
-    paddingTop: 12,
+    borderTopColor: "#F3F4F6",
+    paddingTop: 14,
     paddingHorizontal: 0,
   },
   cardFooterInner: {
@@ -715,23 +785,25 @@ const styles = StyleSheet.create({
   },
   landlordRow: { flexDirection: "row", alignItems: "center", flex: 1 },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#eef2ff",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#EFF6FF",
+    borderWidth: 2,
+    borderColor: "#DBEAFE",
   },
   avatarPlaceholder: {
-    backgroundColor: "#e2e8f0",
+    backgroundColor: "#E5E7EB",
     justifyContent: "center",
     alignItems: "center",
   },
   avatarInitials: {
-    color: "#0f172a",
+    color: "#1A1A2E",
     fontWeight: "700",
-    fontSize: 13,
+    fontSize: 14,
   },
-  landlordName: { color: "#0f172a", fontWeight: "700" },
-  contactInfo: { color: "#64748b", fontSize: 12 },
+  landlordName: { color: "#1A1A2E", fontWeight: "700", fontSize: 15 },
+  contactInfo: { color: "#6B7280", fontSize: 12 },
   actions: {
     flexDirection: "row",
     alignItems: "center",
@@ -740,59 +812,115 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   heartBtn: {
-    padding: 8,
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#fdeceb",
-    backgroundColor: "rgba(239,68,68,0.06)",
+    borderColor: "#FECACA",
+    backgroundColor: "#FEF2F2",
     marginRight: 8,
   },
   detailBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#e6eef7",
-    backgroundColor: "#ffffff",
-    maxWidth: 110,
+    borderColor: "#3B82F6",
+    backgroundColor: "#3B82F6",
+    maxWidth: 120,
     overflow: "hidden",
   },
-  detailText: { color: "#0f172a", fontWeight: "700" },
-  empty: { padding: 36, alignItems: "center" },
-  emptyTitle: { color: "#0f172a", fontSize: 18, fontWeight: "700" },
-  emptySub: { color: "#64748b", marginTop: 8 },
+  detailText: { 
+    color: "#FFFFFF", 
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  empty: { 
+    padding: 48, 
+    alignItems: "center",
+    marginTop: 40,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#F9FAFB",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 24,
+  },
+  emptyTitle: { 
+    color: "#1A1A2E", 
+    fontSize: 22, 
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+  emptySub: { 
+    color: "#6B7280", 
+    marginTop: 4,
+    textAlign: "center",
+    fontSize: 15,
+    lineHeight: 22,
+    paddingHorizontal: 20,
+  },
   pagination: {
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 16,
+    bottom: 20,
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     alignItems: "center",
   },
   pageBtn: {
     backgroundColor: "#ffffff",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#e6eef7",
+    borderColor: "#E5E7EB",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  disabledBtn: { opacity: 0.6 },
-  pageText: { color: "#0f172a", fontWeight: "700" },
-  disabledText: { color: "#94a3b8" },
-  pageInfo: { color: "#64748b", fontWeight: "600" },
+  disabledBtn: { opacity: 0.5 },
+  pageText: { 
+    color: "#1A1A2E", 
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  disabledText: { color: "#CBD5E1" },
+  pageInfoContainer: {
+    backgroundColor: "#ffffff",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  pageInfo: { 
+    color: "#1A1A2E", 
+    fontWeight: "700",
+    fontSize: 14,
+  },
   chipSmall: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#e6eef7",
-    marginRight: 8,
-    marginTop: 8,
+    borderColor: "transparent",
+    marginRight: 6,
+    marginTop: 6,
   },
-  chipTextSmall: { color: "#334155", fontSize: 12 },
+  chipTextSmall: { color: "#475569", fontSize: 12, fontWeight: "600" },
 });

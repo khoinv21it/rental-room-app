@@ -263,60 +263,99 @@ const ProfileScreen = ({ navigation }: Props) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Modern Header with Gradient */}
+        <View style={styles.headerGradient}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Profile</Text>
+            <Text style={styles.headerSubtitle}>
+              Manage your account settings
+            </Text>
+          </View>
         </View>
 
-        {/* Profile Section */}
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatarPlaceholder}>
-              {userProfile?.avatar ? (
-                <Image
-                  source={{ uri: URL_IMAGE + userProfile?.avatar }}
-                  style={{ width: 48, height: 48, borderRadius: 24 }}
-                />
-              ) : (
-                <Icon name="user" size={32} color="#64748b" />
-              )}
+        {/* Profile Card - Modern Design */}
+        <View style={styles.profileCard}>
+          <View style={styles.profileSection}>
+            <View style={styles.avatarContainer}>
+              <View style={styles.avatarWrapper}>
+                {userProfile?.avatar ? (
+                  <Image
+                    source={{ uri: URL_IMAGE + userProfile?.avatar }}
+                    style={styles.avatarImage}
+                  />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Icon name="user" size={40} color="#3B82F6" />
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={styles.editAvatarButton}
+                  onPress={handleEditProfile}
+                >
+                  <Icon name="camera" size={14} color="#fff" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.userInfo}>
+                <Text style={styles.userName}>
+                  {userProfile?.fullName ||
+                    authStore.loggedInUser?.userProfile?.fullName ||
+                    "No name"}
+                </Text>
+                <Text style={styles.userEmail}>
+                  {userProfile?.email || "No email"}
+                </Text>
+              </View>
             </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.userName}>
-                {userProfile?.fullName ||
-                  authStore.loggedInUser?.userProfile?.fullName ||
-                  "No name"}
-              </Text>
-              <Text style={styles.userEmail}>
-                {userProfile?.email || "No email"}
-              </Text>
-            </View>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={handleEditProfile}
+            >
+              <Icon name="edit-2" size={18} color="#3B82F6" />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={handleEditProfile}
-          >
-            <Icon name="edit-2" size={16} color="#64748b" />
-          </TouchableOpacity>
         </View>
 
         {/* Information Cards */}
         <View style={styles.infoContainer}>
           {/* Contact Information */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Contact Information</Text>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIconContainer}>
+                <Icon name="phone" size={18} color="#3B82F6" />
+              </View>
+              <Text style={styles.sectionTitle}>Contact Information</Text>
+            </View>
             <View style={styles.fieldGroup}>
               <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Phone</Text>
-                <Text style={[styles.fieldValue, styles.emptyValue]}>
+                <View style={styles.fieldHeader}>
+                  <Icon name="phone" size={14} color="#6B7280" />
+                  <Text style={styles.fieldLabel}>Phone Number</Text>
+                </View>
+                <Text
+                  style={[
+                    styles.fieldValue,
+                    !userProfile?.phoneNumber && styles.emptyValue,
+                  ]}
+                >
                   {userProfile?.phoneNumber || "Not added yet"}
                 </Text>
               </View>
               <View style={styles.fieldSeparator} />
               <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Address</Text>
-                <Text style={[styles.fieldValue, styles.emptyValue]}>
+                <View style={styles.fieldHeader}>
+                  <Icon name="map-pin" size={14} color="#6B7280" />
+                  <Text style={styles.fieldLabel}>Address</Text>
+                </View>
+                <Text
+                  style={[
+                    styles.fieldValue,
+                    !userProfile?.address && styles.emptyValue,
+                  ]}
+                >
                   {userProfile?.address
                     ? `${userProfile.address.street}, ${userProfile.address.ward.name}, ${userProfile.address.ward.district.name}, ${userProfile.address.ward.district.province.name}`
                     : "Not added yet"}
@@ -327,52 +366,78 @@ const ProfileScreen = ({ navigation }: Props) => {
 
           {/* Settings */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Settings</Text>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIconContainer}>
+                <Icon name="settings" size={18} color="#3B82F6" />
+              </View>
+              <Text style={styles.sectionTitle}>Settings & Actions</Text>
+            </View>
             <View style={styles.fieldGroup}>
               <TouchableOpacity
                 style={styles.actionField}
                 onPress={handleChangePassword}
+                activeOpacity={0.7}
               >
                 <View style={styles.actionContent}>
-                  <Icon name="lock" size={16} color="#64748b" />
+                  <View style={styles.actionIconContainer}>
+                    <Icon name="lock" size={18} color="#3B82F6" />
+                  </View>
                   <Text style={styles.actionLabel}>Change Password</Text>
                 </View>
-                <Icon name="chevron-right" size={16} color="#cbd5e1" />
+                <Icon name="chevron-right" size={20} color="#CBD5E1" />
               </TouchableOpacity>
               <View style={styles.fieldSeparator} />
               <TouchableOpacity
                 style={styles.actionField}
                 onPress={() => navigation.navigate("NotificationScreen")}
+                activeOpacity={0.7}
               >
                 <View style={styles.actionContent}>
-                  <View style={styles.notificationIconWrapper}>
-                    <Icon name="bell" size={16} color="#64748b" />
-                    {unreadNotificationCount > 0 && (
-                      <View style={styles.notificationBadge}>
-                        <Text style={styles.notificationBadgeText}>
-                          {unreadNotificationCount > 99
-                            ? "99+"
-                            : unreadNotificationCount}
-                        </Text>
-                      </View>
-                    )}
+                  <View style={styles.actionIconContainer}>
+                    <View style={styles.notificationIconWrapper}>
+                      <Icon name="bell" size={18} color="#F59E0B" />
+                      {unreadNotificationCount > 0 && (
+                        <View style={styles.notificationBadge}>
+                          <Text style={styles.notificationBadgeText}>
+                            {unreadNotificationCount > 99
+                              ? "99+"
+                              : unreadNotificationCount}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
                   <Text style={styles.actionLabel}>Notifications</Text>
+                  {unreadNotificationCount > 0 && (
+                    <View style={styles.unreadCountBadge}>
+                      <Text style={styles.unreadCountText}>
+                        {unreadNotificationCount}
+                      </Text>
+                    </View>
+                  )}
                 </View>
-                <Icon name="chevron-right" size={16} color="#cbd5e1" />
+                <Icon name="chevron-right" size={20} color="#CBD5E1" />
               </TouchableOpacity>
               <View style={styles.fieldSeparator} />
               <TouchableOpacity
                 style={styles.actionField}
                 onPress={handleSignOut}
+                activeOpacity={0.7}
               >
                 <View style={styles.actionContent}>
-                  <Icon name="log-out" size={16} color="#ef4444" />
+                  <View
+                    style={[
+                      styles.actionIconContainer,
+                      styles.dangerIconContainer,
+                    ]}
+                  >
+                    <Icon name="log-out" size={18} color="#EF4444" />
+                  </View>
                   <Text style={[styles.actionLabel, styles.dangerText]}>
                     Sign Out
                   </Text>
                 </View>
-                <Icon name="chevron-right" size={16} color="#cbd5e1" />
+                <Icon name="chevron-right" size={20} color="#FECACA" />
               </TouchableOpacity>
             </View>
           </View>
@@ -493,133 +558,228 @@ const ProfileScreen = ({ navigation }: Props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#F5F7FA",
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 24,
+    paddingBottom: 100,
+  },
+  // Modern Header - Compacted
+  headerGradient: {
+    backgroundColor: "#fff",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: "#3B82F6",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
+    marginBottom: 10,
   },
   header: {
-    marginBottom: 24,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 14,
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: "600",
-    color: "#0f172a",
-    letterSpacing: -0.025,
+    fontWeight: "800",
+    color: "#1A1A2E",
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  // Profile Card - Compacted
+  profileCard: {
+    marginHorizontal: 20,
+    marginBottom: 10,
   },
   profileSection: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     backgroundColor: "#ffffff",
-    borderRadius: 8,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
-    marginBottom: 24,
+    borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   avatarContainer: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
   },
+  avatarWrapper: {
+    position: "relative",
+    marginRight: 10,
+  },
+  avatarImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
   avatarPlaceholder: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#f1f5f9",
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "#EFF6FF",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderWidth: 2,
+    borderColor: "#DBEAFE",
+  },
+  editAvatarButton: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "#3B82F6",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   userInfo: {
     flex: 1,
   },
   userName: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#0f172a",
+    fontWeight: "700",
+    color: "#1A1A2E",
     marginBottom: 2,
+    letterSpacing: 0.2,
   },
   userEmail: {
-    fontSize: 14,
-    color: "#64748b",
+    fontSize: 13,
+    color: "#6B7280",
+    fontWeight: "500",
   },
   editButton: {
-    padding: 8,
-    borderRadius: 6,
-    backgroundColor: "#f8fafc",
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: "#EFF6FF",
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#DBEAFE",
   },
+  // Info Container - Compacted
   infoContainer: {
-    gap: 16,
+    paddingHorizontal: 20,
+    gap: 12,
   },
   section: {
     backgroundColor: "#ffffff",
-    borderRadius: 8,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#E5E7EB",
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  sectionIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#EFF6FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1A1A2E",
+    letterSpacing: 0.2,
   },
   fieldGroup: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 12,
   },
   field: {
-    paddingVertical: 12,
+    paddingVertical: 10,
+  },
+  fieldHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
   },
   fieldLabel: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#64748b",
-    marginBottom: 4,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6B7280",
+    marginLeft: 6,
   },
   fieldValue: {
     fontSize: 14,
-    color: "#0f172a",
-    fontWeight: "400",
+    color: "#1A1A2E",
+    fontWeight: "500",
+    lineHeight: 20,
   },
   emptyValue: {
-    color: "#94a3b8",
+    color: "#9CA3AF",
     fontStyle: "italic",
+    fontWeight: "400",
   },
   fieldSeparator: {
     height: 1,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#F3F4F6",
     marginHorizontal: -16,
   },
   actionField: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
   actionContent: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
   },
+  actionIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#EFF6FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  dangerIconContainer: {
+    backgroundColor: "#FEF2F2",
+  },
   actionLabel: {
     fontSize: 14,
-    color: "#0f172a",
-    fontWeight: "400",
-    marginLeft: 12,
+    color: "#1A1A2E",
+    fontWeight: "600",
+    flex: 1,
   },
   dangerText: {
-    color: "#ef4444",
+    color: "#EF4444",
   },
   // Modal styles
   modalOverlay: {
@@ -743,6 +903,18 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "600",
     lineHeight: 12,
+  },
+  unreadCountBadge: {
+    backgroundColor: "#EF4444",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginLeft: 8,
+  },
+  unreadCountText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });
 

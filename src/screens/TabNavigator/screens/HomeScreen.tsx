@@ -123,7 +123,7 @@ const HomeScreen: React.FC = () => {
                 lat: savedPreferences.latitude,
                 lng: savedPreferences.longitude,
               }
-          : null,
+            : null,
       });
 
       setVipLoading(true);
@@ -183,7 +183,7 @@ const HomeScreen: React.FC = () => {
         // Handle different response structures
         let rooms: ListRoom[] = [];
         let pages = 1;
-        
+
         if (response?.data && Array.isArray(response.data)) {
           // Standard paginated response with data property
           rooms = response.data;
@@ -233,7 +233,7 @@ const HomeScreen: React.FC = () => {
                 lat: savedPreferences.latitude,
                 lng: savedPreferences.longitude,
               }
-          : null,
+            : null,
       });
 
       setNormalLoading(true);
@@ -293,7 +293,7 @@ const HomeScreen: React.FC = () => {
         // Handle different response structures
         let rooms: ListRoom[] = [];
         let pages = 1;
-        
+
         if (response?.data && Array.isArray(response.data)) {
           // Standard paginated response with data property
           rooms = response.data;
@@ -470,7 +470,7 @@ const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f9ff" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F5F7FA" />
 
       {/* Header */}
       {/* <View style={styles.header}>
@@ -561,7 +561,7 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9ff",
+    backgroundColor: "#F5F7FA",
   },
   header: {
     flexDirection: "row",
@@ -569,43 +569,56 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: layout.screenPadding,
     paddingVertical: spacing.lg,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    paddingTop: normalize(20),
+    backgroundColor: "#ffffff",
+    borderBottomLeftRadius: normalize(20),
+    borderBottomRightRadius: normalize(20),
+    shadowColor: "#3B82F6",
+    shadowOpacity: 0.08,
+    shadowRadius: normalize(6),
+    shadowOffset: { width: 0, height: normalize(3) },
+    elevation: 4,
   },
   headerLeft: {
     flex: 1,
   },
   welcomeText: {
     fontSize: fontSize.base,
-    color: "#666",
+    color: "#6B7280",
     marginBottom: spacing.xs,
+    fontWeight: "500",
   },
   userName: {
     fontSize: fontSize.lg,
-    fontWeight: "600",
-    color: "#1a1a1a",
+    fontWeight: "700",
+    color: "#1A1A2E",
+    letterSpacing: 0.2,
   },
   logoutButton: {
     padding: spacing.md,
-    borderRadius: normalize(8),
-    backgroundColor: "#f5f5f5",
+    borderRadius: normalize(10),
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#DBEAFE",
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: isSmallDevice ? normalize(80) : normalize(100),
+    paddingBottom: isSmallDevice ? normalize(100) : normalize(120),
   },
   title: {
     fontSize: isSmallDevice ? fontSize["2xl"] : fontSize["3xl"],
-    fontWeight: "700",
+    fontWeight: "800",
     marginBottom: spacing.md,
     marginTop: spacing["2xl"],
+    color: "#1A1A2E",
+    letterSpacing: 0.3,
   },
   subtitle: {
     fontSize: fontSize.md,
-    color: "#666",
+    color: "#6B7280",
+    fontWeight: "500",
   },
   userInfo: {
     marginTop: spacing["2xl"],
@@ -613,7 +626,8 @@ const styles = StyleSheet.create({
   },
   userEmail: {
     fontSize: fontSize.md,
-    color: "#888",
+    color: "#9CA3AF",
+    fontWeight: "500",
   },
 });
 
