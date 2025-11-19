@@ -7,6 +7,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { UserProfile } from "../../types/types";
 import TestLogin from "./screens/TestLogin";
 import MapScreen from "./screens/MapScreen";
+import MyContractsScreen from "./screens/MyContractsScreen";
+import RentalHistoryScreen from "./screens/RentalHistoryScreen";
+import RequestStatusScreen from "./screens/RequestStatusScreen";
+import ResidentsScreen from "./screens/ResidentsScreen";
 
 // Define the param list for the stack navigator
 export type RootStackParamList = {
@@ -19,6 +23,10 @@ export type RootStackParamList = {
   };
   NotificationScreen: undefined;
   MapScreen: undefined;
+  MyContractsScreen: undefined;
+  RentalHistoryScreen: undefined;
+  RequestStatusScreen: undefined;
+  ResidentsScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -62,6 +70,26 @@ const StackNavigator = () => {
         <Stack.Screen
           name="MapScreen"
           component={MapScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="MyContractsScreen"
+          component={MyContractsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="RentalHistoryScreen"
+          component={RentalHistoryScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="RequestStatusScreen"
+          component={RequestStatusScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ResidentsScreen"
+          component={ResidentsScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

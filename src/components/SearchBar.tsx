@@ -11,13 +11,11 @@ import {
   Modal,
   FlatList,
   ActivityIndicator,
-  Alert,
   Switch,
   Pressable,
-  GestureResponderEvent,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import * as Location from "expo-location";
-import { GOONG_API_KEY } from "@env";
 import { RootStackParamList } from "../screens/StackNavigator";
 import {
   fontSize,
@@ -300,14 +298,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   // Toggle email notifications
   const handleEmailNotificationsToggle = async (newValue: boolean) => {
-    console.log("🔔 [SearchBar] Switch toggled! New value:", newValue);
-    console.log("🔔 [SearchBar] Current userId:", userId);
+    // console.log("🔔 [SearchBar] Switch toggled! New value:", newValue);
+    // console.log("🔔 [SearchBar] Current userId:", userId);
 
     if (!userId) {
-      Alert.alert(
-        "Login Required",
-        "Please log in to manage email notifications."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Login Required",
+        text2: "Please log in to manage email notifications.",
+        position: "top",
+      });
       return;
     }
 
@@ -335,12 +335,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
       setEmailNotifications(updatedValue);
 
-      Alert.alert(
-        "Success",
-        `Email notifications ${
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: `Email notifications ${
           updatedValue ? "enabled" : "disabled"
-        } successfully!`
-      );
+        } successfully!`,
+        position: "top",
+      });
 
       console.log(
         "✅ [SearchBar] Email notifications updated successfully to:",
@@ -356,10 +358,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
         JSON.stringify(error, null, 2)
       );
 
-      Alert.alert(
-        "Error",
-        "Failed to update email notifications. Please try again."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to update email notifications. Please try again.",
+        position: "top",
+      });
 
       // Revert to previous state on error
       await loadEmailNotificationSettings();
@@ -371,10 +375,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
   // Save current location as preference (like getCurrentLocation in web)
   const saveUserPreferences = async () => {
     if (!userId) {
-      Alert.alert(
-        "Login Required",
-        "Please log in to save your search preferences."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Login Required",
+        text2: "Please log in to save your search preferences.",
+        position: "top",
+      });
       return;
     }
 
@@ -387,10 +393,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
       const { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
-        Alert.alert(
-          "Permission Denied",
-          "Please grant location permission to save your current location."
-        );
+        Toast.show({
+          type: "error",
+          text1: "Permission Denied",
+          text2:
+            "Please grant location permission to save your current location.",
+          position: "top",
+        });
         setSavingPreferences(false);
         return;
       }
@@ -414,10 +423,59 @@ const SearchBar: React.FC<SearchBarProps> = ({
         console.error(
           "❌ [SearchBar] No address data returned from reverse geocoding after retries"
         );
-        Alert.alert(
-          "Location Service Error",
-          "Unable to get address from your location. This might be due to:\n• Temporary server issues\n• Network connectivity\n• Location service restrictions\n\nPlease try again or enter your address manually."
-        );
+
+        // Show detailed error with option to continue
+        Toast.show({
+          type: "error",
+          text1: "Address Lookup Failed",
+          text2: "Using coordinates instead. You can save manually later.",
+          position: "top",
+          visibilityTime: 4000,
+        });
+
+        // Use coordinates as fallback - create a simple address string
+        const fallbackAddress = `Location: ${latitude.toFixed(
+          6
+        )}, ${longitude.toFixed(6)}`;
+
+        const prefsToSave: any = {
+          searchAddress: fallbackAddress,
+          latitude,
+          longitude,
+        };
+
+        if (selectedProvince) prefsToSave.provinceId = selectedProvince;
+        if (selectedDistrict) prefsToSave.districtId = selectedDistrict;
+        if (selectedWard) prefsToSave.wardId = selectedWard;
+
+        setLocation({
+          lat: latitude,
+          lng: longitude,
+          address: fallbackAddress,
+        });
+
+        console.log("📍 [SearchBar] Saving with fallback address:", {
+          lat: latitude,
+          lng: longitude,
+          address: fallbackAddress,
+        });
+
+        await updateUserPreferences(userId, prefsToSave);
+
+        Toast.show({
+          type: "success",
+          text1: "Location Saved",
+          text2: "Saved using coordinates. Searching nearby rooms...",
+          position: "top",
+          visibilityTime: 3000,
+        });
+
+        setDisplayArea(fallbackAddress);
+        if (onCurrentAreaChange) {
+          onCurrentAreaChange(fallbackAddress);
+        }
+
+        onSearch();
         setSavingPreferences(false);
         return;
       }
@@ -453,7 +511,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
       // Save preferences to backend
       await updateUserPreferences(userId, prefsToSave);
 
-      Alert.alert("Success", `Saved and searching near: ${formattedAddress}`);
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: `Saved and searching near: ${formattedAddress}`,
+        position: "top",
+      });
       console.log("✅ [SearchBar] Current location saved successfully");
 
       // Update display area
@@ -469,14 +532,26 @@ const SearchBar: React.FC<SearchBarProps> = ({
       console.error("❌ [SearchBar] Error saving current location:", error);
 
       if (error.code === "E_LOCATION_SERVICES_DISABLED") {
-        Alert.alert("Location Disabled", "Please enable location services.");
+        Toast.show({
+          type: "error",
+          text1: "Location Disabled",
+          text2: "Please enable location services.",
+          position: "top",
+        });
       } else if (error.code === "E_LOCATION_TIMEOUT") {
-        Alert.alert("Timeout", "Location request timed out. Please try again.");
+        Toast.show({
+          type: "error",
+          text1: "Timeout",
+          text2: "Location request timed out. Please try again.",
+          position: "top",
+        });
       } else {
-        Alert.alert(
-          "Error",
-          "Failed to get current location. Please try again."
-        );
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Failed to get current location. Please try again.",
+          position: "top",
+        });
       }
     } finally {
       setSavingPreferences(false);
@@ -495,10 +570,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
     // Require at least some address input
     if (!searchAddress) {
-      Alert.alert(
-        "No Address",
-        "Please enter an address or select a location to search."
-      );
+      Toast.show({
+        type: "info",
+        text1: "No Address",
+        text2: "Please enter an address or select a location to search.",
+        position: "top",
+      });
       return;
     }
 
@@ -509,10 +586,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
       const geoResult = await geocodeAddress(searchAddress);
 
       if (!geoResult) {
-        Alert.alert(
-          "Invalid Address",
-          "Could not find the address. Please check and try again."
-        );
+        Toast.show({
+          type: "error",
+          text1: "Invalid Address",
+          text2: "Could not find the address. Please check and try again.",
+          position: "top",
+        });
         return;
       }
 
@@ -541,7 +620,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
       onSearch();
     } catch (error) {
       console.error("❌ [SearchBar] Error searching by address:", error);
-      Alert.alert("Error", "Failed to search. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to search. Please try again.",
+        position: "top",
+      });
     }
   };
 

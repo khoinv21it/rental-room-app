@@ -83,11 +83,9 @@ export async function getEmailNotifications(userId: string) {
 
     console.log("📧 [getEmailNotifications] Raw response:", res);
 
-    // apiClient might return the data directly or wrapped in { data: ... }
-    // Try different paths to find the value
     let raw: any;
 
-    // Check if response is directly the boolean/value
+    // check
     if (
       typeof res === "boolean" ||
       typeof res === "number" ||
@@ -98,11 +96,9 @@ export async function getEmailNotifications(userId: string) {
     // Check if response has data property
     else if ((res as any)?.data !== undefined) {
       const data = (res as any).data;
-      // Check if data.emailNotifications exists
       if (data?.emailNotifications !== undefined) {
         raw = data.emailNotifications;
       }
-      // Check if data itself is the value
       else if (
         typeof data === "boolean" ||
         typeof data === "number" ||
@@ -110,18 +106,13 @@ export async function getEmailNotifications(userId: string) {
       ) {
         raw = data;
       }
-      // Check if data.enabled exists (alternative backend field name)
       else if (data?.enabled !== undefined) {
         raw = data.enabled;
       }
     }
-    // Check if response has emailNotifications property directly
     else if ((res as any)?.emailNotifications !== undefined) {
       raw = (res as any).emailNotifications;
     }
-
-    console.log("📧 [getEmailNotifications] Extracted value:", raw);
-    console.log("📧 [getEmailNotifications] Type:", typeof raw);
 
     // Normalize various backend representations: boolean, number (1/0), string
     let emailNotifications = false;
@@ -159,9 +150,6 @@ export async function getEmailNotifications(userId: string) {
 // Set email notifications setting for a user
 export async function setEmailNotifications(userId: string, enabled: boolean) {
   try {
-    console.log("🔔 [setEmailNotifications] Setting for userId:", userId);
-    console.log("🔔 [setEmailNotifications] Enabled:", enabled);
-
     const res = await apiClient.patch(
       `/profile/${userId}/email-notifications`,
       { enabled }
@@ -169,10 +157,8 @@ export async function setEmailNotifications(userId: string, enabled: boolean) {
 
     console.log("✅ [setEmailNotifications] Raw response:", res);
 
-    // Extract the updated value from response
     let updatedValue = enabled; // Default to requested value
 
-    // Try different paths to find the confirmed value from backend
     if (typeof res === "boolean") {
       updatedValue = res;
     } else if ((res as any)?.data !== undefined) {
