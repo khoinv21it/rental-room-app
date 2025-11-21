@@ -1,6 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 import StackNavigator from "./src/screens/StackNavigator";
+import { toastConfig } from "./src/config/toastConfig";
 
 export default function App() {
   return (
@@ -8,7 +9,7 @@ export default function App() {
       <NavigationContainer>
         <StackNavigator />
       </NavigationContainer>
-      <Toast />
+      <Toast config={toastConfig} />
     </>
   );
 }

@@ -17,6 +17,7 @@ import {
   Dimensions,
 } from "react-native";
 import BookingModal from "../../../components/BookingModal";
+import { ChatView } from "../../../components/ChatView";
 
 import { Video, ResizeMode } from "expo-av";
 import { RootStackParamList } from "../index";
@@ -26,12 +27,15 @@ import {
   RoomDetail,
 } from "../../../types/types";
 import { fetchRoomDetail } from "../../../Services/RoomService";
-import { URL_IMAGE } from "../../../Services/Constants";
+import { URL_IMAGE, API_URL } from "../../../Services/Constants";
 import { getLandlordByRoomId } from "../../../Services/LandLordService";
 import RoomLocationMap from "../../../components/RoomLocationMap";
 import { creatBooking } from "../../../Services/BookingService";
 import useAuthStore from "../../../Stores/useAuthStore";
 import { getFavoriteCount } from "../../../Services/FavoriteService";
+import useFavoriteStore from "../../../Stores/useFavoriteStore";
+import { addFavorite, removeFavorite } from "../../../Services/FavoriteService";
+import { fetchConversations } from "../../../Services/ChatService";
 
 type RoomDetailScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -49,6 +53,8 @@ export default function RoomDetailScreen() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showChatView, setShowChatView] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [roomData, setRoomData] = useState<RoomDetail>();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [landlordData, setLandlordData] = useState<LandLordByRoomId>();
@@ -57,6 +63,7 @@ export default function RoomDetailScreen() {
   const [zoomImageIndex, setZoomImageIndex] = useState(0);
   const [countFavorites, setCountFavorites] = useState(0);
   const authorStore = useAuthStore();
+  const favoriteStore = useFavoriteStore();
   const thumbnails = roomData?.images?.map((img: any) => img.url) || [];
 
   // Helper function to check if file is video
@@ -148,6 +155,207 @@ export default function RoomDetailScreen() {
     };
     fetchLandlordData();
   }, [roomId]);
+
+  // Fetch unread message count from landlord
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (!authorStore.loggedInUser?.id || !landlordData?.id) return;
+
+      try {
+        const response = await fetchConversations(
+          authorStore.loggedInUser.id,
+          0,
+          50
+        );
+        const conversations = response?.content || [];
+
+        // Find conversation with landlord
+        const landlordConv = conversations.find(
+          (conv: any) =>
+            conv.id === landlordData.id || conv.partner?.id === landlordData.id
+        );
+
+        if (landlordConv && landlordConv.unreadCount) {
+          setUnreadCount(landlordConv.unreadCount);
+        } else {
+          setUnreadCount(0);
+        }
+      } catch (error) {
+        console.error("Error fetching unread count:", error);
+        setUnreadCount(0);
+      }
+    };
+
+    fetchUnreadCount();
+  }, [authorStore.loggedInUser?.id, landlordData?.id]);
+
+  // Realtime listener for new messages to update unread count
+  useEffect(() => {
+    if (!authorStore.loggedInUser?.id || !landlordData?.id) return;
+
+    const { db } = require("../../../lib/firebase");
+    const {
+      collection,
+      query,
+      where,
+      orderBy,
+      onSnapshot,
+    } = require("firebase/firestore");
+
+    // Listen to messages from landlord to current user
+    const messagesQ = query(
+      collection(db, "messages"),
+      where("senderId", "==", landlordData.id),
+      where("recipientId", "==", authorStore.loggedInUser.id),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubMessages = onSnapshot(
+      messagesQ,
+      () => {
+        // When new messages arrive from landlord, refresh unread count
+        const fetchUnreadCount = async () => {
+          if (!authorStore.loggedInUser?.id) return;
+          try {
+            const response = await fetchConversations(
+              authorStore.loggedInUser.id,
+              0,
+              50
+            );
+            const conversations = response?.content || [];
+            const landlordConv = conversations.find(
+              (conv: any) =>
+                conv.id === landlordData.id ||
+                conv.partner?.id === landlordData.id
+            );
+            if (landlordConv && landlordConv.unreadCount) {
+              setUnreadCount(landlordConv.unreadCount);
+            } else {
+              setUnreadCount(0);
+            }
+          } catch (error) {
+            console.error("Error fetching unread count:", error);
+          }
+        };
+        fetchUnreadCount();
+      },
+      (error: any) => {
+        console.error("Unread count listener error:", error);
+      }
+    );
+
+    return () => unsubMessages();
+  }, [authorStore.loggedInUser?.id, landlordData?.id]);
+
+  // Check if room is in favorites
+  useEffect(() => {
+    if (roomId) {
+      setIsFavorite(favoriteStore.favoriteRoomIds.has(roomId));
+    }
+  }, [roomId, favoriteStore.favoriteRoomIds]);
+
+  // Handle favorite toggle
+  const handleFavoriteToggle = async () => {
+    if (!roomId) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Room ID not found",
+        position: "top",
+      });
+      return;
+    }
+
+    if (!authorStore.loggedInUser?.id) {
+      Toast.show({
+        type: "error",
+        text1: "Login Required",
+        text2: "Please login to add favorites",
+        position: "top",
+      });
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        const success = await removeFavorite(roomId);
+        if (success) {
+          setIsFavorite(false);
+          Toast.show({
+            type: "success",
+            text1: "Removed from Favorites",
+            text2: "Room removed from your favorites",
+            position: "top",
+            visibilityTime: 2000,
+          });
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "Failed",
+            text2: "Could not remove from favorites",
+            position: "top",
+          });
+        }
+      } else {
+        // Add to favorites
+        const success = await addFavorite(roomId);
+        if (success) {
+          setIsFavorite(true);
+          Toast.show({
+            type: "success",
+            text1: "Added to Favorites",
+            text2: "Room added to your favorites",
+            position: "top",
+            visibilityTime: 2000,
+          });
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "Failed",
+            text2: "Could not add to favorites",
+            position: "top",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "An error occurred. Please try again.",
+        position: "top",
+      });
+    }
+  };
+
+  // Handle message landlord
+  const handleMessageLandlord = async () => {
+    if (!authorStore.loggedInUser?.id) {
+      Toast.show({
+        type: "error",
+        text1: "Login Required",
+        text2: "Please login to send messages",
+        position: "top",
+      });
+      return;
+    }
+
+    if (!landlordData?.id) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Landlord information not available",
+        position: "top",
+      });
+      return;
+    }
+
+    // Show ChatView overlay
+    setShowChatView(true);
+    // Reset unread count when opening chat
+    setUnreadCount(0);
+  };
 
   const handleBooking = async (booking: RequestBooking) => {
     try {
@@ -545,7 +753,7 @@ export default function RoomDetailScreen() {
       {/* Fixed Bottom Action Bar */}
       <View style={styles.actionBar}>
         <TouchableOpacity
-          onPress={() => setIsFavorite(!isFavorite)}
+          onPress={handleFavoriteToggle}
           style={[
             styles.favoriteButton,
             isFavorite && styles.favoriteButtonActive,
@@ -562,12 +770,22 @@ export default function RoomDetailScreen() {
               isFavorite && styles.favoriteButtonTextActive,
             ]}
           >
-            Favorite
+            {isFavorite ? "Favorited" : "Favorite"}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.messageButton}>
+        <TouchableOpacity
+          style={styles.messageButton}
+          onPress={handleMessageLandlord}
+        >
           <Ionicons name="chatbubble-outline" size={20} color="#fff" />
           <Text style={styles.messageButtonText}>Message</Text>
+          {unreadCount > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadBadgeText}>
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -633,6 +851,37 @@ export default function RoomDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Chat View Modal */}
+      {showChatView && landlordData && roomData && (
+        <Modal
+          visible={showChatView}
+          animationType="slide"
+          onRequestClose={() => setShowChatView(false)}
+        >
+          <ChatView
+            conversationId={`${authorStore.loggedInUser?.id}_${landlordData.id}`}
+            partnerId={landlordData.id}
+            partnerName={landlordData.fullName || "Landlord"}
+            partnerAvatar={
+              landlordData.avatar
+                ? landlordData.avatar.startsWith("http")
+                  ? landlordData.avatar
+                  : `${URL_IMAGE}${landlordData.avatar}`
+                : undefined
+            }
+            onClose={() => setShowChatView(false)}
+            showHeader={true}
+            initialMessage={`Xin chào! Tôi quan tâm đến phòng trọ này:\n\n📍 ${
+              roomData.title
+            }\n💰 Giá: ${roomData.priceMonth?.toLocaleString(
+              "vi-VN"
+            )}₫/tháng\n📏 Diện tích: ${roomData.area}m²\n👥 Sức chứa: ${
+              roomData.maxPeople
+            } người\n\n🔗 Chi tiết: http://localhost:3000/detail/${roomId}\n\nVui lòng cho tôi biết thêm thông tin. Cảm ơn!`}
+          />
+        </Modal>
+      )}
     </View>
   );
 }
@@ -1138,11 +1387,37 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 6,
+    position: "relative",
   },
   messageButtonText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#fff",
+  },
+  unreadBadge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    backgroundColor: "#ef4444",
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    paddingHorizontal: 6,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
+  unreadBadgeText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
+    textAlign: "center",
   },
   videoThumbnailContainer: {
     position: "relative",
