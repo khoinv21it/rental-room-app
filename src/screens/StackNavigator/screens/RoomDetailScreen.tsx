@@ -27,7 +27,7 @@ import {
   RoomDetail,
 } from "../../../types/types";
 import { fetchRoomDetail } from "../../../Services/RoomService";
-import { URL_IMAGE, API_URL } from "../../../Services/Constants";
+import { URL_IMAGE } from "../../../Services/Constants";
 import { getLandlordByRoomId } from "../../../Services/LandLordService";
 import RoomLocationMap from "../../../components/RoomLocationMap";
 import { creatBooking } from "../../../Services/BookingService";
