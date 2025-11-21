@@ -1,4 +1,4 @@
-import { db, storage } from "../lib/firebase";
+import { db } from "../lib/firebase";
 import {
   collection,
   query,
@@ -11,11 +11,6 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
-import {
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
-} from "firebase/storage";
 import apiClient from "../lib/apiClient";
 import { URL_IMAGE } from "./Constants";
 
@@ -282,23 +277,41 @@ export async function sendTextMessage(
   }
 }
 
-// Upload local file URI (react-native) to Firebase Storage and return download URL
-async function uploadFileUriToStorage(localUri: string, path: string) {
+// Upload local file URI (react-native) to backend API (Cloudinary) and return download URL
+async function uploadImageToBackend(localUri: string, fileName?: string) {
   try {
-    // fetch the file and convert to blob
-    const response = await fetch(localUri);
-    const blob = await response.blob();
-    const ref = storageRef(storage, path);
-    await uploadBytes(ref, blob);
-    const url = await getDownloadURL(ref);
-    return url;
+    const formData = new FormData();
+
+    // Extract filename from URI or use provided fileName
+    const uriParts = localUri.split("/");
+    const fileNameFromUri = uriParts[uriParts.length - 1];
+    const finalFileName =
+      fileName || fileNameFromUri || `image_${Date.now()}.jpg`;
+
+    // Append image file to FormData
+    formData.append("image", {
+      uri: localUri,
+      type: "image/jpeg",
+      name: finalFileName,
+    } as any);
+
+    // Upload to backend API
+    const response = await apiClient.post("/chat/upload-image", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    // Backend should return { imageUrl: "https://cloudinary.com/..." }
+    const data = response?.data ?? response;
+    return data.imageUrl;
   } catch (error) {
-    console.error("uploadFileUriToStorage error:", error);
+    console.error("uploadImageToBackend error:", error);
     throw error;
   }
 }
 
-// Send image message by uploading to Firebase Storage then adding message
+// Send image message by uploading to backend then adding message to Firestore
 export async function sendImageMessage(
   userId: string,
   otherId: string,
@@ -306,16 +319,20 @@ export async function sendImageMessage(
   fileName?: string
 ) {
   try {
-    const path = `chat/${userId}_${Date.now()}_${fileName || "img"}`;
-    const url = await uploadFileUriToStorage(localUri, path);
+    // Upload image to backend (Cloudinary)
+    const imageUrl = await uploadImageToBackend(localUri, fileName);
+
+    // Save message to Firestore with Cloudinary URL
     const docRef = await addDoc(collection(db, "messages"), {
-      imageUrl: url,
-      imageFileName: fileName || path,
+      imageUrl: imageUrl,
+      imageFileName: fileName || `image_${Date.now()}.jpg`,
       senderId: userId,
       recipientId: otherId,
       createdAt: serverTimestamp(),
       messageType: "image",
+      text: "", // Add empty text field for consistency
     });
+
     return { id: docRef.id };
   } catch (error) {
     console.error("sendImageMessage error:", error);

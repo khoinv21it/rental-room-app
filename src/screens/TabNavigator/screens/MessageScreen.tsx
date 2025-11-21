@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { URL_IMAGE } from "../../../Services/Constants";
 import {
   View,
   Text,
@@ -134,6 +135,14 @@ const MessageBubble = ({
 
   // For messages from others we show a small avatar on the left
   if (!me) {
+    // Normalize image URL - add Cloudinary domain if missing
+    const imageUri =
+      m.messageType === "image" && m.imageUrl
+        ? m.imageUrl.startsWith("http")
+          ? m.imageUrl
+          : `${URL_IMAGE}${m.imageUrl}`
+        : null;
+
     return (
       <View style={[styles.row, { alignItems: "flex-end", marginVertical: 6 }]}>
         {/* Show avatar or placeholder space */}
@@ -150,9 +159,9 @@ const MessageBubble = ({
         )}
         <Pressable onPress={onToggle} style={{ flex: 1, maxWidth: "75%" }}>
           <View style={[styles.bubble, styles.bubbleThem]}>
-            {m.messageType === "image" && m.imageUrl ? (
+            {imageUri ? (
               <Image
-                source={{ uri: m.imageUrl }}
+                source={{ uri: imageUri }}
                 style={styles.messageImage}
                 resizeMode="cover"
               />
@@ -173,15 +182,23 @@ const MessageBubble = ({
   }
 
   // For my messages (right side)
+  // Normalize image URL - add Cloudinary domain if missing
+  const imageUri =
+    m.messageType === "image" && m.imageUrl
+      ? m.imageUrl.startsWith("http")
+        ? m.imageUrl
+        : `${URL_IMAGE}${m.imageUrl}`
+      : null;
+
   return (
     <Pressable
       onPress={onToggle}
       style={[styles.bubbleContainer, { alignItems: "flex-end" }]}
     >
       <View style={[styles.bubble, styles.bubbleMe]}>
-        {m.messageType === "image" && m.imageUrl ? (
+        {imageUri ? (
           <Image
-            source={{ uri: m.imageUrl }}
+            source={{ uri: imageUri }}
             style={styles.messageImage}
             resizeMode="cover"
           />

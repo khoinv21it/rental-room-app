@@ -32,10 +32,10 @@ import { getLandlordByRoomId } from "../../../Services/LandLordService";
 import RoomLocationMap from "../../../components/RoomLocationMap";
 import { creatBooking } from "../../../Services/BookingService";
 import useAuthStore from "../../../Stores/useAuthStore";
-import { getFavoriteCount } from "../../../Services/FavoriteService";
 import useFavoriteStore from "../../../Stores/useFavoriteStore";
 import { addFavorite, removeFavorite } from "../../../Services/FavoriteService";
 import { fetchConversations } from "../../../Services/ChatService";
+import { getFavoriteCount } from "../../../Services/FavoriteService";
 
 type RoomDetailScreenRouteProp = RouteProp<
   RootStackParamList,

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { URL_IMAGE } from "../Services/Constants";
 import {
   View,
   Text,
@@ -102,6 +103,14 @@ const MessageBubble = ({
     : null;
 
   if (!me) {
+    // Normalize image URL - add Cloudinary domain if missing
+    const imageUri =
+      m.messageType === "image" && m.imageUrl
+        ? m.imageUrl.startsWith("http")
+          ? m.imageUrl
+          : `${URL_IMAGE}${m.imageUrl}`
+        : null;
+
     return (
       <View style={[styles.row, { alignItems: "flex-end", marginVertical: 6 }]}>
         {showAvatar ? (
@@ -117,9 +126,9 @@ const MessageBubble = ({
         )}
         <Pressable onPress={onToggle} style={{ flex: 1, maxWidth: "75%" }}>
           <View style={[styles.bubble, styles.bubbleThem]}>
-            {m.messageType === "image" && m.imageUrl ? (
+            {imageUri ? (
               <Image
-                source={{ uri: m.imageUrl }}
+                source={{ uri: imageUri }}
                 style={styles.messageImage}
                 resizeMode="cover"
               />
@@ -139,15 +148,23 @@ const MessageBubble = ({
     );
   }
 
+  // Normalize image URL for current user's messages - add Cloudinary domain if missing
+  const imageUri =
+    m.messageType === "image" && m.imageUrl
+      ? m.imageUrl.startsWith("http")
+        ? m.imageUrl
+        : `${URL_IMAGE}${m.imageUrl}`
+      : null;
+
   return (
     <Pressable
       onPress={onToggle}
       style={[styles.bubbleContainer, { alignItems: "flex-end" }]}
     >
       <View style={[styles.bubble, styles.bubbleMe]}>
-        {m.messageType === "image" && m.imageUrl ? (
+        {imageUri ? (
           <Image
-            source={{ uri: m.imageUrl }}
+            source={{ uri: imageUri }}
             style={styles.messageImage}
             resizeMode="cover"
           />
