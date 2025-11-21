@@ -225,7 +225,7 @@ export type ContractDetail = {
   startDate: string; 
   endDate: string;
   status: number;
-  contractImage: string;
+  contractImage?: string;
   landlordPaymentInfo: {
         bankName: string;
         bankNumber: string;

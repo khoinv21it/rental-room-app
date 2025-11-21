@@ -10,6 +10,8 @@ import {
 } from "react-native";
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import FilePreview from "../../../components/FilePreview";
+import BillsTab from "../../../components/BillsTab";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ContractDetail } from "../../../types/types";
 import { fetchContractDetail } from "../../../Services/ContractService";
@@ -238,48 +240,21 @@ const ContractOverviewScreen = ({ navigation, route }: Props) => {
 
           {/* Contract File */}
           <Text style={styles.sectionTitle}>Contract File</Text>
-          <View style={styles.fileCard}>
-            <View style={styles.fileInfo}>
-              <View style={styles.fileIconContainer}>
-                <MaterialCommunityIcons
-                  name="file-document-outline"
-                  size={32}
-                  color="#6366f1"
-                />
-              </View>
-              <View style={styles.fileDetails}>
-                <Text style={styles.fileName}>
-                  {contractData?.contractImage
-                    ? decodeURIComponent(
-                        contractData.contractImage.split("/").pop() || "file"
-                      )
-                    : "No file available"}
-                </Text>
-                <Text style={styles.fileId}>{contractData?.contractImage}</Text>
-              </View>
-            </View>
-            {contractData?.contractImage && (
-              <TouchableOpacity
-                style={styles.downloadButton}
-                onPress={() => {
-                  const fileUrl = URL_IMAGE + contractData.contractImage;
-                  const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(
-                    fileUrl
-                  )}&embedded=true`;
-
-                  Linking.openURL(googleViewerUrl).catch(() => {
-                    // Fallback to direct URL if Google Docs fails
-                    Linking.openURL(fileUrl).catch(() => {
-                      alert("Cannot open PDF file");
-                    });
-                  });
-                }}
-              >
-                <Ionicons name="eye-outline" size={20} color="#fff" />
-                <Text style={styles.downloadText}>View File</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          <FilePreview
+            fileUrl={
+              contractData?.contractImage
+                ? URL_IMAGE + contractData.contractImage
+                : ""
+            }
+            fileName={
+              contractData?.contractImage
+                ? decodeURIComponent(
+                    contractData.contractImage.split("/").pop() || "file"
+                  )
+                : "No file available"
+            }
+            fileId={contractData?.contractImage}
+          />
 
           {/* Important Notes */}
           <View style={styles.notesCard}>
@@ -318,19 +293,90 @@ const ContractOverviewScreen = ({ navigation, route }: Props) => {
           <View style={{ height: 100 }} />
         </ScrollView>
       ) : (
-        <View style={styles.emptyContainer}>
-          <View style={styles.emptyIconContainer}>
-            <MaterialCommunityIcons
-              name="receipt-text-outline"
-              size={48}
-              color="#94a3b8"
-            />
-          </View>
-          <Text style={styles.emptyTitle}>No Bills Yet</Text>
-          <Text style={styles.emptyDesc}>
-            Bills will appear here when available
-          </Text>
-        </View>
+        <BillsTab
+          totalBills={6}
+          paidBills={1}
+          pendingBills={3}
+          confirmingBills={2}
+          unpaidAmount="10,189,088đ"
+          bills={[
+            {
+              id: "1",
+              month: "November 2025",
+              electricity: "150.000 đ",
+              electricityDetail: "50.00 kWh × 3.000 đ/kWh",
+              water: "150.000 đ",
+              waterDetail: "10.00 m³ × 15.000 đ/m³",
+              service: "2.000.000 đ",
+              total: "2.300.000 đ",
+              status: "Confirming Payment",
+              image: undefined,
+              actions: "Payment Proof",
+            },
+            {
+              id: "2",
+              month: "December 2025",
+              electricity: "99.000 đ",
+              electricityDetail: "33.00 kWh × 3.000 đ/kWh",
+              water: "450.000 đ",
+              waterDetail: "30.00 m³ × 15.000 đ/m³",
+              service: "2.000.000 đ",
+              serviceDetail: "+ Damage Fee: 100.000 đ",
+              total: "2.649.000 đ",
+              status: "Pending",
+              image: undefined,
+            },
+            {
+              id: "3",
+              month: "August 2025",
+              electricity: "35,5 đ",
+              electricityDetail: "0.01 kWh × 3.000 đ/kWh",
+              water: "20 đ",
+              waterDetail: "0.00 m³ × 15.000 đ/m³",
+              service: "300 đ",
+              total: "355,5 đ",
+              status: "Paid",
+              image: undefined,
+            },
+            {
+              id: "4",
+              month: "December 2025",
+              electricity: "90.000 đ",
+              electricityDetail: "30.00 kWh × 3.000 đ/kWh",
+              water: "150.000 đ",
+              waterDetail: "10.00 m³ × 15.000 đ/m³",
+              service: "2.000.000 đ",
+              total: "2.240.000 đ",
+              status: "Pending",
+              image: undefined,
+            },
+            {
+              id: "5",
+              month: "November 2025",
+              electricity: "40 đ",
+              electricityDetail: "0.01 kWh × 3.000 đ/kWh",
+              water: "10 đ",
+              waterDetail: "0.00 m³ × 15.000 đ/m³",
+              service: "2.600.000 đ",
+              serviceDetail: "+ Damage Fee: 399.950 đ",
+              total: "3.000.000 đ",
+              status: "Pending",
+              image: undefined,
+            },
+            {
+              id: "6",
+              month: "September 2025",
+              electricity: "50 đ",
+              electricityDetail: "0.02 kWh × 3.000 đ/kWh",
+              water: "28 đ",
+              waterDetail: "0.00 m³ × 15.000 đ/m³",
+              service: "10 đ",
+              total: "88 đ",
+              status: "Confirming Payment",
+              image: undefined,
+            },
+          ]}
+        />
       )}
     </View>
   );
