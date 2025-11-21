@@ -35,6 +35,7 @@ import useAuthStore from "../../../Stores/useAuthStore";
 import useFavoriteStore from "../../../Stores/useFavoriteStore";
 import { addFavorite, removeFavorite } from "../../../Services/FavoriteService";
 import { fetchConversations } from "../../../Services/ChatService";
+import { getFavoriteCount } from "../../../Services/FavoriteService";
 
 type RoomDetailScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -60,6 +61,7 @@ export default function RoomDetailScreen() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showZoomModal, setShowZoomModal] = useState(false);
   const [zoomImageIndex, setZoomImageIndex] = useState(0);
+  const [countFavorites, setCountFavorites] = useState(0);
   const authorStore = useAuthStore();
   const favoriteStore = useFavoriteStore();
   const thumbnails = roomData?.images?.map((img: any) => img.url) || [];
@@ -133,6 +135,15 @@ export default function RoomDetailScreen() {
       setRoomData(room);
     };
     fetchRoomData();
+  }, [roomId]);
+
+  useEffect(() => {
+    const fetchCountFavorites = async () => {
+      if (!roomId) return;
+      const response = await getFavoriteCount(roomId);
+      setCountFavorites(response);
+    };
+    fetchCountFavorites();
   }, [roomId]);
 
   useEffect(() => {
@@ -548,9 +559,7 @@ export default function RoomDetailScreen() {
               </View>
               <View style={styles.metaItem}>
                 <Ionicons name="heart-outline" size={14} color="#6b7280" />
-                <Text style={styles.metaText}>
-                  {roomData?.favoriteCount} favorites
-                </Text>
+                <Text style={styles.metaText}>{countFavorites} favorites</Text>
               </View>
             </View>
             <TouchableOpacity
