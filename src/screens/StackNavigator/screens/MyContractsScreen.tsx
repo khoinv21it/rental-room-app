@@ -14,83 +14,56 @@ import {
   spacing,
 } from "../../../utils/responsive";
 import useAuthStore from "../../../Stores/useAuthStore";
+import { fetchListContracts } from "../../../Services/ContractService";
+import { ListContract } from "../../../types/types";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "..";
 
 type Props = {
   navigation: any;
 };
 
-interface Contract {
-  id: string;
-  roomName: string;
-  address: string;
-  startDate: string;
-  endDate: string;
-  monthlyRent: number;
-  status: "active" | "expired" | "pending";
-}
-
 const MyContractsScreen = ({ navigation }: Props) => {
   const currentUser = useAuthStore((s) => s.loggedInUser);
-  const [contracts, setContracts] = useState<Contract[]>([]);
+  const navigate = useNavigation<NavigationProp<RootStackParamList>>();
+  const [contracts, setContracts] = useState<ListContract[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadContracts();
-  }, []);
+    const fetchContracts = async () => {
+      setLoading(true);
+      try {
+        const response = await fetchListContracts(currentUser?.id);
+        setContracts(response || []);
+      } catch (error) {
+        console.error("Error loading contracts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const loadContracts = async () => {
-    setLoading(true);
-    try {
-      // TODO: Call API to load contracts
-      // const response = await getMyContracts(currentUser?.id);
-      // setContracts(response.data);
+    fetchContracts();
+  }, [currentUser?.id]);
+  const handleViewDetails = (contractId: string) => {
+    navigate.navigate("ContractOverviewScreen", { contractId });
+  };  
 
-      // Mock data for now
-      setContracts([
-        {
-          id: "1",
-          roomName: "Phòng 101",
-          address: "123 Nguyễn Văn A, Q1, TP.HCM",
-          startDate: "2024-01-01",
-          endDate: "2024-12-31",
-          monthlyRent: 5000000,
-          status: "active",
-        },
-      ]);
-    } catch (error) {
-      console.error("Error loading contracts:", error);
-    } finally {
-      setLoading(false);
-    }
+  // Status: 0 = Active (green), 2 = Expired (red), others = Pending (orange)
+  const getStatusColor = (status: number | string) => {
+    const s = typeof status === "string" ? parseInt(status) : status;
+    if (s === 0) return "#4CAF50"; // green
+    if (s === 2) return "#F44336"; // red
+    return "#FF9800"; // orange
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "#4CAF50";
-      case "expired":
-        return "#F44336";
-      case "pending":
-        return "#FF9800";
-      default:
-        return "#999";
-    }
+  const getStatusText = (status: number | string) => {
+    const s = typeof status === "string" ? parseInt(status) : status;
+    if (s === 0) return "Active";
+    if (s === 2) return "Expired";
+    return "Pending";
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "active":
-        return "Active";
-      case "expired":
-        return "Expired";
-      case "pending":
-        return "Pending";
-      default:
-        return status;
-    }
-  };
-
-  const renderContract = (contract: Contract) => (
+  const renderContract = (contract: ListContract) => (
     <TouchableOpacity
       key={contract.id}
       style={styles.contractCard}
@@ -103,29 +76,14 @@ const MyContractsScreen = ({ navigation }: Props) => {
       <View style={styles.contractHeader}>
         <View style={styles.contractTitleContainer}>
           <Ionicons name="document-text" size={20} color="#4A90E2" />
-          <Text style={styles.contractTitle}>{contract.roomName}</Text>
-        </View>
-        <View
-          style={[
-            styles.statusBadge,
-            { backgroundColor: getStatusColor(contract.status) + "20" },
-          ]}
-        >
-          <Text
-            style={[
-              styles.statusText,
-              { color: getStatusColor(contract.status) },
-            ]}
-          >
-            {getStatusText(contract.status)}
-          </Text>
+          <Text style={styles.contractTitle}>{contract.roomTitle}</Text>
         </View>
       </View>
 
       <View style={styles.contractDetails}>
         <View style={styles.detailRow}>
-          <Ionicons name="location" size={16} color="#666" />
-          <Text style={styles.detailText}>{contract.address}</Text>
+          <Ionicons name="person" size={16} color="#666" />
+          <Text style={styles.detailText}>{contract.landlordName}</Text>
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="calendar" size={16} color="#666" />
@@ -142,7 +100,29 @@ const MyContractsScreen = ({ navigation }: Props) => {
       </View>
 
       <View style={styles.contractFooter}>
-        <TouchableOpacity style={styles.actionButton}>
+        <View style={styles.statusFooterWrapper}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: getStatusColor(contract.status) + "20" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.statusText,
+                { color: getStatusColor(contract.status) },
+              ]}
+            >
+              {getStatusText(contract.status)}
+            </Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => {
+            handleViewDetails(contract.id);
+          }}
+        >
           <Ionicons name="eye" size={16} color="#4A90E2" />
           <Text style={styles.actionButtonText}>View Details</Text>
         </TouchableOpacity>
@@ -278,7 +258,12 @@ const styles = StyleSheet.create({
     borderTopColor: "#f0f0f0",
     paddingTop: spacing.md,
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  statusFooterWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   actionButton: {
     flexDirection: "row",

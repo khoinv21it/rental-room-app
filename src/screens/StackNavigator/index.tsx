@@ -8,6 +8,7 @@ import { UserProfile } from "../../types/types";
 import TestLogin from "./screens/TestLogin";
 import MapScreen from "./screens/MapScreen";
 import MyContractsScreen from "./screens/MyContractsScreen";
+import ContractOverviewScreen from "./screens/ContractOverviewScreen";
 import RentalHistoryScreen from "./screens/RentalHistoryScreen";
 import RequestStatusScreen from "./screens/RequestStatusScreen";
 import ResidentsScreen from "./screens/ResidentsScreen";
@@ -36,6 +37,10 @@ export type RootStackParamList = {
     | undefined;
   RentalRoomView: {
     booking: any;
+    onRefresh?: () => void;
+  };
+  ContractOverviewScreen: {
+    contractId: string;
   };
 };
 
@@ -110,6 +115,11 @@ const StackNavigator = () => {
         <Stack.Screen
           name="RentalRoomView"
           component={RentalRoomView}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ContractOverviewScreen"
+          component={ContractOverviewScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
