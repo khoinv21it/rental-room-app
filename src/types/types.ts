@@ -200,3 +200,37 @@ export type RequestBooking = {
   tenantCount: number;
 };
 
+export type ListContract = {
+  id: string;
+  roomTitle: string,
+  landlordName: string,
+  startDate: string,
+  endDate: string,
+  monthlyRent: number,
+  status: string,
+}
+
+export type ContractDetail = {
+  id: string;
+  contractName: string;
+  roomId: string;
+  roomTitle: string;
+  tenantId: string;
+  tenantName: string;
+  tenantPhone?: string;
+  landlordId: string;
+  landlordName: string;
+  depositAmount: number;
+  monthlyRent: number;
+  startDate: string; 
+  endDate: string;
+  status: number;
+  contractImage: string;
+  landlordPaymentInfo: {
+        bankName: string;
+        bankNumber: string;
+        binCode: string;
+        accountHolderName: string;
+        phoneNumber: string;
+    }
+}

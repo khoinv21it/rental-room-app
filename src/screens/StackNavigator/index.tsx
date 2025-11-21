@@ -8,6 +8,7 @@ import { UserProfile } from "../../types/types";
 import TestLogin from "./screens/TestLogin";
 import MapScreen from "./screens/MapScreen";
 import MyContractsScreen from "./screens/MyContractsScreen";
+import ContractOverviewScreen from "./screens/ContractOverviewScreen";
 import RentalHistoryScreen from "./screens/RentalHistoryScreen";
 import RequestStatusScreen from "./screens/RequestStatusScreen";
 import ResidentsScreen from "./screens/ResidentsScreen";
@@ -33,6 +34,9 @@ export type RootStackParamList = {
         roomId?: string;
       }
     | undefined;
+  ContractOverviewScreen: {
+    contractId: string;
+  };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -101,6 +105,11 @@ const StackNavigator = () => {
         <Stack.Screen
           name="RoomDetailScreen"
           component={RoomDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ContractOverviewScreen"
+          component={ContractOverviewScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
