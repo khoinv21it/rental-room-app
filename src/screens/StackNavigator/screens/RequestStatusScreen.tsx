@@ -258,7 +258,7 @@ const RequestStatusScreen = ({ navigation }: Props) => {
     >
       <View style={styles.requestHeader}>
         <View style={styles.requestTitleContainer}>
-          <Ionicons name="document-text" size={20} color="#4A90E2" />
+          <Ionicons name="document-text" size={24} color="#4A90E2" />
           <View style={{ flex: 1 }}>
             <Text style={styles.requestTitle}>
               {request.roomTitle || "Room Request"}
@@ -269,7 +269,7 @@ const RequestStatusScreen = ({ navigation }: Props) => {
           </View>
         </View>
         {request.imageUrl && (
-          <Ionicons name="image" size={16} color="#4A90E2" />
+          <Ionicons name="image" size={20} color="#4A90E2" />
         )}
       </View>
 
@@ -290,7 +290,7 @@ const RequestStatusScreen = ({ navigation }: Props) => {
 
       <View style={styles.requestDetails}>
         <View style={styles.detailRow}>
-          <Ionicons name="calendar" size={14} color="#666" />
+          <Ionicons name="calendar" size={18} color="#666" />
           <Text style={styles.detailText}>Created: {request.createdDate}</Text>
         </View>
       </View>
@@ -321,7 +321,7 @@ const RequestStatusScreen = ({ navigation }: Props) => {
         >
           <Ionicons
             name="create-outline"
-            size={16}
+            size={20}
             color={request.status !== 0 ? "#999" : "#4A90E2"}
           />
           <Text
@@ -368,7 +368,7 @@ const RequestStatusScreen = ({ navigation }: Props) => {
           </View>
         ) : requests.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="clipboard-outline" size={64} color="#ccc" />
+            <Ionicons name="clipboard-outline" size={80} color="#ccc" />
             <Text style={styles.emptyText}>No requests found</Text>
             <Text style={styles.emptySubtext}>
               Submit a request to get started
@@ -514,7 +514,7 @@ const RequestStatusScreen = ({ navigation }: Props) => {
                   style={styles.imagePickerButton}
                   onPress={handlePickImage}
                 >
-                  <Ionicons name="image-outline" size={24} color="#4A90E2" />
+                  <Ionicons name="image-outline" size={28} color="#4A90E2" />
                   <Text style={styles.imagePickerText}>
                     {selectedImage?.startsWith("file://")
                       ? "Change Image"
@@ -539,7 +539,7 @@ const RequestStatusScreen = ({ navigation }: Props) => {
                         setSelectedImage(selectedRequest?.imageUrl || null)
                       }
                     >
-                      <Ionicons name="close-circle" size={24} color="#F44336" />
+                      <Ionicons name="close-circle" size={28} color="#F44336" />
                     </TouchableOpacity>
                   </View>
                 )}
@@ -591,7 +591,7 @@ const RequestStatusScreen = ({ navigation }: Props) => {
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
                   <>
-                    <Ionicons name="checkmark" size={20} color="#fff" />
+                    <Ionicons name="checkmark" size={22} color="#fff" />
                     <Text style={styles.modalSubmitButtonText}>Update</Text>
                   </>
                 )}
@@ -642,64 +642,64 @@ const styles = StyleSheet.create({
   },
   requestCard: {
     backgroundColor: "#fff",
-    borderRadius: normalize(12),
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+    borderRadius: normalize(16),
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: normalize(4),
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: normalize(6),
+    elevation: 4,
   },
   requestHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   requestTitleContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: spacing.sm,
+    gap: spacing.md,
     flex: 1,
   },
   requestTitle: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
+    fontSize: fontSize.lg,
+    fontWeight: "700",
     color: "#333",
   },
   requestType: {
-    fontSize: fontSize.xs,
+    fontSize: fontSize.sm,
     color: "#999",
-    marginTop: 2,
+    marginTop: 4,
   },
   requestImageContainer: {
-    marginVertical: spacing.sm,
-    borderRadius: normalize(8),
+    marginVertical: spacing.md,
+    borderRadius: normalize(12),
     overflow: "hidden",
   },
   requestImage: {
     width: "100%",
-    height: normalize(150),
+    height: normalize(200),
     backgroundColor: "#f0f0f0",
   },
   requestDescription: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     color: "#666",
-    marginBottom: spacing.md,
-    lineHeight: 20,
+    marginBottom: spacing.lg,
+    lineHeight: 22,
   },
   requestDetails: {
-    gap: spacing.xs,
-    marginBottom: spacing.md,
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   detailRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   detailText: {
-    fontSize: fontSize.xs,
+    fontSize: fontSize.md,
     color: "#666",
   },
   requestFooter: {
@@ -711,27 +711,32 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
   },
   statusBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: normalize(12),
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: normalize(16),
   },
   statusText: {
-    fontSize: fontSize.xs,
-    fontWeight: "600",
+    fontSize: fontSize.sm,
+    fontWeight: "700",
   },
   updateButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: spacing.sm,
     backgroundColor: "#E3F2FD",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: normalize(8),
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: normalize(12),
+    shadowColor: "#4A90E2",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   updateButtonText: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     color: "#4A90E2",
-    fontWeight: "600",
+    fontWeight: "700",
   },
   updateButtonDisabled: {
     backgroundColor: "#f0f0f0",
@@ -792,36 +797,36 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   modalLabel: {
-    fontSize: fontSize.sm,
-    fontWeight: "600",
+    fontSize: fontSize.md,
+    fontWeight: "700",
     color: "#333",
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   modalReadOnlyText: {
     fontSize: fontSize.md,
     color: "#666",
     backgroundColor: "#f5f5f5",
-    padding: spacing.md,
-    borderRadius: normalize(8),
+    padding: spacing.lg,
+    borderRadius: normalize(12),
   },
   modalTextArea: {
     fontSize: fontSize.md,
     color: "#333",
     backgroundColor: "#f8f9ff",
-    padding: spacing.md,
-    borderRadius: normalize(8),
+    padding: spacing.lg,
+    borderRadius: normalize(12),
     borderWidth: 1,
     borderColor: "#e0e0e0",
-    minHeight: normalize(100),
+    minHeight: normalize(120),
   },
   imagePickerButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: normalize(8),
-    borderWidth: 1,
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderRadius: normalize(12),
+    borderWidth: 2,
     borderColor: "#4A90E2",
     borderStyle: "dashed",
     backgroundColor: "#f8f9ff",
@@ -829,75 +834,83 @@ const styles = StyleSheet.create({
   imagePickerText: {
     fontSize: fontSize.md,
     color: "#4A90E2",
-    fontWeight: "500",
+    fontWeight: "600",
   },
   currentImageContainer: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   currentImageLabel: {
-    fontSize: fontSize.xs,
+    fontSize: fontSize.sm,
     color: "#666",
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
   currentImage: {
     width: "100%",
-    height: normalize(150),
-    borderRadius: normalize(8),
+    height: normalize(180),
+    borderRadius: normalize(12),
     backgroundColor: "#f0f0f0",
   },
   newImageLabel: {
-    fontSize: fontSize.xs,
+    fontSize: fontSize.sm,
     color: "#666",
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
   imagePreviewContainer: {
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
     position: "relative",
-    borderRadius: normalize(8),
+    borderRadius: normalize(12),
     overflow: "hidden",
   },
   imagePreview: {
     width: "100%",
-    height: normalize(200),
-    borderRadius: normalize(8),
+    height: normalize(220),
+    borderRadius: normalize(12),
   },
   removeImageButton: {
     position: "absolute",
-    top: spacing.sm,
-    right: spacing.sm,
+    top: spacing.md,
+    right: spacing.md,
     backgroundColor: "#fff",
-    borderRadius: normalize(12),
+    borderRadius: normalize(16),
+    padding: spacing.sm,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   modalFooter: {
     flexDirection: "row",
-    gap: spacing.md,
+    gap: spacing.lg,
     paddingHorizontal: layout.screenPadding,
-    paddingTop: spacing.lg,
+    paddingTop: spacing.xl,
     borderTopWidth: 1,
     borderTopColor: "#e0e0e0",
   },
   modalCancelButton: {
     flex: 1,
-    padding: spacing.md,
-    borderRadius: normalize(8),
-    borderWidth: 1,
+    padding: spacing.lg,
+    borderRadius: normalize(12),
+    borderWidth: 1.5,
     borderColor: "#e0e0e0",
     alignItems: "center",
   },
   modalCancelButtonText: {
     fontSize: fontSize.md,
     color: "#666",
-    fontWeight: "600",
+    fontWeight: "700",
   },
   modalSubmitButton: {
     flex: 1,
-    padding: spacing.md,
-    borderRadius: normalize(8),
+    padding: spacing.lg,
+    borderRadius: normalize(12),
     backgroundColor: "#4A90E2",
     alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: spacing.xs,
+    shadowColor: "#4A90E2",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   modalSubmitButtonDisabled: {
     backgroundColor: "#ccc",
@@ -905,45 +918,50 @@ const styles = StyleSheet.create({
   modalSubmitButtonText: {
     fontSize: fontSize.md,
     color: "#fff",
-    fontWeight: "600",
+    fontWeight: "700",
   },
   // Pagination styles
   paginationContainer: {
-    padding: spacing.lg,
+    padding: spacing.xl,
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#e0e0e0",
-    gap: spacing.md,
+    gap: spacing.lg,
   },
   paginationInfo: {
     alignItems: "center",
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   paginationText: {
-    fontSize: fontSize.md,
-    fontWeight: "600",
+    fontSize: fontSize.lg,
+    fontWeight: "700",
     color: "#333",
   },
   paginationSubtext: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     color: "#666",
   },
   paginationButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: spacing.md,
+    gap: spacing.lg,
   },
   paginationButton: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing.xs,
-    padding: spacing.md,
-    borderRadius: normalize(8),
-    borderWidth: 1,
+    gap: spacing.sm,
+    padding: spacing.lg,
+    borderRadius: normalize(12),
+    borderWidth: 1.5,
     borderColor: "#4A90E2",
     backgroundColor: "#fff",
+    shadowColor: "#4A90E2",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   paginationButtonDisabled: {
     borderColor: "#e0e0e0",
@@ -952,7 +970,7 @@ const styles = StyleSheet.create({
   paginationButtonText: {
     fontSize: fontSize.md,
     color: "#4A90E2",
-    fontWeight: "600",
+    fontWeight: "700",
   },
   paginationButtonTextDisabled: {
     color: "#ccc",

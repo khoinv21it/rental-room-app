@@ -269,4 +269,80 @@ export async function getRequirementsByStatus(
     );
   }
 }
+
+export async function createRequest(
+  data: RequirementRequestRoomDto,
+  imageUri?: string
+): Promise<RequirementDetail> {
+  try {
+    const formData = new FormData();
+
+    // Add JSON data as a blob
+    const jsonString = JSON.stringify(data);
+    const jsonBlob = new Blob([jsonString], { type: "application/json" });
+    formData.append("data", jsonBlob, "data.json");
+
+    // Add image if provided
+    if (imageUri) {
+      const filename = imageUri.split("/").pop() || "image.jpg";
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : "image/jpeg";
+
+      // React Native FormData format
+      formData.append("image", {
+        uri: imageUri,
+        name: filename,
+        type: type,
+      } as any);
+    }
+
+    console.log("Creating request:", {
+      data,
+      hasImage: !!imageUri,
+    });
+
+    const token = await getAuthToken();
+
+    const response = await fetch(
+      `${apiClient.defaults.baseURL}/requirements/request-room-with-image`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      let errorMsg =
+        errorData?.message ||
+        errorData?.error ||
+        errorData?.errors?.[0] ||
+        "Failed to create request";
+      if (Array.isArray(errorMsg)) {
+        errorMsg = errorMsg[0];
+      }
+      throw new Error(errorMsg);
+    }
+
+    const result = await response.json();
+    console.log("Create request response:", result);
+    return result as RequirementDetail;
+  } catch (error: any) {
+    console.error("Error creating request:", error);
+    console.error("Error details:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+    throw new Error(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to create request"
+    );
+  }
+}
+
 export type { RequirementDetail };

@@ -13,6 +13,7 @@ import RentalHistoryScreen from "./screens/RentalHistoryScreen";
 import RequestStatusScreen from "./screens/RequestStatusScreen";
 import ResidentsScreen from "./screens/ResidentsScreen";
 import RoomDetailScreen from "./screens/RoomDetailScreen";
+import RentalRoomView from "../../components/RentalRoomView";
 
 // Define the param list for the stack navigator
 export type RootStackParamList = {
@@ -34,6 +35,10 @@ export type RootStackParamList = {
         roomId?: string;
       }
     | undefined;
+  RentalRoomView: {
+    booking: any;
+    onRefresh?: () => void;
+  };
   ContractOverviewScreen: {
     contractId: string;
   };
@@ -105,6 +110,11 @@ const StackNavigator = () => {
         <Stack.Screen
           name="RoomDetailScreen"
           component={RoomDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="RentalRoomView"
+          component={RentalRoomView}
           options={{ headerShown: false }}
         />
         <Stack.Screen
