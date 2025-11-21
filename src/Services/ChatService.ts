@@ -304,6 +304,14 @@ async function uploadImageToBackend(localUri: string, fileName?: string) {
 
     // Backend should return { imageUrl: "https://cloudinary.com/..." }
     const data = response?.data ?? response;
+    console.log("[ChatService] uploadImageToBackend response:", data);
+    console.log("[ChatService] imageUrl from backend:", data.imageUrl);
+
+    if (!data.imageUrl) {
+      console.error("[ChatService] Backend did not return imageUrl!", data);
+      throw new Error("Backend did not return imageUrl");
+    }
+
     return data.imageUrl;
   } catch (error) {
     console.error("uploadImageToBackend error:", error);
@@ -322,16 +330,40 @@ export async function sendImageMessage(
     // Upload image to backend (Cloudinary)
     const imageUrl = await uploadImageToBackend(localUri, fileName);
 
+    console.log(
+      "[ChatService] sendImageMessage - imageUrl from backend:",
+      imageUrl
+    );
+
+    // Normalize imageUrl - ensure it's a full URL
+    const normalizedImageUrl = imageUrl.startsWith("http")
+      ? imageUrl
+      : `${URL_IMAGE}${imageUrl}`;
+
+    console.log(
+      "[ChatService] sendImageMessage - normalized imageUrl:",
+      normalizedImageUrl
+    );
+
     // Save message to Firestore with Cloudinary URL
-    const docRef = await addDoc(collection(db, "messages"), {
-      imageUrl: imageUrl,
+    const messageData = {
+      imageUrl: normalizedImageUrl, // Use normalized URL
       imageFileName: fileName || `image_${Date.now()}.jpg`,
       senderId: userId,
       recipientId: otherId,
       createdAt: serverTimestamp(),
       messageType: "image",
       text: "", // Add empty text field for consistency
-    });
+    };
+
+    console.log(
+      "[ChatService] sendImageMessage - saving to Firestore:",
+      messageData
+    );
+
+    const docRef = await addDoc(collection(db, "messages"), messageData);
+
+    console.log("[ChatService] sendImageMessage - saved with ID:", docRef.id);
 
     return { id: docRef.id };
   } catch (error) {
