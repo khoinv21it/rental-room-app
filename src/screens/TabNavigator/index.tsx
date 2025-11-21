@@ -82,7 +82,7 @@ const TabNavigator = () => {
             const ts =
               typeof data.lastRead?.toDate === "function"
                 ? data.lastRead.toDate()
-: data.lastRead?.seconds
+                : data.lastRead?.seconds
                 ? new Date(data.lastRead.seconds * 1000)
                 : null;
             if (!ts) return;
@@ -180,7 +180,7 @@ const TabNavigator = () => {
               >
                 <Icon name={name} size={20} color={focused ? "#fff" : color} />
                 {/* Badge chấm đỏ khi có tin nhắn chưa đọc ở Message */}
-{route.name === "Message" && messageUnreadCount > 0 && (
+                {route.name === "Message" && messageUnreadCount > 0 && (
                   <View style={styles.tabBadgeInside} pointerEvents="none" />
                 )}
                 {/* Badge chấm đỏ khi có thông báo chưa đọc ở Profile */}
