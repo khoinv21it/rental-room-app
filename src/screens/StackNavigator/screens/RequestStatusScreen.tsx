@@ -291,7 +291,14 @@ const RequestStatusScreen = ({ navigation }: Props) => {
       <View style={styles.requestDetails}>
         <View style={styles.detailRow}>
           <Ionicons name="calendar" size={18} color="#666" />
-          <Text style={styles.detailText}>Created: {request.createdDate}</Text>
+          <Text style={styles.detailText}>
+            Created:{" "}
+            {new Date(request.createdDate).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </Text>
         </View>
       </View>
 
