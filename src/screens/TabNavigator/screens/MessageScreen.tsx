@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { URL_IMAGE } from "../../../Services/Constants";
 import {
   View,
   Text,
@@ -8,22 +7,16 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
-  Alert,
-  Pressable,
+  Modal,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   fetchConversations,
-  fetchMessages,
-  sendTextMessage,
   markConversationRead,
-  sendImageMessage,
 } from "../../../Services/ChatService";
 import useAuthStore from "../../../Stores/useAuthStore";
 import { MaterialCommunityIcons as Icon } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
 import {
   collection,
   query,
@@ -31,6 +24,7 @@ import {
   onSnapshot,
   orderBy,
 } from "firebase/firestore";
+import { ChatView } from "../../../components/ChatView";
 
 const ConversationItem = ({ item, onPress }: any) => {
   const last = item.lastMessage;
@@ -86,7 +80,7 @@ const ConversationItem = ({ item, onPress }: any) => {
           style={[styles.convLast, unread > 0 ? styles.convLastUnread : null]}
           numberOfLines={1}
         >
-          {last?.text || ""}
+          {last?.messageType === "image" ? "Đã gửi 1 ảnh" : last?.text || ""}
         </Text>
       </View>
       <Text style={styles.convTime}>{formatTimestamp(last?.createdAt)}</Text>
@@ -94,141 +88,15 @@ const ConversationItem = ({ item, onPress }: any) => {
   );
 };
 
-const MessageBubble = ({
-  m,
-  me,
-  partnerAvatar,
-  expanded,
-  onToggle,
-  showAvatar = true,
-}: any) => {
-  const formatTime = (d: Date | string | number | undefined | null) => {
-    if (!d) return "";
-    const date = d instanceof Date ? d : new Date(d);
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  };
-
-  // Normalize avatar uri
-  const avatarUri = partnerAvatar
-    ? typeof partnerAvatar === "string" && partnerAvatar.startsWith("http")
-      ? partnerAvatar
-      : partnerAvatar
-    : null;
-
-  // Debug log to check image url presence when rendering
-  if (m?.messageType === "image") {
-    try {
-      console.log(
-        "[MessageBubble] rendering image message id=",
-        m.id,
-        "imageUrl=",
-        m.imageUrl
-      );
-    } catch (err) {
-      console.log("[MessageBubble] log error", err);
-    }
-  }
-
-  // For messages from others we show a small avatar on the left
-  if (!me) {
-    // Normalize image URL - add Cloudinary domain if missing
-    const imageUri =
-      m.messageType === "image" && m.imageUrl
-        ? m.imageUrl.startsWith("http")
-          ? m.imageUrl
-          : `${URL_IMAGE}${m.imageUrl}`
-        : null;
-
-    return (
-      <View style={[styles.row, { alignItems: "flex-end", marginVertical: 6 }]}>
-        {/* Show avatar or placeholder space */}
-        {showAvatar ? (
-          avatarUri ? (
-            <Image source={{ uri: avatarUri }} style={styles.avatarSmall} />
-          ) : (
-            <View style={styles.avatarSmallPlaceholder}>
-              <Icon name="account" size={20} color="#9ca3af" />
-            </View>
-          )
-        ) : (
-          <View style={styles.avatarSmallSpacer} />
-        )}
-        <Pressable onPress={onToggle} style={{ flex: 1, maxWidth: "75%" }}>
-          <View style={[styles.bubble, styles.bubbleThem]}>
-            {imageUri ? (
-              <Image
-                source={{ uri: imageUri }}
-                style={styles.messageImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <Text style={styles.bubbleTextThem}>{m.text}</Text>
-            )}
-          </View>
-          {expanded && (
-            <Text
-              style={[styles.timeText, { textAlign: "left", marginLeft: 8 }]}
-            >
-              {formatTime(m.createdAt)}
-            </Text>
-          )}
-        </Pressable>
-      </View>
-    );
-  }
-
-  // For my messages (right side)
-  // Normalize image URL - add Cloudinary domain if missing
-  const imageUri =
-    m.messageType === "image" && m.imageUrl
-      ? m.imageUrl.startsWith("http")
-        ? m.imageUrl
-        : `${URL_IMAGE}${m.imageUrl}`
-      : null;
-
-  return (
-    <Pressable
-      onPress={onToggle}
-      style={[styles.bubbleContainer, { alignItems: "flex-end" }]}
-    >
-      <View style={[styles.bubble, styles.bubbleMe]}>
-        {imageUri ? (
-          <Image
-            source={{ uri: imageUri }}
-            style={styles.messageImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <Text style={styles.bubbleTextMe}>{m.text}</Text>
-        )}
-      </View>
-      {expanded && (
-        <Text style={[styles.timeText, { textAlign: "right" }]}>
-          {formatTime(m.createdAt)}
-        </Text>
-      )}
-    </Pressable>
-  );
-};
+// Removed MessageBubble component - now using ChatView component instead
 
 const MessageScreen = () => {
   const currentUser = useAuthStore((s: any) => s.loggedInUser);
   const userId = currentUser?.id;
   const [conversations, setConversations] = useState<any[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
   const [loadingConvs, setLoadingConvs] = useState(false);
-  const [loadingMsgs, setLoadingMsgs] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [text, setText] = useState("");
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
-  const flatRef = useRef<FlatList>(null);
   const recentlyMarkedAsRead = useRef<Set<string>>(new Set());
   const loadConversationsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -259,41 +127,7 @@ const MessageScreen = () => {
     }
   }, [userId]);
 
-  const loadMessages = useCallback(
-    async (convId: string) => {
-      if (!userId) return;
-      setLoadingMsgs(true);
-      try {
-        const res: any = await fetchMessages(userId, convId, 0, 200);
-        const msgs = res?.content || [];
-        setMessages(msgs);
-        // Debug: log messages count and any image URLs
-        try {
-          const imageMsgs = msgs
-            .filter((m: any) => m?.messageType === "image")
-            .map((m: any) => ({ id: m.id, imageUrl: m.imageUrl }));
-          console.log(
-            "[MessageScreen] Loaded messages:",
-            msgs.length,
-            "imageMsgs:",
-            imageMsgs
-          );
-        } catch (logErr) {
-          console.log(
-            "[MessageScreen] Loaded messages (logging failed):",
-            logErr
-          );
-        }
-        // scroll to bottom
-        setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 200);
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        setLoadingMsgs(false);
-      }
-    },
-    [userId]
-  );
+  // Removed unused functions - now using ChatView component for chat interface
 
   useEffect(() => {
     loadConversations();
@@ -359,54 +193,6 @@ const MessageScreen = () => {
     };
   }, [userId, loadConversations]);
 
-  useEffect(() => {
-    if (selected?.id) loadMessages(selected.id);
-  }, [selected, loadMessages]);
-
-  // Realtime listener for messages in selected conversation
-  useEffect(() => {
-    if (!userId || !selected?.id) return;
-
-    const { db } = require("../../../lib/firebase");
-    // Listen to all messages ordered by createdAt, then filter client-side
-    const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const allMsgs: any[] = [];
-        snapshot.forEach((doc) => {
-          const data: any = doc.data();
-          // Filter for messages between userId and selected.id
-          if (
-            (data.senderId === userId && data.recipientId === selected.id) ||
-            (data.senderId === selected.id && data.recipientId === userId)
-          ) {
-            allMsgs.push({
-              id: doc.id,
-              text: data.text,
-              imageUrl: data.imageUrl,
-              imageFileName: data.imageFileName || null,
-              messageType: data.messageType || "text",
-              fromMe: data.senderId === userId,
-              senderId: data.senderId,
-              recipientId: data.recipientId,
-              createdAt: data.createdAt?.toDate?.() ?? new Date(0),
-            });
-          }
-        });
-        setMessages(allMsgs);
-        // Auto-scroll to bottom when new messages arrive
-        setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 100);
-      },
-      (error) => {
-        console.error("Messages realtime listener error:", error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [userId, selected?.id]);
-
   const handleBackToList = () => {
     setSelected(null);
     setSearchQuery(""); // Clear search when going back
@@ -442,115 +228,6 @@ const MessageScreen = () => {
     }
   };
 
-  const doSend = async () => {
-    if (!text.trim() || !selected || !userId) return;
-    setSending(true);
-    try {
-      await sendTextMessage(userId, selected.id, text);
-      setText("");
-      // Messages will update via realtime listener
-      // Refresh conversations to update unread counts
-      await loadConversations();
-    } catch (e) {
-      console.warn(e);
-    } finally {
-      setSending(false);
-    }
-  };
-
-  // Pick image from device and send
-  const pickImageAndSend = async () => {
-    if (!userId || !selected) return;
-    try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission required",
-          "Please allow access to your photos to send images."
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.7,
-      });
-
-      // Newer Expo returns result.assets array
-      const uri = (result as any)?.assets?.[0]?.uri ?? (result as any)?.uri;
-      if (!uri || result.canceled) return;
-
-      setUploadingImage(true);
-      await sendImageMessage(userId, selected.id, uri);
-      // Messages will update via realtime listener
-      // Refresh conversations to update unread counts
-      await loadConversations();
-    } catch (err) {
-      console.error("pickImageAndSend error", err);
-      Alert.alert("Upload failed", "Could not send image. Please try again.");
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const toggleExpanded = (id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  // Helper to format full date/time for separators
-  const formatFullDate = (d: any) => {
-    if (!d) return "";
-    const date = d instanceof Date ? d : new Date(d);
-    try {
-      // Example: Nov 01, 2025 — 13:17
-      const opts: Intl.DateTimeFormatOptions = {
-        year: "numeric",
-        month: "short",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      };
-      return date.toLocaleString(undefined, opts).replace(",", " —");
-    } catch (e) {
-      return date.toLocaleString();
-    }
-  };
-
-  const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
-
-  // Debug: log image messages whenever messages array updates
-  useEffect(() => {
-    if (!messages || messages.length === 0) return;
-    try {
-      const imageMsgs = messages.filter((m: any) => m?.messageType == "image");
-      if (imageMsgs.length > 0) {
-        console.warn(
-          "[MessageScreen][useEffect] image messages found count=",
-          imageMsgs.length
-        );
-        imageMsgs.forEach((m: any, idx: number) => {
-          console.warn(
-            `[MessageScreen][image ${idx}] id=${m.id} senderId=${m.senderId} imageUrl=${m.imageUrl}`
-          );
-        });
-      } else {
-        console.log(
-          "[MessageScreen][useEffect] no image messages in current list, total=",
-          messages.length
-        );
-      }
-    } catch (err) {
-      console.error("[MessageScreen][useEffect] logging failed", err);
-    }
-  }, [messages]);
-
   // Filter conversations based on search query
   const filteredConversations = conversations.filter((conv) => {
     if (!searchQuery.trim()) return true;
@@ -563,177 +240,79 @@ const MessageScreen = () => {
   });
 
   return (
-    <View style={styles.container}>
-      {/* Header for list or chat */}
-      {!selected ? (
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Messages</Text>
-          <View style={styles.searchContainer}>
-            <Icon
-              name="magnify"
-              size={20}
-              color="#9ca3af"
-              style={styles.searchIcon}
-            />
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search conversations..."
-              placeholderTextColor="#9ca3af"
-              style={styles.searchInput}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity
-                onPress={() => setSearchQuery("")}
-                style={styles.clearBtn}
-              >
-                <Icon name="close-circle" size={18} color="#9ca3af" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      ) : (
-        <View style={styles.chatHeaderMobile}>
-          <TouchableOpacity onPress={handleBackToList} style={styles.backBtn}>
-            <Text style={styles.backText}>{"<"}</Text>
-          </TouchableOpacity>
-          <View style={styles.chatHeaderInfo}>
-            <View style={styles.chatAvatar}>
-              {selected.partner?.avatar ? (
-                <Image
-                  source={{
-                    uri: selected.partner.avatar.startsWith("http")
-                      ? selected.partner.avatar
-                      : selected.partner.avatar,
-                  }}
-                  style={styles.chatAvatarImg}
-                />
-              ) : (
-                <View style={styles.chatAvatarPlaceholder}>
-                  <Icon name="account" size={24} color="#9ca3af" />
-                </View>
-              )}
-            </View>
-            <Text style={styles.chatHeaderTitle} numberOfLines={1}>
-              {selected.partner?.name ||
-                selected.partner?.fullName ||
-                "Unknown"}
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {/* Content */}
-      {!selected ? (
-        // Conversation list fullscreen
-        <View style={styles.listContainer}>
-          {loadingConvs ? (
-            <ActivityIndicator style={{ marginTop: 20 }} />
-          ) : filteredConversations.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Icon name="message-text-outline" size={64} color="#d1d5db" />
-              <Text style={styles.emptyText}>
-                {searchQuery.trim()
-                  ? "No conversations found"
-                  : "No messages yet"}
-              </Text>
-            </View>
-          ) : (
-            <FlatList
-              data={filteredConversations}
-              keyExtractor={(i) => i.id}
-              renderItem={({ item }) => (
-                <ConversationItem item={item} onPress={handleSelect} />
-              )}
-              contentContainerStyle={{ paddingBottom: 24 }}
-            />
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      {/* Conversation list - always visible */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Messages</Text>
+        <View style={styles.searchContainer}>
+          <Icon
+            name="magnify"
+            size={20}
+            color="#9ca3af"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search conversations..."
+            placeholderTextColor="#9ca3af"
+            style={styles.searchInput}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery("")}
+              style={styles.clearBtn}
+            >
+              <Icon name="close-circle" size={18} color="#9ca3af" />
+            </TouchableOpacity>
           )}
         </View>
-      ) : (
-        // Chat view fullscreen
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={{ flex: 1 }}
-        >
-          <FlatList
-            ref={flatRef}
-            data={messages}
-            keyExtractor={(m) => m.id}
-            renderItem={({ item, index }) => {
-              // show separator when first message or gap > 6 hours from previous message
-              const prev = index > 0 ? messages[index - 1] : null;
-              const prevTime = prev
-                ? prev.createdAt instanceof Date
-                  ? prev.createdAt.getTime()
-                  : new Date(prev.createdAt).getTime()
-                : 0;
-              const currTime =
-                item.createdAt instanceof Date
-                  ? item.createdAt.getTime()
-                  : new Date(item.createdAt).getTime();
-              const showSeparator = !prev || currTime - prevTime > SIX_HOURS_MS;
-
-              // Check if next message is from same sender
-              const next =
-                index < messages.length - 1 ? messages[index + 1] : null;
-              const isLastInGroup = !next || next.fromMe !== item.fromMe;
-
-              return (
-                <>
-                  {showSeparator && (
-                    <View style={styles.dateSeparator}>
-                      <Text style={styles.dateSeparatorText}>
-                        {formatFullDate(item.createdAt)}
-                      </Text>
-                    </View>
-                  )}
-                  <MessageBubble
-                    m={item}
-                    me={item.fromMe}
-                    partnerAvatar={selected?.partner?.avatar}
-                    expanded={expandedIds.has(item.id)}
-                    onToggle={() => toggleExpanded(item.id)}
-                    showAvatar={isLastInGroup}
-                  />
-                </>
-              );
-            }}
-            contentContainerStyle={{ padding: 12 }}
-          />
-
-          <View style={styles.composer}>
-            <TouchableOpacity
-              style={[
-                styles.imageBtn,
-                uploadingImage ? { opacity: 0.6 } : null,
-              ]}
-              onPress={pickImageAndSend}
-              disabled={uploadingImage}
-            >
-              {uploadingImage ? (
-                <ActivityIndicator color="#7c3aed" />
-              ) : (
-                <Icon name="image" size={20} color="#3b82f6" />
-              )}
-            </TouchableOpacity>
-            <TextInput
-              value={text}
-              onChangeText={setText}
-              placeholder="Write a message..."
-              style={styles.input}
-              multiline
-            />
-            <TouchableOpacity
-              style={styles.sendBtn}
-              onPress={doSend}
-              disabled={sending || !text.trim()}
-            >
-              <Icon name="send" size={20} color="#fff" />
-            </TouchableOpacity>
+      </View>
+      <View style={styles.listContainer}>
+        {loadingConvs ? (
+          <ActivityIndicator style={{ marginTop: 20 }} />
+        ) : filteredConversations.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Icon name="message-text-outline" size={64} color="#d1d5db" />
+            <Text style={styles.emptyText}>
+              {searchQuery.trim()
+                ? "No conversations found"
+                : "No messages yet"}
+            </Text>
           </View>
-        </KeyboardAvoidingView>
+        ) : (
+          <FlatList
+            data={filteredConversations}
+            keyExtractor={(i) => i.id}
+            renderItem={({ item }) => (
+              <ConversationItem item={item} onPress={handleSelect} />
+            )}
+            contentContainerStyle={{ paddingBottom: 24 }}
+          />
+        )}
+      </View>
+
+      {/* ChatView Modal - overlays on top */}
+      {selected && (
+        <Modal
+          visible={!!selected}
+          animationType="slide"
+          onRequestClose={handleBackToList}
+          presentationStyle="fullScreen"
+        >
+          <ChatView
+            conversationId={selected.id}
+            partnerId={selected.id}
+            partnerName={
+              selected.partner?.name || selected.partner?.fullName || "Unknown"
+            }
+            partnerAvatar={selected.partner?.avatar}
+            onClose={handleBackToList}
+            showHeader={true}
+          />
+        </Modal>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -747,7 +326,7 @@ const styles = StyleSheet.create({
   header: {
     paddingVertical: 16,
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 8,
     backgroundColor: "#ffffff",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
@@ -947,165 +526,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 11,
     fontWeight: "700",
-  },
-
-  // CHAT BUBBLES - Modern Design
-  bubbleContainer: {
-    marginVertical: 4,
-    maxWidth: "100%",
-  },
-  bubble: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    marginVertical: 0,
-    maxWidth: "75%",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 2,
-  },
-  bubbleMe: {
-    backgroundColor: "#3B82F6",
-    alignSelf: "flex-end",
-    borderBottomRightRadius: 4,
-  },
-  bubbleThem: {
-    backgroundColor: "#ffffff",
-    alignSelf: "flex-start",
-    borderBottomLeftRadius: 4,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  bubbleTextMe: {
-    color: "#fff",
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: "500",
-  },
-  bubbleTextThem: {
-    color: "#1A1A2E",
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: "500",
-  },
-  messageImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 14,
-    backgroundColor: "#F3F4F6",
-  },
-  timeText: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginTop: 4,
-    marginHorizontal: 8,
-    fontWeight: "500",
-  },
-
-  // COMPOSER - Modern Design
-  composer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: "#ffffff",
-    borderTopColor: "#E5E7EB",
-    borderTopWidth: 1,
-    marginBottom: Platform.OS === "ios" ? 90 : 100,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: -2 },
-    elevation: 3,
-  },
-  input: {
-    flex: 1,
-    minHeight: 42,
-    maxHeight: 120,
-    backgroundColor: "#F9FAFB",
-    borderRadius: 22,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    fontWeight: "500",
-    color: "#1A1A2E",
-  },
-  sendBtn: {
-    marginLeft: 10,
-    backgroundColor: "#3B82F6",
-    padding: 12,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#3B82F6",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  imageBtn: {
-    marginRight: 10,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#EFF6FF",
-    borderWidth: 1,
-    borderColor: "#DBEAFE",
-    shadowColor: "#3B82F6",
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 2,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 4,
-  },
-  avatarSmall: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  avatarSmallPlaceholder: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#EFF6FF",
-    marginRight: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#DBEAFE",
-  },
-  avatarSmallSpacer: {
-    width: 32,
-    marginRight: 8,
-  },
-  dateSeparator: {
-    alignSelf: "center",
-    backgroundColor: "#EFF6FF",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginVertical: 10,
-    borderWidth: 1,
-    borderColor: "#DBEAFE",
-  },
-  dateSeparatorText: {
-    color: "#3B82F6",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.3,
   },
 });
 
