@@ -98,7 +98,7 @@ export async function getAllFavoriteIds(): Promise<string[]> {
 }
 
 // Get favorite count for a room (returns number or 0)
-export async function getFavoriteCount(roomId: string): Promise<number> {
+export async function getFavoriteCount(roomId?: string): Promise<number> {
   try {
     const res: any = await apiClient.get(`/favorites/rooms/${roomId}/count`);
     // backend may return number or object
