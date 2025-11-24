@@ -140,7 +140,7 @@ export async function updateRequirementWithImage(
   try {
     const formData = new FormData();
 
-    // Add JSON data as a blob
+    // Add JSON data as a blob-like object with proper content type
     const updateData: UpdateRequestRoomDto = {
       id: requirementId,
       description: description,
@@ -148,9 +148,11 @@ export async function updateRequirementWithImage(
 
     const jsonString = JSON.stringify(updateData);
 
-    // For React Native, create a blob from JSON string
-    const jsonBlob = new Blob([jsonString], { type: "application/json" });
-    formData.append("data", jsonBlob, "data.json");
+    // Create a blob-like object for React Native
+    formData.append("data", {
+      string: jsonString,
+      type: "application/json",
+    } as any);
 
     // Add image if provided
     if (imageUri) {
@@ -171,7 +173,7 @@ export async function updateRequirementWithImage(
       description,
       hasImage: !!imageUri,
     });
-    console.log("JSON data:", jsonString);
+    console.log("JSON payload:", jsonString);
 
     const token = await getAuthToken();
 
@@ -181,6 +183,7 @@ export async function updateRequirementWithImage(
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
+          // Don't set Content-Type header - let the browser set it with boundary for multipart/form-data
         },
         body: formData,
       }
@@ -277,10 +280,14 @@ export async function createRequest(
   try {
     const formData = new FormData();
 
-    // Add JSON data as a blob
+    // Add JSON data as a blob-like object with proper content type
     const jsonString = JSON.stringify(data);
-    const jsonBlob = new Blob([jsonString], { type: "application/json" });
-    formData.append("data", jsonBlob, "data.json");
+
+    // Create a blob-like object for React Native
+    formData.append("data", {
+      string: jsonString,
+      type: "application/json",
+    } as any);
 
     // Add image if provided
     if (imageUri) {
@@ -300,6 +307,7 @@ export async function createRequest(
       data,
       hasImage: !!imageUri,
     });
+    console.log("JSON payload:", jsonString);
 
     const token = await getAuthToken();
 
@@ -309,6 +317,7 @@ export async function createRequest(
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          // Don't set Content-Type header - let the browser set it with boundary for multipart/form-data
         },
         body: formData,
       }

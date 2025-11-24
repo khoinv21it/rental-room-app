@@ -20,13 +20,13 @@ import * as ImagePicker from "expo-image-picker";
 import useAuthStore from "../Stores/useAuthStore";
 import { URL_IMAGE } from "../Services/Constants";
 import { PaymentModal } from "./index";
+import { CommonActions } from "@react-navigation/native";
 
 interface Props {
   navigation: any;
   route: {
     params: {
       booking: BookingData;
-      onRefresh?: () => void;
     };
   };
 }
@@ -48,7 +48,7 @@ interface BookingData {
 }
 
 const RentalRoomView = ({ navigation, route }: Props) => {
-  const { booking: initialBooking, onRefresh } = route.params;
+  const { booking: initialBooking } = route.params;
   const [booking, setBooking] = useState<BookingData>(initialBooking);
 
   // Payment Modal State
@@ -135,8 +135,13 @@ const RentalRoomView = ({ navigation, route }: Props) => {
         text2: "Payment confirmation submitted successfully!",
       });
 
-      onRefresh?.();
-      navigation.goBack();
+      // Navigate back and trigger refresh via navigation state
+      navigation.dispatch(
+        CommonActions.navigate({
+          name: "RentalHistoryScreen",
+          params: { refresh: Date.now() },
+        })
+      );
     } catch (error) {
       // Error is already handled and shown in PaymentModal
       throw error;

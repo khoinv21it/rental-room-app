@@ -22,8 +22,10 @@ import * as ImagePicker from "expo-image-picker";
 interface LandlordPaymentInfo {
   bankNumber: string;
   binCode: string;
+  bankName?: string;
   depositAmount: number;
   phoneNumber: string;
+  accountHolderName?: string;
   email: string;
 }
 
@@ -203,9 +205,9 @@ const PaymentModal = ({
                     </Text>
                   </View>
                   <View style={styles.paymentInfoRow}>
-                    <Text style={styles.paymentLabel}>Bank Code:</Text>
+                    <Text style={styles.paymentLabel}>Bank Name:</Text>
                     <Text style={styles.paymentValue}>
-                      {paymentInfo.binCode}
+                      {paymentInfo.bankName}
                     </Text>
                   </View>
                   <View style={styles.paymentInfoRow}>
@@ -215,9 +217,9 @@ const PaymentModal = ({
                     </Text>
                   </View>
                   <View style={styles.paymentInfoRow}>
-                    <Text style={styles.paymentLabel}>Phone:</Text>
+                    <Text style={styles.paymentLabel}>Owner:</Text>
                     <Text style={styles.paymentValue}>
-                      {paymentInfo.phoneNumber}
+                      {paymentInfo.accountHolderName}
                     </Text>
                   </View>
                   <View style={styles.paymentInfoRow}>

@@ -12,6 +12,7 @@ import ContractOverviewScreen from "./screens/ContractOverviewScreen";
 import RentalHistoryScreen from "./screens/RentalHistoryScreen";
 import RequestStatusScreen from "./screens/RequestStatusScreen";
 import ResidentsScreen from "./screens/ResidentsScreen";
+import ResidentsDetailView from "./screens/ResidentsDetailView";
 import RoomDetailScreen from "./screens/RoomDetailScreen";
 import RentalRoomView from "../../components/RentalRoomView";
 
@@ -30,6 +31,21 @@ export type RootStackParamList = {
   RentalHistoryScreen: undefined;
   RequestStatusScreen: undefined;
   ResidentsScreen: undefined;
+  ResidentsDetailView: {
+    resident: {
+      id: string;
+      fullName: string;
+      idNumber: string;
+      relationship: string;
+      startDate: string;
+      endDate: string;
+      note?: string;
+      status: string;
+      contractId: string;
+      idCardFrontUrl?: string;
+      idCardBackUrl?: string;
+    };
+  };
   RoomDetailScreen:
     | {
         roomId?: string;
@@ -105,6 +121,11 @@ const StackNavigator = () => {
         <Stack.Screen
           name="ResidentsScreen"
           component={ResidentsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ResidentsDetailView"
+          component={ResidentsDetailView}
           options={{ headerShown: false }}
         />
         <Stack.Screen

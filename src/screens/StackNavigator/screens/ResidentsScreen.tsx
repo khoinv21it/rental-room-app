@@ -5,8 +5,11 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  ActivityIndicator,
+  Modal,
+  Alert,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import {
   fontSize,
@@ -16,6 +19,13 @@ import {
 } from "../../../utils/responsive";
 import useAuthStore from "../../../Stores/useAuthStore";
 import Toast from "react-native-toast-message";
+import {
+  getByTenant,
+  createResident,
+  updateResident,
+  deleteResident,
+} from "../../../Services/ResidentService";
+import { useFocusEffect } from "@react-navigation/native";
 
 type Props = {
   navigation: any;
@@ -23,13 +33,16 @@ type Props = {
 
 interface Resident {
   id: string;
-  name: string;
-  roomName: string;
-  phoneNumber: string;
-  email: string;
-  moveInDate: string;
-  relationship: "owner" | "tenant" | "roommate";
-  isActive: boolean;
+  fullName: string;
+  idNumber: string;
+  relationship: string;
+  startDate: string;
+  endDate: string;
+  note?: string;
+  status: string;
+  contractId: string;
+  idCardFrontUrl?: string;
+  idCardBackUrl?: string;
 }
 
 const ResidentsScreen = ({ navigation }: Props) => {
@@ -37,173 +50,354 @@ const ResidentsScreen = ({ navigation }: Props) => {
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedResident, setSelectedResident] = useState<Resident | null>(
+    null
+  );
 
-  useEffect(() => {
-    loadResidents();
-  }, []);
+  // Form state for add/edit
+  const [formData, setFormData] = useState({
+    fullName: "",
+    idNumber: "",
+    relationship: "Bản thân",
+    startDate: "",
+    endDate: "",
+    note: "",
+    contractId: "",
+  });
+
+  // Refresh residents when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (currentUser?.id) {
+        loadResidents();
+      }
+    }, [currentUser?.id])
+  );
 
   const loadResidents = async () => {
+    if (!currentUser?.id) return;
+
     setLoading(true);
     try {
-      setResidents([
-        {
-          id: "1",
-          name: "Nguyễn Văn A",
-          roomName: "Phòng 101",
-          phoneNumber: "0123456789",
-          email: "nguyenvana@email.com",
-          moveInDate: "2024-01-01",
-          relationship: "owner",
-          isActive: true,
-        },
-        {
-          id: "2",
-          name: "Trần Thị B",
-          roomName: "Phòng 101",
-          phoneNumber: "0987654321",
-          email: "tranthib@email.com",
-          moveInDate: "2024-01-01",
-          relationship: "roommate",
-          isActive: true,
-        },
-        {
-          id: "3",
-          name: "Lê Văn C",
-          roomName: "Phòng 205",
-          phoneNumber: "0369852147",
-          email: "levanc@email.com",
-          moveInDate: "2023-06-15",
-          relationship: "tenant",
-          isActive: false,
-        },
-      ]);
-    } catch (error) {
+      console.log("Loading residents for tenant:", currentUser.id);
+      const data = await getByTenant(currentUser.id);
+      console.log("Residents loaded:", data);
+      setResidents(data || []);
+    } catch (error: any) {
       console.error("Error loading residents:", error);
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: "Failed to load residents",
+        text2: error.message || "Failed to load residents",
       });
     } finally {
       setLoading(false);
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      fullName: "",
+      idNumber: "",
+      relationship: "Bản thân",
+      startDate: "",
+      endDate: "",
+      note: "",
+      contractId: "",
+    });
+  };
+
+  const handleAddResident = async () => {
+    if (!formData.fullName || !formData.idNumber || !formData.contractId) {
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "Please fill in all required fields",
+      });
+      return;
+    }
+
+    if (!formData.startDate || !formData.endDate) {
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "Please select start and end dates",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await createResident(formData.contractId, formData);
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Resident added successfully",
+      });
+      setShowAddModal(false);
+      resetForm();
+      loadResidents();
+    } catch (error: any) {
+      console.error("Error adding resident:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to add resident",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditResident = async () => {
+    if (!selectedResident) return;
+
+    if (!formData.fullName || !formData.idNumber) {
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "Please fill in all required fields",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await updateResident(
+        selectedResident.id,
+        selectedResident.contractId,
+        formData
+      );
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Resident updated successfully",
+      });
+      setShowEditModal(false);
+      setSelectedResident(null);
+      resetForm();
+      loadResidents();
+    } catch (error: any) {
+      console.error("Error updating resident:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to update resident",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteResident = (resident: Resident) => {
+    Alert.alert(
+      "Delete Resident",
+      `Are you sure you want to delete ${resident.fullName}?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await deleteResident(resident.id);
+              Toast.show({
+                type: "success",
+                text1: "Success",
+                text2: "Resident deleted successfully",
+              });
+              loadResidents();
+            } catch (error: any) {
+              console.error("Error deleting resident:", error);
+              Toast.show({
+                type: "error",
+                text1: "Error",
+                text2: error.message || "Failed to delete resident",
+              });
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const openEditModal = (resident: Resident) => {
+    setSelectedResident(resident);
+    setFormData({
+      fullName: resident.fullName,
+      idNumber: resident.idNumber,
+      relationship: resident.relationship,
+      startDate: resident.startDate.split("T")[0], // Format to YYYY-MM-DD
+      endDate: resident.endDate.split("T")[0],
+      note: resident.note || "",
+      contractId: resident.contractId,
+    });
+    setShowEditModal(true);
+  };
+
   const getRelationshipColor = (relationship: string) => {
-    switch (relationship) {
-      case "owner":
-        return "#9C27B0";
-      case "tenant":
-        return "#2196F3";
-      case "roommate":
+    // Map to colors based on relationship type
+    const lowerRelationship = relationship.toLowerCase();
+    if (
+      lowerRelationship.includes("bản thân") ||
+      lowerRelationship.includes("tenant")
+    ) {
+      return "#2196F3";
+    } else if (
+      lowerRelationship.includes("vợ") ||
+      lowerRelationship.includes("chồng")
+    ) {
+      return "#E91E63";
+    } else if (lowerRelationship.includes("con")) {
+      return "#4CAF50";
+    } else if (
+      lowerRelationship.includes("bố") ||
+      lowerRelationship.includes("mẹ")
+    ) {
+      return "#9C27B0";
+    }
+    return "#FF9800";
+  };
+
+  const getRelationshipText = (relationship: string) => {
+    return relationship || "Other";
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case "DONE":
         return "#4CAF50";
+      case "PENDING":
+        return "#FF9800";
       default:
         return "#999";
     }
   };
 
-  const getRelationshipText = (relationship: string) => {
-    switch (relationship) {
-      case "owner":
-        return "Owner";
-      case "tenant":
-        return "Tenant";
-      case "roommate":
-        return "Roommate";
-      default:
-        return relationship;
-    }
-  };
-
   const filteredResidents = residents.filter(
     (resident) =>
-      resident.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      resident.roomName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      resident.phoneNumber.includes(searchQuery)
+      resident.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      resident.idNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      resident.relationship.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      resident.note?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const renderResident = (resident: Resident) => (
-    <TouchableOpacity
-      key={resident.id}
-      style={[
-        styles.residentCard,
-        !resident.isActive && styles.residentCardInactive,
-      ]}
-      onPress={() => {
-        // Navigate to resident details or start chat
-        console.log("View resident:", resident.id);
-      }}
-      activeOpacity={0.7}
-    >
-      <View style={styles.residentHeader}>
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {(resident.name || "?").charAt(0)}
-            </Text>
-          </View>
-          {resident.isActive && <View style={styles.activeDot} />}
-        </View>
-
-        <View style={styles.residentInfo}>
-          <Text style={styles.residentName}>{resident.name}</Text>
-          <View style={styles.residentMetaRow}>
-            <View
-              style={[
-                styles.relationshipBadge,
-                {
-                  backgroundColor:
-                    getRelationshipColor(resident.relationship) + "20",
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.relationshipText,
-                  { color: getRelationshipColor(resident.relationship) },
-                ]}
-              >
-                {getRelationshipText(resident.relationship)}
+  const renderResident = (resident: Resident) => {
+    return (
+      <TouchableOpacity
+        key={resident.id}
+        style={styles.residentCard}
+        onPress={() => {
+          navigation.navigate("ResidentsDetailView", { resident });
+        }}
+        activeOpacity={0.7}
+      >
+        <View style={styles.residentHeader}>
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {(resident.fullName || "?").charAt(0).toUpperCase()}
               </Text>
             </View>
-            <Text style={styles.roomName}>{resident.roomName}</Text>
+          </View>
+
+          <View style={styles.residentInfo}>
+            <Text style={styles.residentName}>{resident.fullName}</Text>
+            <View style={styles.residentMetaRow}>
+              <View
+                style={[
+                  styles.relationshipBadge,
+                  {
+                    backgroundColor:
+                      getRelationshipColor(resident.relationship) + "20",
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.relationshipText,
+                    { color: getRelationshipColor(resident.relationship) },
+                  ]}
+                >
+                  {getRelationshipText(resident.relationship)}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.statusBadge,
+                  {
+                    backgroundColor: getStatusColor(resident.status) + "20",
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.statusText,
+                    { color: getStatusColor(resident.status) },
+                  ]}
+                >
+                  {resident.status || "PENDING"}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={styles.viewButton}
+              onPress={() => {
+                navigation.navigate("ResidentsDetailView", { resident });
+              }}
+            >
+              <Ionicons name="eye" size={18} color="#4A90E2" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => openEditModal(resident)}
+            >
+              <Ionicons name="create" size={18} color="#FF9800" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => handleDeleteResident(resident)}
+            >
+              <Ionicons name="trash" size={18} color="#F44336" />
+            </TouchableOpacity>
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.chatButton}
-          onPress={() => {
-            // Start chat with resident
-            console.log("Chat with:", resident.id);
-          }}
-        >
-          <Ionicons name="chatbubble-ellipses" size={20} color="#4A90E2" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.residentDetails}>
-        <View style={styles.detailRow}>
-          <Ionicons name="call" size={14} color="#666" />
-          <Text style={styles.detailText}>{resident.phoneNumber}</Text>
+        <View style={styles.residentDetails}>
+          <View style={styles.detailRow}>
+            <Ionicons name="card" size={14} color="#666" />
+            <Text style={styles.detailText}>ID: {resident.idNumber}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Ionicons name="calendar" size={14} color="#666" />
+            <Text style={styles.detailText}>
+              {new Date(resident.startDate).toLocaleDateString()} -{" "}
+              {new Date(resident.endDate).toLocaleDateString()}
+            </Text>
+          </View>
+          {resident.note && (
+            <View style={styles.detailRow}>
+              <Ionicons name="document-text" size={14} color="#666" />
+              <Text style={styles.detailText} numberOfLines={1}>
+                {resident.note}
+              </Text>
+            </View>
+          )}
         </View>
-        <View style={styles.detailRow}>
-          <Ionicons name="mail" size={14} color="#666" />
-          <Text style={styles.detailText}>{resident.email}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Ionicons name="calendar" size={14} color="#666" />
-          <Text style={styles.detailText}>Moved in: {resident.moveInDate}</Text>
-        </View>
-      </View>
-
-      {!resident.isActive && (
-        <View style={styles.inactiveBanner}>
-          <Ionicons name="information-circle" size={16} color="#FF9800" />
-          <Text style={styles.inactiveBannerText}>Moved out</Text>
-        </View>
-      )}
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -216,7 +410,15 @@ const ResidentsScreen = ({ navigation }: Props) => {
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Residents</Text>
-        <View style={styles.headerRight} />
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            resetForm();
+            setShowAddModal(true);
+          }}
+        >
+          <Ionicons name="add-circle" size={28} color="#4A90E2" />
+        </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
@@ -241,6 +443,7 @@ const ResidentsScreen = ({ navigation }: Props) => {
       <ScrollView style={styles.content}>
         {loading ? (
           <View style={styles.emptyContainer}>
+            <ActivityIndicator size="large" color="#4A90E2" />
             <Text style={styles.emptyText}>Loading residents...</Text>
           </View>
         ) : filteredResidents.length === 0 ? (
@@ -265,6 +468,202 @@ const ResidentsScreen = ({ navigation }: Props) => {
           </View>
         )}
       </ScrollView>
+
+      {/* Add Resident Modal - Simplified for now */}
+      <Modal
+        visible={showAddModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Resident</Text>
+              <TouchableOpacity onPress={() => setShowAddModal(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.inputLabel}>Full Name *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter full name"
+                value={formData.fullName}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, fullName: text })
+                }
+              />
+
+              <Text style={styles.inputLabel}>ID Number *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter ID number"
+                value={formData.idNumber}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, idNumber: text })
+                }
+              />
+
+              <Text style={styles.inputLabel}>Contract ID *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter contract ID"
+                value={formData.contractId}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, contractId: text })
+                }
+              />
+
+              <Text style={styles.inputLabel}>Start Date (YYYY-MM-DD) *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="2024-01-01"
+                value={formData.startDate}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, startDate: text })
+                }
+              />
+
+              <Text style={styles.inputLabel}>End Date (YYYY-MM-DD) *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="2024-12-31"
+                value={formData.endDate}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, endDate: text })
+                }
+              />
+
+              <Text style={styles.inputLabel}>Note</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Enter note"
+                value={formData.note}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, note: text })
+                }
+                multiline
+                numberOfLines={3}
+              />
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setShowAddModal(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleAddResident}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Add Resident</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Resident Modal */}
+      <Modal
+        visible={showEditModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Resident</Text>
+              <TouchableOpacity onPress={() => setShowEditModal(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.inputLabel}>Full Name *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter full name"
+                value={formData.fullName}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, fullName: text })
+                }
+              />
+
+              <Text style={styles.inputLabel}>ID Number *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter ID number"
+                value={formData.idNumber}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, idNumber: text })
+                }
+              />
+
+              <Text style={styles.inputLabel}>Start Date (YYYY-MM-DD) *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="2024-01-01"
+                value={formData.startDate}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, startDate: text })
+                }
+              />
+
+              <Text style={styles.inputLabel}>End Date (YYYY-MM-DD) *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="2024-12-31"
+                value={formData.endDate}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, endDate: text })
+                }
+              />
+
+              <Text style={styles.inputLabel}>Note</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Enter note"
+                value={formData.note}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, note: text })
+                }
+                multiline
+                numberOfLines={3}
+              />
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setShowEditModal(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleEditResident}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Update Resident</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -344,9 +743,6 @@ const styles = StyleSheet.create({
     shadowRadius: normalize(4),
     elevation: 3,
   },
-  residentCardInactive: {
-    opacity: 0.7,
-  },
   residentHeader: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -367,17 +763,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.lg,
     color: "#fff",
     fontWeight: "600",
-  },
-  activeDot: {
-    position: "absolute",
-    bottom: 2,
-    right: 2,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#4CAF50",
-    borderWidth: 2,
-    borderColor: "#fff",
   },
   residentInfo: {
     flex: 1,
@@ -407,7 +792,24 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: "#666",
   },
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: normalize(8),
+  },
+  statusText: {
+    fontSize: fontSize.xs,
+    fontWeight: "600",
+  },
   chatButton: {
+    width: normalize(40),
+    height: normalize(40),
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#E8F2FF",
+    borderRadius: normalize(20),
+  },
+  viewButton: {
     width: normalize(40),
     height: normalize(40),
     alignItems: "center",
@@ -430,20 +832,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: "#666",
   },
-  inactiveBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    marginTop: spacing.md,
-    padding: spacing.sm,
-    backgroundColor: "#FFF8E1",
-    borderRadius: normalize(8),
-  },
-  inactiveBannerText: {
-    fontSize: fontSize.xs,
-    color: "#FF9800",
-    fontWeight: "500",
-  },
   emptyContainer: {
     flex: 1,
     alignItems: "center",
@@ -460,6 +848,112 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: "#ccc",
     marginTop: spacing.xs,
+  },
+  addButton: {
+    width: normalize(40),
+    height: normalize(40),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionButtons: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  editButton: {
+    width: normalize(36),
+    height: normalize(36),
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF8E1",
+    borderRadius: normalize(18),
+  },
+  deleteButton: {
+    width: normalize(36),
+    height: normalize(36),
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFEBEE",
+    borderRadius: normalize(18),
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: normalize(20),
+    borderTopRightRadius: normalize(20),
+    maxHeight: "90%",
+    paddingBottom: spacing.xl,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: spacing.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  modalTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: "700",
+    color: "#333",
+  },
+  modalBody: {
+    padding: spacing.xl,
+  },
+  modalFooter: {
+    flexDirection: "row",
+    gap: spacing.md,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+  },
+  inputLabel: {
+    fontSize: fontSize.md,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
+  },
+  input: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: normalize(10),
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    fontSize: fontSize.md,
+    color: "#333",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  textArea: {
+    height: normalize(80),
+    textAlignVertical: "top",
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: normalize(10),
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    fontSize: fontSize.md,
+    fontWeight: "600",
+    color: "#666",
+  },
+  submitButton: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: normalize(10),
+    backgroundColor: "#4A90E2",
+    alignItems: "center",
+  },
+  submitButtonText: {
+    fontSize: fontSize.md,
+    fontWeight: "700",
+    color: "#fff",
   },
 });
 

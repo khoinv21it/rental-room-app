@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import {
   fontSize,
@@ -17,6 +17,7 @@ import {
 import useAuthStore from "../../../Stores/useAuthStore";
 import Toast from "react-native-toast-message";
 import { userFetchBookings } from "../../../Services/BookingService";
+import { useFocusEffect } from "@react-navigation/native";
 
 type Props = {
   navigation: any;
@@ -48,11 +49,14 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
     total: 0,
   });
 
-  useEffect(() => {
-    if (currentUser?.id) {
-      loadBookings();
-    }
-  }, [currentUser?.id]);
+  // Refresh bookings when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (currentUser?.id) {
+        loadBookings(pagination.current);
+      }
+    }, [currentUser?.id])
+  );
 
   const loadBookings = async (page = 1) => {
     if (!currentUser?.id) return;
@@ -180,7 +184,6 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
         onPress={() =>
           navigation.navigate("RentalRoomView", {
             booking: item,
-            onRefresh: () => loadBookings(pagination.current),
           })
         }
         activeOpacity={0.7}
