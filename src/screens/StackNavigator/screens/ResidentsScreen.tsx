@@ -8,9 +8,12 @@ import {
   ActivityIndicator,
   Modal,
   Alert,
+  Platform,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import React, { useState, useEffect, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import {
   fontSize,
   layout,
@@ -55,6 +58,10 @@ const ResidentsScreen = ({ navigation }: Props) => {
   const [selectedResident, setSelectedResident] = useState<Resident | null>(
     null
   );
+
+  // Image state
+  const [frontImageUri, setFrontImageUri] = useState<string | null>(null);
+  const [backImageUri, setBackImageUri] = useState<string | null>(null);
 
   // Form state for add/edit
   const [formData, setFormData] = useState({
@@ -107,6 +114,54 @@ const ResidentsScreen = ({ navigation }: Props) => {
       note: "",
       contractId: "",
     });
+    setFrontImageUri(null);
+    setBackImageUri(null);
+  };
+
+  const pickFrontImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Toast.show({
+        type: "error",
+        text1: "Permission Denied",
+        text2: "We need camera roll permissions to upload images",
+      });
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setFrontImageUri(result.assets[0].uri);
+    }
+  };
+
+  const pickBackImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Toast.show({
+        type: "error",
+        text1: "Permission Denied",
+        text2: "We need camera roll permissions to upload images",
+      });
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setBackImageUri(result.assets[0].uri);
+    }
   };
 
   const handleAddResident = async () => {
@@ -130,7 +185,12 @@ const ResidentsScreen = ({ navigation }: Props) => {
 
     try {
       setLoading(true);
-      await createResident(formData.contractId, formData);
+      await createResident(
+        formData.contractId,
+        formData,
+        frontImageUri || undefined,
+        backImageUri || undefined
+      );
       Toast.show({
         type: "success",
         text1: "Success",
@@ -168,7 +228,9 @@ const ResidentsScreen = ({ navigation }: Props) => {
       await updateResident(
         selectedResident.id,
         selectedResident.contractId,
-        formData
+        formData,
+        frontImageUri || undefined,
+        backImageUri || undefined
       );
       Toast.show({
         type: "success",
@@ -427,7 +489,7 @@ const ResidentsScreen = ({ navigation }: Props) => {
           <Ionicons name="search" size={20} color="#999" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by name, room, or phone"
+            placeholder="Search by name"
             placeholderTextColor="#999"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -506,6 +568,25 @@ const ResidentsScreen = ({ navigation }: Props) => {
                 }
               />
 
+              <Text style={styles.inputLabel}>Relationship *</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={formData.relationship}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, relationship: value })
+                  }
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Bản thân" value="Bản thân" />
+                  <Picker.Item label="Vợ/Chồng" value="Vợ/Chồng" />
+                  <Picker.Item label="Con" value="Con" />
+                  <Picker.Item label="Bố/Mẹ" value="Bố/Mẹ" />
+                  <Picker.Item label="Anh/Em" value="Anh/Em" />
+                  <Picker.Item label="Bạn bè" value="Bạn bè" />
+                  <Picker.Item label="Khác" value="Khác" />
+                </Picker>
+              </View>
+
               <Text style={styles.inputLabel}>Contract ID *</Text>
               <TextInput
                 style={styles.input}
@@ -535,6 +616,42 @@ const ResidentsScreen = ({ navigation }: Props) => {
                   setFormData({ ...formData, endDate: text })
                 }
               />
+
+              {/* ID Card Upload */}
+              <Text style={styles.inputLabel}>ID Card Images (Optional)</Text>
+              <View style={styles.imageUploadContainer}>
+                <TouchableOpacity
+                  style={styles.imageUploadButton}
+                  onPress={pickFrontImage}
+                >
+                  {frontImageUri ? (
+                    <View style={styles.imagePreviewContainer}>
+                      <Text style={styles.imagePreviewText}>Front ✓</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <Ionicons name="camera" size={24} color="#4A90E2" />
+                      <Text style={styles.imageUploadText}>Front ID</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.imageUploadButton}
+                  onPress={pickBackImage}
+                >
+                  {backImageUri ? (
+                    <View style={styles.imagePreviewContainer}>
+                      <Text style={styles.imagePreviewText}>Back ✓</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <Ionicons name="camera" size={24} color="#4A90E2" />
+                      <Text style={styles.imageUploadText}>Back ID</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
 
               <Text style={styles.inputLabel}>Note</Text>
               <TextInput
@@ -609,6 +726,25 @@ const ResidentsScreen = ({ navigation }: Props) => {
                 }
               />
 
+              <Text style={styles.inputLabel}>Relationship *</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={formData.relationship}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, relationship: value })
+                  }
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Bản thân" value="Bản thân" />
+                  <Picker.Item label="Vợ/Chồng" value="Vợ/Chồng" />
+                  <Picker.Item label="Con" value="Con" />
+                  <Picker.Item label="Bố/Mẹ" value="Bố/Mẹ" />
+                  <Picker.Item label="Anh/Em" value="Anh/Em" />
+                  <Picker.Item label="Bạn bè" value="Bạn bè" />
+                  <Picker.Item label="Khác" value="Khác" />
+                </Picker>
+              </View>
+
               <Text style={styles.inputLabel}>Start Date (YYYY-MM-DD) *</Text>
               <TextInput
                 style={styles.input}
@@ -628,6 +764,42 @@ const ResidentsScreen = ({ navigation }: Props) => {
                   setFormData({ ...formData, endDate: text })
                 }
               />
+
+              {/* ID Card Upload */}
+              <Text style={styles.inputLabel}>ID Card Images (Optional)</Text>
+              <View style={styles.imageUploadContainer}>
+                <TouchableOpacity
+                  style={styles.imageUploadButton}
+                  onPress={pickFrontImage}
+                >
+                  {frontImageUri ? (
+                    <View style={styles.imagePreviewContainer}>
+                      <Text style={styles.imagePreviewText}>Front ✓</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <Ionicons name="camera" size={24} color="#4A90E2" />
+                      <Text style={styles.imageUploadText}>Front ID</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.imageUploadButton}
+                  onPress={pickBackImage}
+                >
+                  {backImageUri ? (
+                    <View style={styles.imagePreviewContainer}>
+                      <Text style={styles.imagePreviewText}>Back ✓</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <Ionicons name="camera" size={24} color="#4A90E2" />
+                      <Text style={styles.imageUploadText}>Back ID</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
 
               <Text style={styles.inputLabel}>Note</Text>
               <TextInput
@@ -926,9 +1098,51 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e0e0e0",
   },
+  pickerContainer: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: normalize(10),
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    overflow: "hidden",
+  },
+  picker: {
+    height: Platform.OS === "ios" ? normalize(180) : normalize(50),
+    width: "100%",
+  },
   textArea: {
     height: normalize(80),
     textAlignVertical: "top",
+  },
+  imageUploadContainer: {
+    flexDirection: "row",
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  imageUploadButton: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    borderRadius: normalize(10),
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderStyle: "dashed",
+    padding: spacing.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: normalize(100),
+  },
+  imageUploadText: {
+    fontSize: fontSize.sm,
+    color: "#666",
+    marginTop: spacing.xs,
+  },
+  imagePreviewContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imagePreviewText: {
+    fontSize: fontSize.md,
+    color: "#4A90E2",
+    fontWeight: "600",
   },
   cancelButton: {
     flex: 1,
