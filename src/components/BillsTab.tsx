@@ -1,18 +1,26 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Linking,
-  Alert,
-} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { downloadBillProof, fetchBillDetails } from "../Services/BillService";
-import { Bill, TenantInfo } from "../types/types";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  Alert,
+  Linking,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
+  downloadBillProof,
+  fetchBillDetails,
+  setStatusBill,
+} from "../Services/BillService";
+import { Bill, LandlordPaymentInfo, TenantInfo } from "../types/types";
 import ImageModal from "./ImageModal";
 import BillDetailModal from "./ModalBill";
+import PaymentBill from "./PaymentBill";
+import Toast from "react-native-toast-message";
+import { set } from "react-hook-form";
 
 // Helpers: format amounts and month string
 const formatVND = (value?: number | string | null) => {
@@ -37,7 +45,6 @@ const formatNumber = (value?: number | string | null) => {
     return num.toString();
   }
 };
-
 const formatMonth = (monthStr?: string | null) => {
   if (!monthStr) return "";
   // expect formats like "YYYY-MM" or "YYYY-MM-DD"
@@ -59,12 +66,14 @@ const formatMonth = (monthStr?: string | null) => {
 interface BillsTabProps {
   contractId: string;
   tenantInfo: TenantInfo;
+  infoLandlord: LandlordPaymentInfo;
   navigation: any;
 }
 
 const BillsTab: React.FC<BillsTabProps> = ({
   contractId,
   tenantInfo,
+  infoLandlord,
   navigation,
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<string>("All");
@@ -79,13 +88,52 @@ const BillsTab: React.FC<BillsTabProps> = ({
 
   const [billDetailVisible, setBillDetailVisible] = useState(false);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [paymentModal, setPaymentModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    const fetchBills = async () => {
+      const response = await fetchBillDetails(contractId);
+      if (response) {
+        setBills(response);
+      } else {
+        setBills([]);
+      }
+      setRefreshing(false);
+    };
+    fetchBills();
+  }, [contractId]);
   // Thêm handler
   const handleViewDetails = (bill: Bill) => {
     setSelectedBill(bill);
     setBillDetailVisible(true);
   };
 
+  const handelConfirm = async (billId: string) => {
+    console.log("Confirming payment for bill aa:", billId);
+    const response = await setStatusBill(billId, "CONFIRMING");
+    console.log("Response from setStatusBill:", response);
+    if (response) {
+      // Update local state
+      const updatedBills = bills.map((bill) =>
+        bill.id === billId ? { ...bill, status: "CONFIRMING" } : bill
+      );
+      Toast.show({
+        type: "success",
+        text1: "Payment confirmed",
+        text2: "Your payment is being confirmed by the landlord.",
+      });
+      setBills(updatedBills);
+      setPaymentModal(false);
+    } else {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to confirm payment. Please try again.",
+      });
+    }
+  };
   const handleViewImage = (imageUrl: string) => {
     setSelectedImage(imageUrl);
     setModalVisible(true);
@@ -150,8 +198,9 @@ const BillsTab: React.FC<BillsTabProps> = ({
       Alert.alert("Error", "Failed to download bill proof");
     }
   };
-  const handlePay = () => {
-    navigation.navigate("PaymentScreen", { contractId });
+  const handlePay = (bill: Bill) => {
+    setSelectedBill(bill);
+    setPaymentModal(true);
   };
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -183,6 +232,9 @@ const BillsTab: React.FC<BillsTabProps> = ({
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
       {/* Summary Cards */}
       <View style={styles.summaryGrid}>
@@ -450,10 +502,18 @@ const BillsTab: React.FC<BillsTabProps> = ({
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.payButton}
+                    style={[
+                      styles.payButton,
+                      (bill.status === "PAID" ||
+                        bill.status === "CONFIRMING") &&
+                        styles.payButtonDisabled,
+                    ]}
                     onPress={() => {
-                      handlePay();
+                      handlePay(bill);
                     }}
+                    disabled={
+                      bill.status === "PAID" || bill.status === "CONFIRMING"
+                    }
                   >
                     <Text style={styles.payButtonText}>Pay Now</Text>
                   </TouchableOpacity>
@@ -512,6 +572,14 @@ const BillsTab: React.FC<BillsTabProps> = ({
       </View>
 
       <View style={{ height: 20 }} />
+      <PaymentBill
+        visible={paymentModal}
+        infoLandlord={infoLandlord}
+        bill={selectedBill!}
+        totalAmount={selectedBill ? selectedBill.totalAmount || 0 : 0}
+        onClose={() => setPaymentModal(false)}
+        onConfirm={(billId) => handelConfirm(billId)}
+      />
       <ImageModal
         visible={modalVisible}
         imageUrl={selectedImage}
@@ -611,6 +679,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
+  },
+  payButtonDisabled: {
+    backgroundColor: "#a5b4fc",
   },
   payButtonText: {
     color: "#fff",

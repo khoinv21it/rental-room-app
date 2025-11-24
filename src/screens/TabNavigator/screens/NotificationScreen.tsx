@@ -109,6 +109,22 @@ const NotificationScreen = ({ navigation }: Props) => {
   };
 
   const markAsRead = async (notification: Notification) => {
+    switch (notification.type) {
+      case "booking_success":
+        navigation.navigate("RentalHistoryScreen");
+        break;
+      case "request_success":
+        navigation.navigate("RequestStatusScreen");
+        break;
+      case "resident_success":
+        navigation.navigate("ResidentsScreen");
+        break;
+      case "payment_success":
+        navigation.navigate("MyContractsScreen");
+        break;
+      default:
+        break; 
+    }
     if (notification.isRead) return;
 
     try {

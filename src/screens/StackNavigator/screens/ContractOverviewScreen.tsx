@@ -11,7 +11,11 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import FilePreview from "../../../components/FilePreview";
 import BillsTab from "../../../components/BillsTab";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ContractDetail, TenantInfo } from "../../../types/types";
+import {
+  ContractDetail,
+  LandlordPaymentInfo,
+  TenantInfo,
+} from "../../../types/types";
 import { fetchContractDetail } from "../../../Services/ContractService";
 import { URL_IMAGE } from "../../../Services/Constants";
 
@@ -36,6 +40,7 @@ const ContractOverviewScreen = ({ navigation, route }: Props) => {
   const [tab, setTab] = useState<"overview" | "bills">("overview");
   const [contractData, setContractData] = useState<ContractDetail>();
   const [tenantInfo, setTenantInfo] = useState<TenantInfo>();
+  const [infoLandlord, setInfoLandlord] = useState<LandlordPaymentInfo>();
 
   useEffect(() => {
     const fetchContract = async () => {
@@ -46,7 +51,15 @@ const ContractOverviewScreen = ({ navigation, route }: Props) => {
           phone: response.tenantPhone,
           roomTitle: response.roomTitle,
         } as TenantInfo;
+        const landlordInfo = {
+          bankNumber: response.landlordPaymentInfo.bankNumber,
+          binCode: response.landlordPaymentInfo.binCode,
+          bankName: response.landlordPaymentInfo.bankName,
+          accountHolderName: response.landlordPaymentInfo.accountHolderName,
+          phoneNumber: response.landlordPaymentInfo.phoneNumber,
+        } as LandlordPaymentInfo;
         setTenantInfo(tenantInfo);
+        setInfoLandlord(landlordInfo);
         setContractData(response);
       } catch (error) {
         console.error("Error fetching contract detail:", error);
@@ -301,6 +314,7 @@ const ContractOverviewScreen = ({ navigation, route }: Props) => {
         <BillsTab
           contractId={contractId}
           tenantInfo={tenantInfo!}
+          infoLandlord={infoLandlord!}
           navigation={navigation}
         />
       )}

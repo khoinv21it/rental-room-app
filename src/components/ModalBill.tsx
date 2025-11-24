@@ -116,7 +116,7 @@ const BillDetailModal: React.FunctionComponent<BillDetailModalProps> = ({
                   </View>
                   <View style={styles.infoCol}>
                     <Text style={styles.label}>Month:</Text>
-                    <Text style={[styles.value, styles.monthValue]}>    
+                    <Text style={[styles.value, styles.monthValue]}>
                       {bill.month}
                     </Text>
                   </View>
@@ -201,9 +201,9 @@ const BillDetailModal: React.FunctionComponent<BillDetailModalProps> = ({
               <Text style={styles.footerTitle}>
                 Thank you for trusting and using our services!
               </Text>
-              <Text style={styles.footerSubtext}>
-                Please pay on time. Contact: khoi
-              </Text>
+              {/* <Text style={styles.footerSubtext}>
+                Please pay on time. Contact: {info}
+              </Text> */}
             </View>
 
             <View style={{ height: 20 }} />

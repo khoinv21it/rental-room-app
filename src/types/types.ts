@@ -242,6 +242,13 @@ export type TenantInfo = {
   roomTitle?: string;
 }
 
+export type LandlordPaymentInfo = {
+      bankName: string,
+      bankNumber: string,
+      binCode: string,
+      accountHolderName: string,
+      phoneNumber: string;
+}
 export type Bill = {
         id: string;
         month: string;
