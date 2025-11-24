@@ -51,6 +51,7 @@ export type Notification = {
   type?: string;
   senderId?: string;
   data?: any;
+  contractId?: string;
 };
 // Image
 export type Image = {
@@ -235,6 +236,20 @@ export type ContractDetail = {
     }
 }
 
+export type TenantInfo = {
+  id: string;
+  name: string;
+  phone?: string;
+  roomTitle?: string;
+}
+
+export type LandlordPaymentInfo = {
+      bankName: string,
+      bankNumber: string,
+      binCode: string,
+      accountHolderName: string,
+      phoneNumber: string;
+}
 export type Bill = {
         id: string;
         month: string;

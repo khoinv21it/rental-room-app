@@ -109,6 +109,25 @@ const NotificationScreen = ({ navigation }: Props) => {
   };
 
   const markAsRead = async (notification: Notification) => {
+    switch (notification.type) {
+      case "booking_success":
+        navigation.navigate("RentalHistoryScreen");
+        break;
+      case "request_success":
+        navigation.navigate("RequestStatusScreen");
+        break;
+      case "resident_success":
+        navigation.navigate("ResidentsScreen");
+        break;
+      case "payment_success":
+        navigation.navigate("ContractOverviewScreen", {
+          contractId: notification.contractId,
+          initialTab: "bills", // bắt buộc phải là string 'bills'
+        });
+        break;
+      default:
+        break;
+    }
     if (notification.isRead) return;
 
     try {

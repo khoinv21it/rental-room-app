@@ -5,21 +5,26 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Linking,
-  Alert,
 } from "react-native";
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import FilePreview from "../../../components/FilePreview";
 import BillsTab from "../../../components/BillsTab";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ContractDetail } from "../../../types/types";
+import {
+  ContractDetail,
+  LandlordPaymentInfo,
+  TenantInfo,
+} from "../../../types/types";
 import { fetchContractDetail } from "../../../Services/ContractService";
 import { URL_IMAGE } from "../../../Services/Constants";
-
+type ContractOverviewScreenRouteParams = {
+  contractId: string;
+  initialTab?: "overview" | "bills"; // optional
+};
 type Props = {
   navigation: any;
-  route: { params: { contractId: string } };
+  route: { params: ContractOverviewScreenRouteParams };
 };
 
 const formatDate = (dateString?: string) => {
@@ -37,11 +42,34 @@ const ContractOverviewScreen = ({ navigation, route }: Props) => {
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<"overview" | "bills">("overview");
   const [contractData, setContractData] = useState<ContractDetail>();
+  const [tenantInfo, setTenantInfo] = useState<TenantInfo>();
+  const [infoLandlord, setInfoLandlord] = useState<LandlordPaymentInfo>();
+  const initialTab = route.params.initialTab;
+  console.log("initialTab:", initialTab); // phải in ra 'bills'
+  useEffect(() => {
+    if (initialTab) {
+      setTab(initialTab);
+    }
+  }, [initialTab]);
 
   useEffect(() => {
     const fetchContract = async () => {
       try {
         const response = await fetchContractDetail(contractId);
+        const tenantInfo = {
+          name: response.tenantName,
+          phone: response.tenantPhone,
+          roomTitle: response.roomTitle,
+        } as TenantInfo;
+        const landlordInfo = {
+          bankNumber: response.landlordPaymentInfo.bankNumber,
+          binCode: response.landlordPaymentInfo.binCode,
+          bankName: response.landlordPaymentInfo.bankName,
+          accountHolderName: response.landlordPaymentInfo.accountHolderName,
+          phoneNumber: response.landlordPaymentInfo.phoneNumber,
+        } as LandlordPaymentInfo;
+        setTenantInfo(tenantInfo);
+        setInfoLandlord(landlordInfo);
         setContractData(response);
       } catch (error) {
         console.error("Error fetching contract detail:", error);
@@ -295,6 +323,8 @@ const ContractOverviewScreen = ({ navigation, route }: Props) => {
       ) : (
         <BillsTab
           contractId={contractId}
+          tenantInfo={tenantInfo!}
+          infoLandlord={infoLandlord!}
           navigation={navigation}
         />
       )}
