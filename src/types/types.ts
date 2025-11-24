@@ -51,6 +51,7 @@ export type Notification = {
   type?: string;
   senderId?: string;
   data?: any;
+  contractId?: string;
 };
 // Image
 export type Image = {

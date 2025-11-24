@@ -18,10 +18,13 @@ import {
 } from "../../../types/types";
 import { fetchContractDetail } from "../../../Services/ContractService";
 import { URL_IMAGE } from "../../../Services/Constants";
-
+type ContractOverviewScreenRouteParams = {
+  contractId: string;
+  initialTab?: "overview" | "bills"; // optional
+};
 type Props = {
   navigation: any;
-  route: { params: { contractId: string } };
+  route: { params: ContractOverviewScreenRouteParams };
 };
 
 const formatDate = (dateString?: string) => {
@@ -41,6 +44,13 @@ const ContractOverviewScreen = ({ navigation, route }: Props) => {
   const [contractData, setContractData] = useState<ContractDetail>();
   const [tenantInfo, setTenantInfo] = useState<TenantInfo>();
   const [infoLandlord, setInfoLandlord] = useState<LandlordPaymentInfo>();
+  const initialTab = route.params.initialTab;
+  console.log("initialTab:", initialTab); // phải in ra 'bills'
+  useEffect(() => {
+    if (initialTab) {
+      setTab(initialTab);
+    }
+  }, [initialTab]);
 
   useEffect(() => {
     const fetchContract = async () => {

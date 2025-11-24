@@ -120,10 +120,13 @@ const NotificationScreen = ({ navigation }: Props) => {
         navigation.navigate("ResidentsScreen");
         break;
       case "payment_success":
-        navigation.navigate("MyContractsScreen");
+        navigation.navigate("ContractOverviewScreen", {
+          contractId: notification.contractId,
+          initialTab: "bills", // bắt buộc phải là string 'bills'
+        });
         break;
       default:
-        break; 
+        break;
     }
     if (notification.isRead) return;
 
