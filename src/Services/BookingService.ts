@@ -23,18 +23,58 @@ export const creatBooking = async (
 export const updateBookingStatus = async (
   bookingId: string,
   statusData: {
+    newStatus?: number;
     status?: string;
     paymentStatus?: string;
     [key: string]: any;
   }
 ) => {
   const { user } = await getAuthData();
-  const requestBody = {
-    ...statusData,
+
+  // Convert status to newStatus if provided
+  const requestBody: any = {
     actorId: user.id,
-    actorRole: user.roles?.[0] || "Users",
+    actorRole: (user.roles?.[0] || "Users").toLowerCase(), // Ensure lowercase
   };
-  return apiClient.patch(`bookings/${bookingId}/status`, requestBody);
+
+  // Handle both newStatus and status formats
+  if (statusData.newStatus !== undefined) {
+    requestBody.newStatus = statusData.newStatus;
+  } else if (statusData.status !== undefined) {
+    // Convert string status to number for newStatus
+    requestBody.newStatus =
+      typeof statusData.status === "string"
+        ? parseInt(statusData.status)
+        : statusData.status;
+  }
+
+  // Add any other fields from statusData
+  Object.keys(statusData).forEach((key) => {
+    if (key !== "status" && key !== "newStatus") {
+      requestBody[key] = statusData[key];
+    }
+  });
+
+  console.log("updateBookingStatus - bookingId:", bookingId);
+  console.log(
+    "updateBookingStatus - requestBody:",
+    JSON.stringify(requestBody, null, 2)
+  );
+
+  try {
+    const response = await apiClient.patch(
+      `bookings/${bookingId}/status`,
+      requestBody
+    );
+    console.log("updateBookingStatus - success:", response.data);
+    return response;
+  } catch (error: any) {
+    console.error(
+      "updateBookingStatus - error:",
+      error?.response?.data || error.message
+    );
+    throw error;
+  }
 };
 
 export const getLandlordPaymentInfo = async (bookingId: string) => {

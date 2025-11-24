@@ -16,7 +16,6 @@ import Toast from "react-native-toast-message";
 import {
   getLandlordPaymentInfo,
   uploadBillTransferImage,
-  updateBookingStatus,
 } from "../Services/BookingService";
 import * as ImagePicker from "expo-image-picker";
 
@@ -32,20 +31,22 @@ interface PaymentModalProps {
   visible: boolean;
   bookingId: string;
   onClose: () => void;
-  onSuccess?: () => void;
+  onConfirm?: (bookingId: string) => void | Promise<void>;
 }
 
 const PaymentModal = ({
   visible,
   bookingId,
   onClose,
-  onSuccess,
+  onConfirm,
 }: PaymentModalProps) => {
   const [paymentInfo, setPaymentInfo] = useState<LandlordPaymentInfo | null>(
     null
   );
   const [transferConfirmed, setTransferConfirmed] = useState(false);
   const [uploadedImageUri, setUploadedImageUri] = useState<string | null>(null);
+  const [imageUploadedSuccessfully, setImageUploadedSuccessfully] =
+    useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -58,6 +59,7 @@ const PaymentModal = ({
       setPaymentInfo(null);
       setTransferConfirmed(false);
       setUploadedImageUri(null);
+      setImageUploadedSuccessfully(false);
     }
   }, [visible, bookingId]);
 
@@ -101,19 +103,34 @@ const PaymentModal = ({
       setImageUploading(true);
 
       try {
-        await uploadBillTransferImage(bookingId, uri);
+        console.log("Uploading bill transfer image for booking:", bookingId);
+        const response = await uploadBillTransferImage(bookingId, uri);
+        console.log("Image upload response:", response);
+
         setUploadedImageUri(uri);
+        setImageUploadedSuccessfully(true);
+
         Toast.show({
           type: "success",
           text1: "Success",
           text2: "Bill transfer image uploaded successfully!",
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to upload image:", error);
+        console.error("Upload error details:", error?.response?.data);
+
+        setImageUploadedSuccessfully(false);
+
+        const errorMessage =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          "Failed to upload image";
+
         Toast.show({
           type: "error",
           text1: "Error",
-          text2: "Failed to upload image",
+          text2: errorMessage,
         });
       } finally {
         setImageUploading(false);
@@ -130,21 +147,26 @@ const PaymentModal = ({
       return;
     }
 
+    // Image upload is now optional - no longer required to confirm payment
+
     try {
-      await updateBookingStatus(bookingId, { status: "3" });
-      Toast.show({
-        type: "success",
-        text1: "Success",
-        text2: "Payment confirmation submitted successfully!",
-      });
-      onSuccess?.();
+      // Call parent's onConfirm handler
+      await onConfirm?.(bookingId);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to confirm payment:", error);
+      console.error("Error response:", error?.response?.data);
+
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to confirm payment";
+
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: "Failed to confirm payment",
+        text2: errorMessage,
       });
     }
   };
@@ -217,7 +239,8 @@ const PaymentModal = ({
                 </View>
 
                 <Text style={styles.modalSectionTitle}>
-                  Upload Payment Proof
+                  Upload Payment Proof{" "}
+                  <Text style={{ color: "#F44336" }}>*</Text>
                 </Text>
                 <TouchableOpacity
                   style={styles.uploadButton}
@@ -260,12 +283,28 @@ const PaymentModal = ({
                     </Text>
                   </TouchableOpacity>
                 </View>
+
+                {!transferConfirmed && (
+                  <View style={styles.reminderContainer}>
+                    <Ionicons
+                      name="information-circle"
+                      size={20}
+                      color="#FF9800"
+                    />
+                    <Text style={styles.reminderText}>
+                      Please confirm that you have completed the transfer
+                    </Text>
+                  </View>
+                )}
+
                 <TouchableOpacity
                   style={[
                     styles.submitButton,
+                    // (!transferConfirmed || !imageUploadedSuccessfully) &&
                     !transferConfirmed && styles.submitButtonDisabled,
                   ]}
                   onPress={handleConfirmPayment}
+                  //   disabled={!transferConfirmed || !imageUploadedSuccessfully}
                   disabled={!transferConfirmed}
                 >
                   <Text style={styles.submitButtonText}>Confirm Payment</Text>
@@ -411,6 +450,21 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: "#333",
     flex: 1,
+  },
+  reminderContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF8E1",
+    padding: spacing.md,
+    borderRadius: normalize(8),
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  reminderText: {
+    fontSize: fontSize.sm,
+    color: "#FF9800",
+    flex: 1,
+    fontWeight: "500",
   },
   submitButton: {
     backgroundColor: "#4A90E2",

@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { fontSize, layout, normalize, spacing } from "../utils/responsive";
 import Toast from "react-native-toast-message";
 import { createRequest } from "../Services/RequirementService";
+import { updateBookingStatus } from "../Services/BookingService";
 import * as ImagePicker from "expo-image-picker";
 import useAuthStore from "../Stores/useAuthStore";
 import { URL_IMAGE } from "../Services/Constants";
@@ -117,9 +118,29 @@ const RentalRoomView = ({ navigation, route }: Props) => {
     setPaymentModalVisible(false);
   };
 
-  const handlePaymentSuccess = () => {
-    onRefresh?.();
-    navigation.goBack();
+  const handlePaymentSuccess = async (bookingId: string) => {
+    try {
+      console.log("Confirming payment for booking:", bookingId);
+      // Update with newStatus = 3 (Waiting Confirmation)
+      const statusUpdate = {
+        newStatus: 3, // Backend expects newStatus as number
+      };
+      console.log("Status update payload:", statusUpdate);
+
+      await updateBookingStatus(bookingId, statusUpdate);
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Payment confirmation submitted successfully!",
+      });
+
+      onRefresh?.();
+      navigation.goBack();
+    } catch (error) {
+      // Error is already handled and shown in PaymentModal
+      throw error;
+    }
   };
 
   // Image Preview Functions
@@ -313,7 +334,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
         </View>
 
         {/* Payment Proof */}
-        {booking.imageProof && (
+        {booking.imageProof && booking.status === 3 && (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Payment Proof</Text>
             <TouchableOpacity
@@ -375,7 +396,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
         visible={paymentModalVisible}
         bookingId={booking.bookingId}
         onClose={handleClosePaymentModal}
-        onSuccess={handlePaymentSuccess}
+        onConfirm={handlePaymentSuccess}
       />
 
       {/* Request Modal */}
