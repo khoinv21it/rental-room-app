@@ -235,6 +235,13 @@ export type ContractDetail = {
     }
 }
 
+export type TenantInfo = {
+  id: string;
+  name: string;
+  phone?: string;
+  roomTitle?: string;
+}
+
 export type Bill = {
         id: string;
         month: string;

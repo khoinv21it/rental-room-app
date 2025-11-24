@@ -10,8 +10,9 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { downloadBillProof, fetchBillDetails } from "../Services/BillService";
-import { Bill } from "../types/types";
+import { Bill, TenantInfo } from "../types/types";
 import ImageModal from "./ImageModal";
+import BillDetailModal from "./ModalBill";
 
 // Helpers: format amounts and month string
 const formatVND = (value?: number | string | null) => {
@@ -57,10 +58,15 @@ const formatMonth = (monthStr?: string | null) => {
 
 interface BillsTabProps {
   contractId: string;
+  tenantInfo: TenantInfo;
   navigation: any;
 }
 
-const BillsTab: React.FC<BillsTabProps> = ({ contractId, navigation }) => {
+const BillsTab: React.FC<BillsTabProps> = ({
+  contractId,
+  tenantInfo,
+  navigation,
+}) => {
   const [selectedFilter, setSelectedFilter] = useState<string>("All");
   const [bills, setBills] = useState<Bill[]>([]);
   const [unpaidAmount, setUnpaidAmount] = useState<number>(0);
@@ -70,6 +76,15 @@ const BillsTab: React.FC<BillsTabProps> = ({ contractId, navigation }) => {
   const [confirmingBills, setConfirmingBills] = useState<number>(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
+
+  const [billDetailVisible, setBillDetailVisible] = useState(false);
+  const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+
+  // Thêm handler
+  const handleViewDetails = (bill: Bill) => {
+    setSelectedBill(bill);
+    setBillDetailVisible(true);
+  };
 
   const handleViewImage = (imageUrl: string) => {
     setSelectedImage(imageUrl);
@@ -86,8 +101,7 @@ const BillsTab: React.FC<BillsTabProps> = ({ contractId, navigation }) => {
       }
     };
     fetchBills();
-  }, [contractId, selectedFilter]);
-  console.log("Fetched bills ");
+  }, [contractId]);
 
   useEffect(() => {
     // Calculate summary stats
@@ -113,6 +127,11 @@ const BillsTab: React.FC<BillsTabProps> = ({ contractId, navigation }) => {
     setConfirmingBills(confirming);
   }, [bills]);
 
+  // derive filtered list based on selectedFilter
+  const filteredBills = bills.filter((bill) =>
+    selectedFilter === "All" ? true : bill.status === selectedFilter
+  );
+
   const handleDownload = async (billId: string) => {
     try {
       const response = await downloadBillProof(billId);
@@ -130,6 +149,9 @@ const BillsTab: React.FC<BillsTabProps> = ({ contractId, navigation }) => {
       console.error("Error downloading bill proof:", error);
       Alert.alert("Error", "Failed to download bill proof");
     }
+  };
+  const handlePay = () => {
+    navigation.navigate("PaymentScreen", { contractId });
   };
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -255,172 +277,192 @@ const BillsTab: React.FC<BillsTabProps> = ({ contractId, navigation }) => {
       </View>
 
       {/* Bills List */}
-      {bills.map((bill) => (
-        <View style={styles.billCard} key={bill.id}>
-          {/* Header */}
-          <View style={styles.billHeader}>
-            <View style={styles.billMonth}>
-              <MaterialCommunityIcons
-                name="calendar-month"
-                size={20}
-                color="#6366f1"
-              />
-              <Text style={styles.billMonthText}>
-                {formatMonth(bill.month)}
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: getStatusBgColor(bill.status) },
-              ]}
-            >
-              <Text
+      {filteredBills.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>No bills to display.</Text>
+        </View>
+      ) : (
+        filteredBills.map((bill) => (
+          <View style={styles.billCard} key={bill.id}>
+            {/* Header */}
+            <View style={styles.billHeader}>
+              <View style={styles.billMonth}>
+                <MaterialCommunityIcons
+                  name="calendar-month"
+                  size={20}
+                  color="#6366f1"
+                />
+                <Text style={styles.billMonthText}>
+                  {formatMonth(bill.month)}
+                </Text>
+              </View>
+              <View
                 style={[
-                  styles.statusText,
-                  { color: getStatusColor(bill.status) },
+                  styles.statusBadge,
+                  { backgroundColor: getStatusBgColor(bill.status) },
                 ]}
               >
-                {bill.status}
-              </Text>
-            </View>
-          </View>
-
-          {/* Bill Details */}
-          <View style={styles.billDetails}>
-            {/* Electricity + Water */}
-            <View style={styles.detailRow}>
-              {/* Electricity */}
-              <View style={styles.detailItem}>
-                <MaterialCommunityIcons
-                  name="lightning-bolt"
-                  size={18}
-                  color="#f59e0b"
-                />
-                <View style={styles.detailText}>
-                  <Text style={styles.detailLabel}>Electricity</Text>
-                  <Text style={styles.detailValue}>
-                    {formatVND(bill.electricityFee)}
-                  </Text>
-                  <Text style={styles.detailSubtext}>
-                    {bill.electricityUsage || 0} kWh ×{" "}
-                    {formatNumber(bill.electricityPrice)} đ/kWh
-                  </Text>
-                </View>
-              </View>
-
-              {/* Water */}
-              <View style={styles.detailItem}>
-                <MaterialCommunityIcons
-                  name="water"
-                  size={18}
-                  color="#3b82f6"
-                />
-                <View style={styles.detailText}>
-                  <Text style={styles.detailLabel}>Water</Text>
-                  <Text style={styles.detailValue}>
-                    {formatVND(bill.waterFee)}
-                  </Text>
-                  <Text style={styles.detailSubtext}>
-                    {bill.waterUsage || 0} m³ × {formatNumber(bill.waterPrice)}{" "}
-                    đ/m³
-                  </Text>
-                </View>
+                <Text
+                  style={[
+                    styles.statusText,
+                    { color: getStatusColor(bill.status) },
+                  ]}
+                >
+                  {bill.status}
+                </Text>
               </View>
             </View>
 
-            {/* Service + Other */}
-            <View style={styles.detailRow}>
-              {/* Service Fee */}
-              <View style={styles.detailItem}>
-                <MaterialCommunityIcons name="cog" size={18} color="#8b5cf6" />
-                <View style={styles.detailText}>
-                  <Text style={styles.detailLabel}>Service</Text>
-                  <Text style={styles.detailValue}>
-                    {formatVND(bill.serviceFee)}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Other / Damage Fee */}
-              {bill.damageFee > 0 && (
+            {/* Bill Details */}
+            <View style={styles.billDetails}>
+              {/* Electricity + Water */}
+              <View style={styles.detailRow}>
+                {/* Electricity */}
                 <View style={styles.detailItem}>
                   <MaterialCommunityIcons
-                    name="alert-circle-outline"
+                    name="lightning-bolt"
                     size={18}
-                    color="#dc2626"
+                    color="#f59e0b"
                   />
                   <View style={styles.detailText}>
-                    <Text style={styles.detailLabel}>Other Fee</Text>
+                    <Text style={styles.detailLabel}>Electricity</Text>
                     <Text style={styles.detailValue}>
-                      {formatVND(bill.damageFee)}
+                      {formatVND(bill.electricityFee)}
                     </Text>
-                    {!!bill.note && (
-                      <Text style={styles.detailSubtext}>{bill.note}</Text>
-                    )}
+                    <Text style={styles.detailSubtext}>
+                      {bill.electricityUsage || 0} kWh ×
+                      {formatNumber(bill.electricityPrice)} đ/kWh
+                    </Text>
                   </View>
                 </View>
-              )}
-            </View>
-          </View>
 
-          {/* Divider */}
-          <View style={styles.billDivider} />
-
-          {/* Footer */}
-          <View style={styles.billFooter}>
-            <View style={styles.totalSection}>
-              <Text style={styles.totalLabel}>Total Amount</Text>
-              <Text style={styles.totalValue}>
-                {formatVND(bill.totalAmount)}
-              </Text>
-            </View>
-            <View style={styles.billActions}>
-              {bill.imageProof && (
-                <TouchableOpacity
-                  style={styles.imageButton}
-                  onPress={() => {
-                    handleViewImage(bill.imageProof!);
-                  }}
-                >
+                {/* Water */}
+                <View style={styles.detailItem}>
                   <MaterialCommunityIcons
-                    name="image"
+                    name="water"
                     size={18}
-                    color="#6366f1"
+                    color="#3b82f6"
                   />
-                </TouchableOpacity>
-              )}
+                  <View style={styles.detailText}>
+                    <Text style={styles.detailLabel}>Water</Text>
+                    <Text style={styles.detailValue}>
+                      {formatVND(bill.waterFee)}
+                    </Text>
+                    <Text style={styles.detailSubtext}>
+                      {bill.waterUsage || 0} m³ ×{" "}
+                      {formatNumber(bill.waterPrice)} đ/m³
+                    </Text>
+                  </View>
+                </View>
+              </View>
 
-              {/* icon eyee */}
-              <View style={styles.actionRow}>
-                <TouchableOpacity style={styles.viewButton}>
+              {/* Service + Other */}
+              <View style={styles.detailRow}>
+                {/* Service Fee */}
+                <View style={styles.detailItem}>
                   <MaterialCommunityIcons
-                    name="eye-outline"
+                    name="cog"
                     size={18}
-                    color="#6366f1"
+                    color="#8b5cf6"
                   />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.viewButton}
-                  onPress={() => {
-                    handleDownload(bill.id!);
-                  }}
-                >
-                  <MaterialCommunityIcons
-                    name="download-outline"
-                    size={16}
-                    color="#6366f1"
-                  />
-                </TouchableOpacity>
+                  <View style={styles.detailText}>
+                    <Text style={styles.detailLabel}>Service</Text>
+                    <Text style={styles.detailValue}>
+                      {formatVND(bill.serviceFee)}
+                    </Text>
+                  </View>
+                </View>
 
-                <TouchableOpacity style={styles.payButton}>
-                  <Text style={styles.payButtonText}>Pay Now</Text>
-                </TouchableOpacity>
+                {/* Other / Damage Fee */}
+                {bill.damageFee > 0 && (
+                  <View style={styles.detailItem}>
+                    <MaterialCommunityIcons
+                      name="alert-circle-outline"
+                      size={18}
+                      color="#dc2626"
+                    />
+                    <View style={styles.detailText}>
+                      <Text style={styles.detailLabel}>Other Fee</Text>
+                      <Text style={styles.detailValue}>
+                        {formatVND(bill.damageFee)}
+                      </Text>
+                      {!!bill.note && (
+                        <Text style={styles.detailSubtext}>{bill.note}</Text>
+                      )}
+                    </View>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {/* Divider */}
+            <View style={styles.billDivider} />
+
+            {/* Footer */}
+            <View style={styles.billFooter}>
+              <View style={styles.totalSection}>
+                <Text style={styles.totalLabel}>Total Amount</Text>
+                <Text style={styles.totalValue}>
+                  {formatVND(bill.totalAmount)}
+                </Text>
+              </View>
+              <View style={styles.billActions}>
+                {bill.imageProof && (
+                  <TouchableOpacity
+                    style={styles.imageButton}
+                    onPress={() => {
+                      handleViewImage(bill.imageProof!);
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="image"
+                      size={18}
+                      color="#6366f1"
+                    />
+                  </TouchableOpacity>
+                )}
+
+                {/* icon eyee */}
+                <View style={styles.actionRow}>
+                  <TouchableOpacity
+                    style={styles.viewButton}
+                    onPress={() => {
+                      handleViewDetails(bill);
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="eye-outline"
+                      size={18}
+                      color="#6366f1"
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.viewButton}
+                    onPress={() => {
+                      handleDownload(bill.id!);
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="download-outline"
+                      size={16}
+                      color="#6366f1"
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.payButton}
+                    onPress={() => {
+                      handlePay();
+                    }}
+                  >
+                    <Text style={styles.payButtonText}>Pay Now</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </View>
-        </View>
-      ))}
+        ))
+      )}
 
       {/* Payment Info */}
       <View style={styles.paymentInfoCard}>
@@ -440,7 +482,7 @@ const BillsTab: React.FC<BillsTabProps> = ({ contractId, navigation }) => {
               color="#22c55e"
             />
             <Text style={styles.paymentMethodText}>
-              Online payment via VNPay, MoMo, ZaloPay
+              Online payment via mobile banking apps
             </Text>
           </View>
           <View style={styles.paymentMethod}>
@@ -474,6 +516,13 @@ const BillsTab: React.FC<BillsTabProps> = ({ contractId, navigation }) => {
         visible={modalVisible}
         imageUrl={selectedImage}
         onClose={() => setModalVisible(false)}
+      />
+      {/* ModalBill component for bill details */}
+      <BillDetailModal
+        visible={billDetailVisible}
+        bill={selectedBill}
+        tenantInfo={tenantInfo}
+        onClose={() => setBillDetailVisible(false)}
       />
     </ScrollView>
   );
@@ -784,6 +833,18 @@ const styles = StyleSheet.create({
     color: "#991b1b",
     marginLeft: 8,
     lineHeight: 18,
+  },
+  emptyState: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  emptyStateText: {
+    color: "#64748b",
+    fontSize: 14,
   },
 });
 

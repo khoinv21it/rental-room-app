@@ -5,15 +5,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Linking,
-  Alert,
 } from "react-native";
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import FilePreview from "../../../components/FilePreview";
 import BillsTab from "../../../components/BillsTab";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ContractDetail } from "../../../types/types";
+import { ContractDetail, TenantInfo } from "../../../types/types";
 import { fetchContractDetail } from "../../../Services/ContractService";
 import { URL_IMAGE } from "../../../Services/Constants";
 
@@ -37,11 +35,18 @@ const ContractOverviewScreen = ({ navigation, route }: Props) => {
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<"overview" | "bills">("overview");
   const [contractData, setContractData] = useState<ContractDetail>();
+  const [tenantInfo, setTenantInfo] = useState<TenantInfo>();
 
   useEffect(() => {
     const fetchContract = async () => {
       try {
         const response = await fetchContractDetail(contractId);
+        const tenantInfo = {
+          name: response.tenantName,
+          phone: response.tenantPhone,
+          roomTitle: response.roomTitle,
+        } as TenantInfo;
+        setTenantInfo(tenantInfo);
         setContractData(response);
       } catch (error) {
         console.error("Error fetching contract detail:", error);
@@ -295,6 +300,7 @@ const ContractOverviewScreen = ({ navigation, route }: Props) => {
       ) : (
         <BillsTab
           contractId={contractId}
+          tenantInfo={tenantInfo!}
           navigation={navigation}
         />
       )}
