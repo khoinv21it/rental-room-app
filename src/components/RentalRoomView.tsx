@@ -509,7 +509,10 @@ const RentalRoomView = ({ navigation, route }: Props) => {
                     <View style={styles.paymentInfoRow}>
                       <Text style={styles.paymentLabel}>Deposit Amount:</Text>
                       <Text style={styles.paymentPrice}>
-                        {paymentInfo.depositAmount?.toLocaleString("vi-VN")} ₫
+                        {(paymentInfo.depositAmount || 0).toLocaleString(
+                          "vi-VN"
+                        )}{" "}
+                        ₫
                       </Text>
                     </View>
                     <View style={styles.paymentInfoRow}>
@@ -524,7 +527,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
                         {paymentInfo.email}
                       </Text>
                     </View>
-                  </View>{" "}
+                  </View>
                   <Text style={styles.modalSectionTitle}>
                     Upload Payment Proof
                   </Text>

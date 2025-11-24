@@ -234,3 +234,20 @@ export type ContractDetail = {
         phoneNumber: string;
     }
 }
+
+export type Bill = {
+        id: string;
+        month: string;
+        electricityPrice: number;
+        electricityUsage: number;
+        electricityFee: number;
+        waterPrice: number;
+        waterUsage: number;
+        waterFee: number;
+        damageFee: number;
+        note: string | null;
+        serviceFee: number;
+        totalAmount: number;
+        status: string;
+        imageProof: string | null;
+}

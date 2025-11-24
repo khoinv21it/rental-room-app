@@ -117,7 +117,9 @@ const ManageScreen = ({ navigation }: Props) => {
 
       {/* Menu Section */}
       <View style={styles.menuSection}>
-        <View style={styles.menuContainer}>{menuItems.map(renderMenuItem)}</View>
+        <View style={styles.menuContainer}>
+          {menuItems.map(renderMenuItem)}
+        </View>
       </View>
     </ScrollView>
   );

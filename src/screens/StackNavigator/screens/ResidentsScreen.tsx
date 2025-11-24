@@ -138,7 +138,9 @@ const ResidentsScreen = ({ navigation }: Props) => {
       <View style={styles.residentHeader}>
         <View style={styles.avatarContainer}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{resident.name.charAt(0)}</Text>
+            <Text style={styles.avatarText}>
+              {(resident.name || "?").charAt(0)}
+            </Text>
           </View>
           {resident.isActive && <View style={styles.activeDot} />}
         </View>

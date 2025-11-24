@@ -453,8 +453,8 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
             <Text style={styles.detailText}>
               {item.rentalDate
                 ? new Date(item.rentalDate).toLocaleDateString()
-                : "N/A"}{" "}
-              -{" "}
+                : "N/A"}
+              -
               {item.rentalExpires
                 ? new Date(item.rentalExpires).toLocaleDateString()
                 : "N/A"}
@@ -716,7 +716,7 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
               {/* Description Input */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>
-                  Request Description{" "}
+                  Request Description
                   <Text style={{ color: "#F44336" }}>*</Text>
                 </Text>
                 <TextInput

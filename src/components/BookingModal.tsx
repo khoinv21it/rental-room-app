@@ -113,7 +113,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 {totalCost.toLocaleString("vi-VN")} VND
               </Text>
               <Text style={styles.totalCostDesc}>
-                {duration} month{duration > 1 ? "s" : ""} ×{" "}
+                {duration} month{duration > 1 ? "s" : ""} ×
                 {pricePerMonth.toLocaleString("vi-VN")} VND/month
               </Text>
             </View>
