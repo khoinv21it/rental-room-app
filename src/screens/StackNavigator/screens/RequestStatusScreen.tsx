@@ -292,7 +292,7 @@ const RequestStatusScreen = ({ navigation }: Props) => {
         <View style={styles.detailRow}>
           <Ionicons name="calendar" size={18} color="#666" />
           <Text style={styles.detailText}>
-            Created:{" "}
+            Created:
             {new Date(request.createdDate).toLocaleDateString("en-US", {
               year: "numeric",
               month: "short",
@@ -395,7 +395,7 @@ const RequestStatusScreen = ({ navigation }: Props) => {
                     Page {currentPage + 1} of {totalPages}
                   </Text>
                   <Text style={styles.paginationSubtext}>
-                    {totalRecords} total{" "}
+                    {totalRecords} total
                     {totalRecords === 1 ? "request" : "requests"}
                   </Text>
                 </View>

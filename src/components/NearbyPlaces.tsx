@@ -360,7 +360,7 @@ const NearbyPlaces: React.FC<NearbyPlacesProps> = ({ address, roomId }) => {
 
       {isCollapsed ? (
         <Text style={styles.collapsedSummary}>
-          {totalPlaces} places • Nearest:{" "}
+          {totalPlaces} places • Nearest:
           {nearestDistance !== null ? formatDistance(nearestDistance) : "N/A"}
         </Text>
       ) : nearbyPlaces.length > 0 ? (
@@ -440,7 +440,7 @@ const NearbyPlaces: React.FC<NearbyPlacesProps> = ({ address, roomId }) => {
               <Text style={styles.summaryBold}>{totalPlaces} places</Text>
               <Text style={styles.summarySeparator}> • </Text>
               <Text>
-                Nearest:{" "}
+                Nearest:
                 {nearestDistance !== null
                   ? formatDistance(nearestDistance)
                   : "N/A"}

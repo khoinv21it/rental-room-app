@@ -190,7 +190,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
           <View style={styles.priceContainer}>
             <Text style={styles.priceLabel}>Price per month</Text>
             <Text style={styles.price}>
-              {formatPrice(room.priceMonth || 0)}{" "}
+              {formatPrice(room.priceMonth || 0)}
               <Text style={styles.currency}>VND</Text>
             </Text>
           </View>

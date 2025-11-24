@@ -10,6 +10,8 @@ import {
 } from "react-native";
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import FilePreview from "../../../components/FilePreview";
+import BillsTab from "../../../components/BillsTab";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ContractDetail } from "../../../types/types";
 import { fetchContractDetail } from "../../../Services/ContractService";
@@ -238,48 +240,21 @@ const ContractOverviewScreen = ({ navigation, route }: Props) => {
 
           {/* Contract File */}
           <Text style={styles.sectionTitle}>Contract File</Text>
-          <View style={styles.fileCard}>
-            <View style={styles.fileInfo}>
-              <View style={styles.fileIconContainer}>
-                <MaterialCommunityIcons
-                  name="file-document-outline"
-                  size={32}
-                  color="#6366f1"
-                />
-              </View>
-              <View style={styles.fileDetails}>
-                <Text style={styles.fileName}>
-                  {contractData?.contractImage
-                    ? decodeURIComponent(
-                        contractData.contractImage.split("/").pop() || "file"
-                      )
-                    : "No file available"}
-                </Text>
-                <Text style={styles.fileId}>{contractData?.contractImage}</Text>
-              </View>
-            </View>
-            {contractData?.contractImage && (
-              <TouchableOpacity
-                style={styles.downloadButton}
-                onPress={() => {
-                  const fileUrl = URL_IMAGE + contractData.contractImage;
-                  const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(
-                    fileUrl
-                  )}&embedded=true`;
-
-                  Linking.openURL(googleViewerUrl).catch(() => {
-                    // Fallback to direct URL if Google Docs fails
-                    Linking.openURL(fileUrl).catch(() => {
-                      alert("Cannot open PDF file");
-                    });
-                  });
-                }}
-              >
-                <Ionicons name="eye-outline" size={20} color="#fff" />
-                <Text style={styles.downloadText}>View File</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          <FilePreview
+            fileUrl={
+              contractData?.contractImage
+                ? URL_IMAGE + contractData.contractImage
+                : ""
+            }
+            fileName={
+              contractData?.contractImage
+                ? decodeURIComponent(
+                    contractData.contractImage.split("/").pop() || "file"
+                  )
+                : "No file available"
+            }
+            fileId={contractData?.contractImage}
+          />
 
           {/* Important Notes */}
           <View style={styles.notesCard}>
@@ -318,19 +293,10 @@ const ContractOverviewScreen = ({ navigation, route }: Props) => {
           <View style={{ height: 100 }} />
         </ScrollView>
       ) : (
-        <View style={styles.emptyContainer}>
-          <View style={styles.emptyIconContainer}>
-            <MaterialCommunityIcons
-              name="receipt-text-outline"
-              size={48}
-              color="#94a3b8"
-            />
-          </View>
-          <Text style={styles.emptyTitle}>No Bills Yet</Text>
-          <Text style={styles.emptyDesc}>
-            Bills will appear here when available
-          </Text>
-        </View>
+        <BillsTab
+          contractId={contractId}
+          navigation={navigation}
+        />
       )}
     </View>
   );

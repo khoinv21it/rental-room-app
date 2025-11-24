@@ -524,7 +524,7 @@ export default function RoomDetailScreen() {
 
             <View style={styles.priceRow}>
               <Text style={styles.price}>
-                {roomData?.priceMonth?.toLocaleString("vi-VN")}₫
+                {(roomData?.priceMonth || 0).toLocaleString("vi-VN")}₫
               </Text>
               <Text style={styles.month}>/month</Text>
             </View>
@@ -532,8 +532,8 @@ export default function RoomDetailScreen() {
             <View style={styles.locationRow}>
               <Ionicons name="location-outline" size={16} color="#6b7280" />
               <Text style={styles.locationText}>
-                {roomData?.address?.street}, {roomData?.address?.ward?.name},{" "}
-                {roomData?.address?.ward?.district?.name},{" "}
+                {roomData?.address?.street}, {roomData?.address?.ward?.name},
+                {roomData?.address?.ward?.district?.name},
                 {roomData?.address?.ward?.district?.province?.name}
               </Text>
             </View>
@@ -596,14 +596,14 @@ export default function RoomDetailScreen() {
             <View style={styles.specCard}>
               <Ionicons name="flash-outline" size={28} color="#4f46e5" />
               <Text style={styles.specNumber}>
-                {roomData?.elecPrice?.toLocaleString("vi-VN")}₫
+                {(roomData?.elecPrice || 0).toLocaleString("vi-VN")}₫
               </Text>
               <Text style={styles.specLabel}>Electric/kWh</Text>
             </View>
             <View style={styles.specCard}>
               <Ionicons name="water-outline" size={28} color="#4f46e5" />
               <Text style={styles.specNumber}>
-                {roomData?.waterPrice?.toLocaleString("vi-VN")}₫
+                {(roomData?.waterPrice || 0).toLocaleString("vi-VN")}₫
               </Text>
               <Text style={styles.specLabel}>Water/m³</Text>
             </View>
