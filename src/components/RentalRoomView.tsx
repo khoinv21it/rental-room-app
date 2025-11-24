@@ -14,15 +14,11 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { fontSize, layout, normalize, spacing } from "../utils/responsive";
 import Toast from "react-native-toast-message";
-import {
-  getLandlordPaymentInfo,
-  uploadBillTransferImage,
-  updateBookingStatus,
-} from "../Services/BookingService";
 import { createRequest } from "../Services/RequirementService";
 import * as ImagePicker from "expo-image-picker";
 import useAuthStore from "../Stores/useAuthStore";
 import { URL_IMAGE } from "../Services/Constants";
+import { PaymentModal } from "./index";
 
 interface Props {
   navigation: any;
@@ -50,26 +46,12 @@ interface BookingData {
   imageProof?: string;
 }
 
-interface LandlordPaymentInfo {
-  bankNumber: string;
-  binCode: string;
-  depositAmount: number;
-  phoneNumber: string;
-  email: string;
-}
-
 const RentalRoomView = ({ navigation, route }: Props) => {
   const { booking: initialBooking, onRefresh } = route.params;
   const [booking, setBooking] = useState<BookingData>(initialBooking);
 
   // Payment Modal State
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
-  const [paymentInfo, setPaymentInfo] = useState<LandlordPaymentInfo | null>(
-    null
-  );
-  const [transferConfirmed, setTransferConfirmed] = useState(false);
-  const [uploadedImageUri, setUploadedImageUri] = useState<string | null>(null);
-  const [imageUploading, setImageUploading] = useState(false);
 
   // Image Preview Modal
   const [imagePreviewVisible, setImagePreviewVisible] = useState(false);
@@ -127,101 +109,17 @@ const RentalRoomView = ({ navigation, route }: Props) => {
     new Date() <= new Date(booking.rentalExpires);
 
   // Payment Modal Functions
-  const handleOpenPaymentModal = async () => {
+  const handleOpenPaymentModal = () => {
     setPaymentModalVisible(true);
-    setTransferConfirmed(false);
-    setUploadedImageUri(null);
-
-    try {
-      const info: any = await getLandlordPaymentInfo(booking.bookingId);
-      setPaymentInfo(info);
-    } catch (error) {
-      console.error("Failed to fetch payment info:", error);
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "Failed to load payment information",
-      });
-    }
   };
 
   const handleClosePaymentModal = () => {
     setPaymentModalVisible(false);
-    setPaymentInfo(null);
-    setTransferConfirmed(false);
-    setUploadedImageUri(null);
   };
 
-  const handlePickImage = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permissionResult.granted) {
-      Alert.alert(
-        "Permission Required",
-        "Please grant camera roll permissions to upload images."
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      const uri = result.assets[0].uri;
-      setImageUploading(true);
-
-      try {
-        await uploadBillTransferImage(booking.bookingId, uri);
-        setUploadedImageUri(uri);
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: "Bill transfer image uploaded successfully!",
-        });
-      } catch (error) {
-        console.error("Failed to upload image:", error);
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: "Failed to upload image",
-        });
-      } finally {
-        setImageUploading(false);
-      }
-    }
-  };
-
-  const handleConfirmPayment = async () => {
-    if (!transferConfirmed) {
-      Alert.alert(
-        "Confirmation Required",
-        "Please confirm that you have completed the transfer"
-      );
-      return;
-    }
-
-    try {
-      await updateBookingStatus(booking.bookingId, { status: "3" });
-      Toast.show({
-        type: "success",
-        text1: "Success",
-        text2: "Payment confirmation submitted successfully!",
-      });
-      handleClosePaymentModal();
-      onRefresh?.();
-      navigation.goBack();
-    } catch (error) {
-      console.error("Failed to confirm payment:", error);
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "Failed to confirm payment",
-      });
-    }
+  const handlePaymentSuccess = () => {
+    onRefresh?.();
+    navigation.goBack();
   };
 
   // Image Preview Functions
@@ -473,120 +371,12 @@ const RentalRoomView = ({ navigation, route }: Props) => {
       </ScrollView>
 
       {/* Payment Modal */}
-      <Modal
+      <PaymentModal
         visible={paymentModalVisible}
-        animationType="slide"
-        transparent={true}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Confirm Deposit</Text>
-              <TouchableOpacity onPress={handleClosePaymentModal}>
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.modalBody}>
-              {paymentInfo ? (
-                <>
-                  <Text style={styles.modalSectionTitle}>
-                    Landlord Payment Information
-                  </Text>
-                  <View style={styles.paymentInfoCard}>
-                    <View style={styles.paymentInfoRow}>
-                      <Text style={styles.paymentLabel}>Bank Number:</Text>
-                      <Text style={styles.paymentValue}>
-                        {paymentInfo.bankNumber}
-                      </Text>
-                    </View>
-                    <View style={styles.paymentInfoRow}>
-                      <Text style={styles.paymentLabel}>Bank Code:</Text>
-                      <Text style={styles.paymentValue}>
-                        {paymentInfo.binCode}
-                      </Text>
-                    </View>
-                    <View style={styles.paymentInfoRow}>
-                      <Text style={styles.paymentLabel}>Deposit Amount:</Text>
-                      <Text style={styles.paymentPrice}>
-                        {paymentInfo.depositAmount?.toLocaleString("vi-VN")} ₫
-                      </Text>
-                    </View>
-                    <View style={styles.paymentInfoRow}>
-                      <Text style={styles.paymentLabel}>Phone:</Text>
-                      <Text style={styles.paymentValue}>
-                        {paymentInfo.phoneNumber}
-                      </Text>
-                    </View>
-                    <View style={styles.paymentInfoRow}>
-                      <Text style={styles.paymentLabel}>Email:</Text>
-                      <Text style={styles.paymentValue}>
-                        {paymentInfo.email}
-                      </Text>
-                    </View>
-                  </View>{" "}
-                  <Text style={styles.modalSectionTitle}>
-                    Upload Payment Proof
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.uploadButton}
-                    onPress={handlePickImage}
-                    disabled={imageUploading}
-                  >
-                    {imageUploading ? (
-                      <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                      <>
-                        <Ionicons name="cloud-upload" size={20} color="#fff" />
-                        <Text style={styles.uploadButtonText}>
-                          {uploadedImageUri
-                            ? "Change Image"
-                            : "Upload Transfer Bill"}
-                        </Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                  {uploadedImageUri && (
-                    <View style={styles.uploadedImageContainer}>
-                      <Image
-                        source={{ uri: uploadedImageUri }}
-                        style={styles.uploadedImage}
-                      />
-                    </View>
-                  )}
-                  <View style={styles.confirmationContainer}>
-                    <TouchableOpacity
-                      style={styles.checkboxContainer}
-                      onPress={() => setTransferConfirmed(!transferConfirmed)}
-                    >
-                      <Ionicons
-                        name={transferConfirmed ? "checkbox" : "square-outline"}
-                        size={24}
-                        color="#4A90E2"
-                      />
-                      <Text style={styles.checkboxLabel}>
-                        I confirm that I have completed the transfer
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                  <TouchableOpacity
-                    style={[
-                      styles.submitButton,
-                      !transferConfirmed && styles.submitButtonDisabled,
-                    ]}
-                    onPress={handleConfirmPayment}
-                    disabled={!transferConfirmed}
-                  >
-                    <Text style={styles.submitButtonText}>Confirm Payment</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <ActivityIndicator size="large" color="#4A90E2" />
-              )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+        bookingId={booking.bookingId}
+        onClose={handleClosePaymentModal}
+        onSuccess={handlePaymentSuccess}
+      />
 
       {/* Request Modal */}
       <Modal
@@ -895,34 +685,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     marginTop: spacing.sm,
   },
-  paymentInfoCard: {
-    backgroundColor: "#f8f9ff",
-    padding: spacing.xl,
-    borderRadius: normalize(12),
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
-  paymentInfoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: spacing.sm,
-  },
-  paymentLabel: {
-    fontSize: fontSize.md,
-    color: "#666",
-    fontWeight: "600",
-  },
-  paymentValue: {
-    fontSize: fontSize.md,
-    color: "#333",
-    fontWeight: "500",
-  },
-  paymentPrice: {
-    fontSize: fontSize.md,
-    color: "#4CAF50",
-    fontWeight: "700",
-  },
   uploadButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -948,19 +710,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: normalize(200),
     borderRadius: normalize(8),
-  },
-  confirmationContainer: {
-    marginVertical: spacing.lg,
-  },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  checkboxLabel: {
-    fontSize: fontSize.md,
-    color: "#333",
-    flex: 1,
   },
   submitButton: {
     backgroundColor: "#4A90E2",

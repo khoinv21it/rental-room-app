@@ -1,0 +1,432 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+  Alert,
+  Image,
+  ActivityIndicator,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { fontSize, layout, normalize, spacing } from "../utils/responsive";
+import Toast from "react-native-toast-message";
+import {
+  getLandlordPaymentInfo,
+  uploadBillTransferImage,
+  updateBookingStatus,
+} from "../Services/BookingService";
+import * as ImagePicker from "expo-image-picker";
+
+interface LandlordPaymentInfo {
+  bankNumber: string;
+  binCode: string;
+  depositAmount: number;
+  phoneNumber: string;
+  email: string;
+}
+
+interface PaymentModalProps {
+  visible: boolean;
+  bookingId: string;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+const PaymentModal = ({
+  visible,
+  bookingId,
+  onClose,
+  onSuccess,
+}: PaymentModalProps) => {
+  const [paymentInfo, setPaymentInfo] = useState<LandlordPaymentInfo | null>(
+    null
+  );
+  const [transferConfirmed, setTransferConfirmed] = useState(false);
+  const [uploadedImageUri, setUploadedImageUri] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch payment info when modal opens
+  React.useEffect(() => {
+    if (visible && bookingId) {
+      fetchPaymentInfo();
+    } else if (!visible) {
+      // Reset state when modal closes
+      setPaymentInfo(null);
+      setTransferConfirmed(false);
+      setUploadedImageUri(null);
+    }
+  }, [visible, bookingId]);
+
+  const fetchPaymentInfo = async () => {
+    setLoading(true);
+    try {
+      const info: any = await getLandlordPaymentInfo(bookingId);
+      setPaymentInfo(info);
+    } catch (error) {
+      console.error("Failed to fetch payment info:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load payment information",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePickImage = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert(
+        "Permission Required",
+        "Please grant camera roll permissions to upload images."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const uri = result.assets[0].uri;
+      setImageUploading(true);
+
+      try {
+        await uploadBillTransferImage(bookingId, uri);
+        setUploadedImageUri(uri);
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Bill transfer image uploaded successfully!",
+        });
+      } catch (error) {
+        console.error("Failed to upload image:", error);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Failed to upload image",
+        });
+      } finally {
+        setImageUploading(false);
+      }
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!transferConfirmed) {
+      Alert.alert(
+        "Confirmation Required",
+        "Please confirm that you have completed the transfer"
+      );
+      return;
+    }
+
+    try {
+      await updateBookingStatus(bookingId, { status: "3" });
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Payment confirmation submitted successfully!",
+      });
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      console.error("Failed to confirm payment:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to confirm payment",
+      });
+    }
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent={true}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Confirm Deposit</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalBody}>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#4A90E2" />
+                <Text style={styles.loadingText}>
+                  Loading payment information...
+                </Text>
+              </View>
+            ) : paymentInfo ? (
+              <>
+                <Text style={styles.modalSectionTitle}>
+                  Landlord Payment Information
+                </Text>
+                <View style={styles.paymentInfoCard}>
+                  <View style={styles.paymentInfoRow}>
+                    <Text style={styles.paymentLabel}>Bank Number:</Text>
+                    <Text style={styles.paymentValue}>
+                      {paymentInfo.bankNumber}
+                    </Text>
+                  </View>
+                  <View style={styles.paymentInfoRow}>
+                    <Text style={styles.paymentLabel}>Bank Code:</Text>
+                    <Text style={styles.paymentValue}>
+                      {paymentInfo.binCode}
+                    </Text>
+                  </View>
+                  <View style={styles.paymentInfoRow}>
+                    <Text style={styles.paymentLabel}>Deposit Amount:</Text>
+                    <Text style={styles.paymentPrice}>
+                      {paymentInfo.depositAmount?.toLocaleString("vi-VN")} ₫
+                    </Text>
+                  </View>
+                  <View style={styles.paymentInfoRow}>
+                    <Text style={styles.paymentLabel}>Phone:</Text>
+                    <Text style={styles.paymentValue}>
+                      {paymentInfo.phoneNumber}
+                    </Text>
+                  </View>
+                  <View style={styles.paymentInfoRow}>
+                    <Text style={styles.paymentLabel}>Email:</Text>
+                    <Text style={styles.paymentValue}>{paymentInfo.email}</Text>
+                  </View>
+                </View>
+
+                {/* QR Code */}
+                <View style={styles.qrContainer}>
+                  <Image
+                    source={{
+                      uri: `https://img.vietqr.io/image/${paymentInfo.binCode}-${paymentInfo.bankNumber}-qr_only.png?amount=${paymentInfo.depositAmount}&addInfo=Dat coc phong ${bookingId}`,
+                    }}
+                    style={styles.qrImage}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.qrText}>Scan QR code to pay deposit</Text>
+                </View>
+
+                <Text style={styles.modalSectionTitle}>
+                  Upload Payment Proof
+                </Text>
+                <TouchableOpacity
+                  style={styles.uploadButton}
+                  onPress={handlePickImage}
+                  disabled={imageUploading}
+                >
+                  {imageUploading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <>
+                      <Ionicons name="cloud-upload" size={20} color="#fff" />
+                      <Text style={styles.uploadButtonText}>
+                        {uploadedImageUri
+                          ? "Change Image"
+                          : "Upload Transfer Bill"}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+                {uploadedImageUri && (
+                  <View style={styles.uploadedImageContainer}>
+                    <Image
+                      source={{ uri: uploadedImageUri }}
+                      style={styles.uploadedImage}
+                    />
+                  </View>
+                )}
+                <View style={styles.confirmationContainer}>
+                  <TouchableOpacity
+                    style={styles.checkboxContainer}
+                    onPress={() => setTransferConfirmed(!transferConfirmed)}
+                  >
+                    <Ionicons
+                      name={transferConfirmed ? "checkbox" : "square-outline"}
+                      size={24}
+                      color="#4A90E2"
+                    />
+                    <Text style={styles.checkboxLabel}>
+                      I confirm that I have completed the transfer
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  style={[
+                    styles.submitButton,
+                    !transferConfirmed && styles.submitButtonDisabled,
+                  ]}
+                  onPress={handleConfirmPayment}
+                  disabled={!transferConfirmed}
+                >
+                  <Text style={styles.submitButtonText}>Confirm Payment</Text>
+                </TouchableOpacity>
+              </>
+            ) : null}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: normalize(20),
+    borderTopRightRadius: normalize(20),
+    maxHeight: "90%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: layout.screenPadding,
+    paddingVertical: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  modalTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: "700",
+    color: "#333",
+  },
+  modalBody: {
+    paddingHorizontal: layout.screenPadding,
+    paddingVertical: spacing.lg,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: spacing["4xl"],
+  },
+  loadingText: {
+    fontSize: fontSize.md,
+    color: "#666",
+    marginTop: spacing.md,
+  },
+  modalSectionTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: spacing.md,
+    marginTop: spacing.sm,
+  },
+  paymentInfoCard: {
+    backgroundColor: "#f8f9ff",
+    padding: spacing.xl,
+    borderRadius: normalize(12),
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  paymentInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: spacing.sm,
+  },
+  paymentLabel: {
+    fontSize: fontSize.md,
+    color: "#666",
+    fontWeight: "600",
+  },
+  paymentValue: {
+    fontSize: fontSize.md,
+    color: "#333",
+    fontWeight: "500",
+  },
+  paymentPrice: {
+    fontSize: fontSize.md,
+    color: "#4CAF50",
+    fontWeight: "700",
+  },
+  qrContainer: {
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: normalize(12),
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  qrImage: {
+    width: normalize(200),
+    height: normalize(200),
+  },
+  qrText: {
+    fontSize: fontSize.sm,
+    color: "#666",
+    marginTop: spacing.md,
+    textAlign: "center",
+  },
+  uploadButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4A90E2",
+    padding: spacing.lg,
+    borderRadius: normalize(8),
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+  },
+  uploadButtonText: {
+    fontSize: fontSize.md,
+    color: "#fff",
+    fontWeight: "600",
+  },
+  uploadedImageContainer: {
+    alignItems: "center",
+    marginBottom: spacing.lg,
+    borderRadius: normalize(8),
+    overflow: "hidden",
+  },
+  uploadedImage: {
+    width: "100%",
+    height: normalize(200),
+    borderRadius: normalize(8),
+  },
+  confirmationContainer: {
+    marginVertical: spacing.lg,
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  checkboxLabel: {
+    fontSize: fontSize.md,
+    color: "#333",
+    flex: 1,
+  },
+  submitButton: {
+    backgroundColor: "#4A90E2",
+    padding: spacing.xl,
+    borderRadius: normalize(12),
+    alignItems: "center",
+    marginTop: spacing.md,
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  submitButtonText: {
+    fontSize: fontSize.lg,
+    color: "#fff",
+    fontWeight: "700",
+  },
+});
+
+export default PaymentModal;
