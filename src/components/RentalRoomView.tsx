@@ -21,6 +21,7 @@ import useAuthStore from "../Stores/useAuthStore";
 import { URL_IMAGE } from "../Services/Constants";
 import { PaymentModal } from "./index";
 import { CommonActions } from "@react-navigation/native";
+import { BookingData } from "../types/types";
 
 interface Props {
   navigation: any;
@@ -29,22 +30,6 @@ interface Props {
       booking: BookingData;
     };
   };
-}
-
-interface BookingData {
-  bookingId: string;
-  roomName: string;
-  roomId: string;
-  address: string;
-  rentalDate: string;
-  rentalExpires: string;
-  tenantCount: number;
-  monthlyRent: number;
-  status: number;
-  isRemoved: number;
-  landlordName: string;
-  landlordPhone: string;
-  imageProof?: string;
 }
 
 const RentalRoomView = ({ navigation, route }: Props) => {

@@ -18,16 +18,7 @@ import {
   uploadBillTransferImage,
 } from "../Services/BookingService";
 import * as ImagePicker from "expo-image-picker";
-
-interface LandlordPaymentInfo {
-  bankNumber: string;
-  binCode: string;
-  bankName?: string;
-  depositAmount: number;
-  phoneNumber: string;
-  accountHolderName?: string;
-  email: string;
-}
+import { LandlordPaymentInfo } from "../types/types";
 
 interface PaymentModalProps {
   visible: boolean;

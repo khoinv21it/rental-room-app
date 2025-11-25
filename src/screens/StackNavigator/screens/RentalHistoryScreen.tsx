@@ -18,26 +18,11 @@ import useAuthStore from "../../../Stores/useAuthStore";
 import Toast from "react-native-toast-message";
 import { userFetchBookings } from "../../../Services/BookingService";
 import { useFocusEffect } from "@react-navigation/native";
+import { BookingData } from "../../../types/types";
 
 type Props = {
   navigation: any;
 };
-
-interface BookingData {
-  bookingId: string;
-  roomName: string;
-  roomId: string;
-  address: string;
-  rentalDate: string;
-  rentalExpires: string;
-  tenantCount: number;
-  monthlyRent: number;
-  status: number;
-  isRemoved: number;
-  landlordName: string;
-  landlordPhone: string;
-  imageProof?: string;
-}
 
 const RentalHistoryScreen = ({ navigation }: Props) => {
   const currentUser = useAuthStore((s) => s.loggedInUser);

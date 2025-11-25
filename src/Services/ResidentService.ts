@@ -1,20 +1,7 @@
 import apiClient from "../lib/apiClient";
 
-// Helper function to get auth token
-async function getAuthToken(): Promise<string> {
-  const { default: useAuthStore } = await import("../Stores/useAuthStore");
-  const token = useAuthStore.getState().access_token;
-  if (!token) {
-    throw new Error("No authentication token available");
-  }
-  return token;
-}
+// Get list of residents for the tenant
 
-/**
- * Get all residents for a specific tenant
- * @param tenantId - The tenant/user ID
- * @returns List of residents for the tenant
- */
 export async function getByTenant(tenantId: string): Promise<any[]> {
   try {
     console.log("Fetching residents for tenant:", tenantId);
@@ -40,8 +27,7 @@ export async function getByTenant(tenantId: string): Promise<any[]> {
 
 /**
  * Get specific resident by ID
- * @param residentId - The resident ID
- * @returns Resident details
+ * returns Resident details
  */
 export async function getById(residentId: string): Promise<any> {
   try {
@@ -66,14 +52,6 @@ export async function getById(residentId: string): Promise<any> {
   }
 }
 
-/**
- * Create new resident with optional images
- * @param contractId - The contract ID
- * @param residentData - The resident data
- * @param frontImageUri - Optional front image URI
- * @param backImageUri - Optional back image URI
- * @returns Created resident data
- */
 export async function createResident(
   contractId: string,
   residentData: any,
@@ -132,29 +110,18 @@ export async function createResident(
       } as any);
     }
 
-    const token = await getAuthToken();
-
-    const response = await fetch(
-      `${apiClient.defaults.baseURL}/temporary-residences`,
+    const response: any = await apiClient.post(
+      `/temporary-residences`,
+      formData,
       {
-        method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-        body: formData,
       }
     );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.message || errorData.error || "Failed to create resident"
-      );
-    }
-
-    const result = await response.json();
-    console.log("Resident created successfully:", result);
-    return result;
+    console.log("Resident created successfully:", response);
+    return response;
   } catch (error: any) {
     console.error("Error creating resident:", error);
     console.error("Error details:", {
@@ -170,15 +137,6 @@ export async function createResident(
   }
 }
 
-/**
- * Update existing resident with optional images
- * @param residentId - The resident ID
- * @param contractId - The contract ID
- * @param residentData - The updated resident data
- * @param frontImageUri - Optional front image URI
- * @param backImageUri - Optional back image URI
- * @returns Updated resident data
- */
 export async function updateResident(
   residentId: string,
   contractId: string,
@@ -238,29 +196,18 @@ export async function updateResident(
       } as any);
     }
 
-    const token = await getAuthToken();
-
-    const response = await fetch(
-      `${apiClient.defaults.baseURL}/temporary-residences/${residentId}`,
+    const response: any = await apiClient.put(
+      `/temporary-residences/${residentId}`,
+      formData,
       {
-        method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-        body: formData,
       }
     );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.message || errorData.error || "Failed to update resident"
-      );
-    }
-
-    const result = await response.json();
-    console.log("Resident updated successfully:", result);
-    return result;
+    console.log("Resident updated successfully:", response);
+    return response;
   } catch (error: any) {
     console.error("Error updating resident:", error);
     console.error("Error details:", {
@@ -276,11 +223,6 @@ export async function updateResident(
   }
 }
 
-/**
- * Delete resident by ID
- * @param residentId - The resident ID
- * @returns Success message
- */
 export async function deleteResident(residentId: string): Promise<void> {
   try {
     console.log("Deleting resident:", residentId);
@@ -301,11 +243,6 @@ export async function deleteResident(residentId: string): Promise<void> {
   }
 }
 
-/**
- * Convert image URI to base64 string for preview
- * @param imageUri - The image URI
- * @returns Base64 string
- */
 export async function fileToBase64(imageUri: string): Promise<string> {
   try {
     const response = await fetch(imageUri);
