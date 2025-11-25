@@ -175,32 +175,18 @@ export async function updateRequirementWithImage(
     });
     console.log("JSON payload:", jsonString);
 
-    const token = await getAuthToken();
-
-    const response = await fetch(
-      `${apiClient.defaults.baseURL}/requirements/${requirementId}/update-with-image`,
+    const response: any = await apiClient.patch(
+      `/requirements/${requirementId}/update-with-image`,
+      formData,
       {
-        method: "PATCH",
         headers: {
-          Authorization: `Bearer ${token}`,
-          // Don't set Content-Type header - let the browser set it with boundary for multipart/form-data
+          "Content-Type": "multipart/form-data",
         },
-        body: formData,
       }
     );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.message ||
-          errorData.errors?.[0] ||
-          "Failed to update requirement"
-      );
-    }
-
-    const result = await response.json();
-    console.log("Update response:", result);
-    return result as RequirementDetail;
+    console.log("Update response:", response);
+    return response as RequirementDetail;
   } catch (error: any) {
     console.error("Error updating requirement with image:", error);
     console.error("Error details:", {
@@ -214,16 +200,6 @@ export async function updateRequirementWithImage(
         "Failed to update requirement"
     );
   }
-}
-
-// Helper function to get auth token
-async function getAuthToken(): Promise<string> {
-  const { default: useAuthStore } = await import("../Stores/useAuthStore");
-  const token = useAuthStore.getState().access_token;
-  if (!token) {
-    throw new Error("No authentication token available");
-  }
-  return token;
 }
 
 export async function getRequirementsByStatus(
@@ -309,36 +285,18 @@ export async function createRequest(
     });
     console.log("JSON payload:", jsonString);
 
-    const token = await getAuthToken();
-
-    const response = await fetch(
-      `${apiClient.defaults.baseURL}/requirements/request-room-with-image`,
+    const response: any = await apiClient.post(
+      `/requirements/request-room-with-image`,
+      formData,
       {
-        method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
-          // Don't set Content-Type header - let the browser set it with boundary for multipart/form-data
+          "Content-Type": "multipart/form-data",
         },
-        body: formData,
       }
     );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      let errorMsg =
-        errorData?.message ||
-        errorData?.error ||
-        errorData?.errors?.[0] ||
-        "Failed to create request";
-      if (Array.isArray(errorMsg)) {
-        errorMsg = errorMsg[0];
-      }
-      throw new Error(errorMsg);
-    }
-
-    const result = await response.json();
-    console.log("Create request response:", result);
-    return result as RequirementDetail;
+    console.log("Create request response:", response);
+    return response as RequirementDetail;
   } catch (error: any) {
     console.error("Error creating request:", error);
     console.error("Error details:", {
@@ -346,11 +304,19 @@ export async function createRequest(
       response: error.response?.data,
       status: error.response?.status,
     });
-    throw new Error(
+
+    let errorMsg =
       error.response?.data?.message ||
-        error.message ||
-        "Failed to create request"
-    );
+      error.response?.data?.error ||
+      error.response?.data?.errors?.[0] ||
+      error.message ||
+      "Failed to create request";
+
+    if (Array.isArray(errorMsg)) {
+      errorMsg = errorMsg[0];
+    }
+
+    throw new Error(errorMsg);
   }
 }
 

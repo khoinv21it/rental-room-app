@@ -14,6 +14,7 @@ import { Picker } from "@react-native-picker/picker";
 import React, { useState, useEffect, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import {
   fontSize,
   layout,
@@ -28,30 +29,19 @@ import {
   updateResident,
   deleteResident,
 } from "../../../Services/ResidentService";
+import { getByTenant as getContractsByTenant } from "../../../Services/ContractService";
 import { useFocusEffect } from "@react-navigation/native";
+import { Resident } from "../../../types/types";
 
 type Props = {
   navigation: any;
 };
 
-interface Resident {
-  id: string;
-  fullName: string;
-  idNumber: string;
-  relationship: string;
-  startDate: string;
-  endDate: string;
-  note?: string;
-  status: string;
-  contractId: string;
-  idCardFrontUrl?: string;
-  idCardBackUrl?: string;
-}
-
 const ResidentsScreen = ({ navigation }: Props) => {
   const currentUser = useAuthStore((s) => s.loggedInUser);
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -62,6 +52,16 @@ const ResidentsScreen = ({ navigation }: Props) => {
   // Image state
   const [frontImageUri, setFrontImageUri] = useState<string | null>(null);
   const [backImageUri, setBackImageUri] = useState<string | null>(null);
+
+  // Available contracts for selection
+  const [availableContracts, setAvailableContracts] = useState<any[]>([]);
+  const [loadingContracts, setLoadingContracts] = useState(false);
+
+  // Date picker state
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date>(new Date());
 
   // Form state for add/edit
   const [formData, setFormData] = useState({
@@ -101,6 +101,27 @@ const ResidentsScreen = ({ navigation }: Props) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAvailableContracts = async () => {
+    if (!currentUser?.id) return;
+
+    setLoadingContracts(true);
+    try {
+      console.log("Loading contracts for tenant:", currentUser.id);
+      const data = await getContractsByTenant(currentUser.id);
+      console.log("Available contracts:", data);
+      setAvailableContracts(data || []);
+    } catch (error: any) {
+      console.error("Error loading contracts:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to load contracts",
+      });
+    } finally {
+      setLoadingContracts(false);
     }
   };
 
@@ -164,12 +185,40 @@ const ResidentsScreen = ({ navigation }: Props) => {
     }
   };
 
+  const handleStartDateChange = (event: any, selectedDate?: Date) => {
+    setShowStartDatePicker(Platform.OS === "ios");
+    if (selectedDate) {
+      setStartDate(selectedDate);
+      const formatted = selectedDate.toISOString().split("T")[0];
+      setFormData({ ...formData, startDate: formatted });
+    }
+  };
+
+  const handleEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowEndDatePicker(Platform.OS === "ios");
+    if (selectedDate) {
+      setEndDate(selectedDate);
+      const formatted = selectedDate.toISOString().split("T")[0];
+      setFormData({ ...formData, endDate: formatted });
+    }
+  };
+
   const handleAddResident = async () => {
     if (!formData.fullName || !formData.idNumber || !formData.contractId) {
       Toast.show({
         type: "error",
         text1: "Validation Error",
         text2: "Please fill in all required fields",
+      });
+      return;
+    }
+
+    // Validate ID Number - must be exactly 12 digits
+    if (!/^\d{12}$/.test(formData.idNumber)) {
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "ID Number must be exactly 12 digits",
       });
       return;
     }
@@ -223,6 +272,16 @@ const ResidentsScreen = ({ navigation }: Props) => {
       return;
     }
 
+    // Validate ID Number - must be exactly 12 digits
+    if (!/^\d{12}$/.test(formData.idNumber)) {
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "ID Number must be exactly 12 digits",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       await updateResident(
@@ -267,14 +326,19 @@ const ResidentsScreen = ({ navigation }: Props) => {
           style: "destructive",
           onPress: async () => {
             try {
-              setLoading(true);
+              setDeleting(true);
               await deleteResident(resident.id);
+
+              // Update state immediately instead of reloading from server
+              setResidents((prevResidents) =>
+                prevResidents.filter((r) => r.id !== resident.id)
+              );
+
               Toast.show({
                 type: "success",
                 text1: "Success",
                 text2: "Resident deleted successfully",
               });
-              loadResidents();
             } catch (error: any) {
               console.error("Error deleting resident:", error);
               Toast.show({
@@ -283,7 +347,7 @@ const ResidentsScreen = ({ navigation }: Props) => {
                 text2: error.message || "Failed to delete resident",
               });
             } finally {
-              setLoading(false);
+              setDeleting(false);
             }
           },
         },
@@ -477,6 +541,7 @@ const ResidentsScreen = ({ navigation }: Props) => {
           onPress={() => {
             resetForm();
             setShowAddModal(true);
+            loadAvailableContracts();
           }}
         >
           <Ionicons name="add-circle" size={28} color="#4A90E2" />
@@ -531,6 +596,16 @@ const ResidentsScreen = ({ navigation }: Props) => {
         )}
       </ScrollView>
 
+      {/* Deleting Overlay */}
+      {deleting && (
+        <View style={styles.deletingOverlay}>
+          <View style={styles.deletingContainer}>
+            <ActivityIndicator size="large" color="#4A90E2" />
+            <Text style={styles.deletingText}>Deleting resident...</Text>
+          </View>
+        </View>
+      )}
+
       {/* Add Resident Modal - Simplified for now */}
       <Modal
         visible={showAddModal}
@@ -548,7 +623,9 @@ const ResidentsScreen = ({ navigation }: Props) => {
             </View>
 
             <ScrollView style={styles.modalBody}>
-              <Text style={styles.inputLabel}>Full Name *</Text>
+              <Text style={styles.inputLabel}>
+                Full Name <Text style={styles.required}>*</Text>
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter full name"
@@ -558,17 +635,23 @@ const ResidentsScreen = ({ navigation }: Props) => {
                 }
               />
 
-              <Text style={styles.inputLabel}>ID Number *</Text>
+              <Text style={styles.inputLabel}>
+                ID Number <Text style={styles.required}>*</Text>
+              </Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter ID number"
+                placeholder="Enter 12-digit ID number"
                 value={formData.idNumber}
                 onChangeText={(text) =>
                   setFormData({ ...formData, idNumber: text })
                 }
+                keyboardType="numeric"
+                maxLength={12}
               />
 
-              <Text style={styles.inputLabel}>Relationship *</Text>
+              <Text style={styles.inputLabel}>
+                Relationship <Text style={styles.required}>*</Text>
+              </Text>
               <View style={styles.pickerContainer}>
                 <Picker
                   selectedValue={formData.relationship}
@@ -587,35 +670,88 @@ const ResidentsScreen = ({ navigation }: Props) => {
                 </Picker>
               </View>
 
-              <Text style={styles.inputLabel}>Contract ID *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter contract ID"
-                value={formData.contractId}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, contractId: text })
-                }
-              />
+              <Text style={styles.inputLabel}>
+                Contract <Text style={styles.required}>*</Text>
+              </Text>
+              <View style={styles.pickerContainer}>
+                {loadingContracts ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="#4A90E2"
+                    style={{ padding: spacing.md }}
+                  />
+                ) : availableContracts.length === 0 ? (
+                  <Text style={styles.noContractsText}>
+                    No contracts available. Please create a contract first.
+                  </Text>
+                ) : (
+                  <Picker
+                    selectedValue={formData.contractId}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, contractId: value })
+                    }
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="Select a contract" value="" />
+                    {availableContracts.map((contract) => (
+                      <Picker.Item
+                        key={contract.id}
+                        label={`${contract.roomTitle || "Unknown Room"} - ${
+                          contract.contractName || "No Contract Name"
+                        }`}
+                        value={contract.id}
+                      />
+                    ))}
+                  </Picker>
+                )}
+              </View>
 
-              <Text style={styles.inputLabel}>Start Date (YYYY-MM-DD) *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="2024-01-01"
-                value={formData.startDate}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, startDate: text })
-                }
-              />
+              <Text style={styles.inputLabel}>
+                Start Date <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={styles.datePickerButton}
+                onPress={() => setShowStartDatePicker(true)}
+              >
+                <Ionicons name="calendar-outline" size={20} color="#666" />
+                <Text style={styles.datePickerText}>
+                  {formData.startDate
+                    ? new Date(formData.startDate).toLocaleDateString()
+                    : "Select start date"}
+                </Text>
+              </TouchableOpacity>
+              {showStartDatePicker && (
+                <DateTimePicker
+                  value={startDate}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleStartDateChange}
+                />
+              )}
 
-              <Text style={styles.inputLabel}>End Date (YYYY-MM-DD) *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="2024-12-31"
-                value={formData.endDate}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, endDate: text })
-                }
-              />
+              <Text style={styles.inputLabel}>
+                End Date <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={styles.datePickerButton}
+                onPress={() => setShowEndDatePicker(true)}
+              >
+                <Ionicons name="calendar-outline" size={20} color="#666" />
+                <Text style={styles.datePickerText}>
+                  {formData.endDate
+                    ? new Date(formData.endDate).toLocaleDateString()
+                    : "Select end date"}
+                </Text>
+              </TouchableOpacity>
+              {showEndDatePicker && (
+                <DateTimePicker
+                  value={endDate}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleEndDateChange}
+                  minimumDate={startDate}
+                />
+              )}
 
               {/* ID Card Upload */}
               <Text style={styles.inputLabel}>ID Card Images (Optional)</Text>
@@ -706,7 +842,9 @@ const ResidentsScreen = ({ navigation }: Props) => {
             </View>
 
             <ScrollView style={styles.modalBody}>
-              <Text style={styles.inputLabel}>Full Name *</Text>
+              <Text style={styles.inputLabel}>
+                Full Name <Text style={styles.required}>*</Text>
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter full name"
@@ -716,17 +854,23 @@ const ResidentsScreen = ({ navigation }: Props) => {
                 }
               />
 
-              <Text style={styles.inputLabel}>ID Number *</Text>
+              <Text style={styles.inputLabel}>
+                ID Number <Text style={styles.required}>*</Text>
+              </Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter ID number"
+                placeholder="Enter 12-digit ID number"
                 value={formData.idNumber}
                 onChangeText={(text) =>
                   setFormData({ ...formData, idNumber: text })
                 }
+                keyboardType="numeric"
+                maxLength={12}
               />
 
-              <Text style={styles.inputLabel}>Relationship *</Text>
+              <Text style={styles.inputLabel}>
+                Relationship <Text style={styles.required}>*</Text>
+              </Text>
               <View style={styles.pickerContainer}>
                 <Picker
                   selectedValue={formData.relationship}
@@ -745,25 +889,52 @@ const ResidentsScreen = ({ navigation }: Props) => {
                 </Picker>
               </View>
 
-              <Text style={styles.inputLabel}>Start Date (YYYY-MM-DD) *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="2024-01-01"
-                value={formData.startDate}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, startDate: text })
-                }
-              />
+              <Text style={styles.inputLabel}>
+                Start Date <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={styles.datePickerButton}
+                onPress={() => setShowStartDatePicker(true)}
+              >
+                <Ionicons name="calendar-outline" size={20} color="#666" />
+                <Text style={styles.datePickerText}>
+                  {formData.startDate
+                    ? new Date(formData.startDate).toLocaleDateString()
+                    : "Select start date"}
+                </Text>
+              </TouchableOpacity>
+              {showStartDatePicker && (
+                <DateTimePicker
+                  value={startDate}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleStartDateChange}
+                />
+              )}
 
-              <Text style={styles.inputLabel}>End Date (YYYY-MM-DD) *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="2024-12-31"
-                value={formData.endDate}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, endDate: text })
-                }
-              />
+              <Text style={styles.inputLabel}>
+                End Date <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={styles.datePickerButton}
+                onPress={() => setShowEndDatePicker(true)}
+              >
+                <Ionicons name="calendar-outline" size={20} color="#666" />
+                <Text style={styles.datePickerText}>
+                  {formData.endDate
+                    ? new Date(formData.endDate).toLocaleDateString()
+                    : "Select end date"}
+                </Text>
+              </TouchableOpacity>
+              {showEndDatePicker && (
+                <DateTimePicker
+                  value={endDate}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleEndDateChange}
+                  minimumDate={startDate}
+                />
+              )}
 
               {/* ID Card Upload */}
               <Text style={styles.inputLabel}>ID Card Images (Optional)</Text>
@@ -1088,6 +1259,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     marginTop: spacing.md,
   },
+  required: {
+    color: "#F44336",
+    fontWeight: "700",
+  },
   input: {
     backgroundColor: "#f5f5f5",
     borderRadius: normalize(10),
@@ -1108,6 +1283,12 @@ const styles = StyleSheet.create({
   picker: {
     height: Platform.OS === "ios" ? normalize(180) : normalize(50),
     width: "100%",
+  },
+  noContractsText: {
+    fontSize: fontSize.sm,
+    color: "#999",
+    padding: spacing.md,
+    textAlign: "center",
   },
   textArea: {
     height: normalize(80),
@@ -1168,6 +1349,51 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     fontWeight: "700",
     color: "#fff",
+  },
+  datePickerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: normalize(10),
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    height: normalize(44),
+    marginBottom: spacing.md,
+  },
+  datePickerText: {
+    flex: 1,
+    fontSize: fontSize.md,
+    color: "#333",
+    marginLeft: spacing.sm,
+  },
+  deletingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 9999,
+  },
+  deletingContainer: {
+    backgroundColor: "#fff",
+    borderRadius: normalize(16),
+    padding: spacing.xl * 2,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: normalize(8),
+    elevation: 10,
+  },
+  deletingText: {
+    fontSize: fontSize.lg,
+    color: "#333",
+    marginTop: spacing.lg,
+    fontWeight: "600",
   },
 });
 

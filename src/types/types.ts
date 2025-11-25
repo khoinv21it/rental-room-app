@@ -144,41 +144,41 @@ export interface UpdateRequestRoomDto {
 }
 
 export type RoomDetail = {
-   id: string,
-    title: string,
-    description: string,
-    priceMonth: number,
-    priceDeposit: number,
-    area: number,
-    roomLength: number,
-    roomWidth: number,
-    elecPrice: number,
-    waterPrice: number,
-    maxPeople: number,
-    postStartDate: string,
-    postEndDate: string,
-    address: {
-        id?: string;
-        street: string;
-        ward: {
+  id: string;
+  title: string;
+  description: string;
+  priceMonth: number;
+  priceDeposit: number;
+  area: number;
+  roomLength: number;
+  roomWidth: number;
+  elecPrice: number;
+  waterPrice: number;
+  maxPeople: number;
+  postStartDate: string;
+  postEndDate: string;
+  address: {
+    id?: string;
+    street: string;
+    ward: {
+      id?: number;
+      name: string;
+      district: {
+        id?: number;
+        name: string;
+        province: {
           id?: number;
           name: string;
-          district: {
-            id?: number;
-            name: string;
-            province: {
-              id?: number;
-              name: string;
-            };
-          };
         };
-      },
-    images: Image[],
-    convenients: Convenient[],
-    typepost: string,
-    userId: string,
-    favoriteCount: number,
-    viewCount: number,
+      };
+    };
+  };
+  images: Image[];
+  convenients: Convenient[];
+  typepost: string;
+  userId: string;
+  favoriteCount: number;
+  viewCount: number;
 };
 
 export type Convenient = {
@@ -186,13 +186,13 @@ export type Convenient = {
   name: string;
 };
 export type LandLordByRoomId = {
-    id: string;
-    fullName: string;
-    email: string;
-    avatar: string;
-    amountPost: number;
-    phone: string;
-    createDate: string;
+  id: string;
+  fullName: string;
+  email: string;
+  avatar: string;
+  amountPost: number;
+  phone: string;
+  createDate: string;
 };
 export type RequestBooking = {
   roomId: string;
@@ -203,13 +203,13 @@ export type RequestBooking = {
 
 export type ListContract = {
   id: string;
-  roomTitle: string,
-  landlordName: string,
-  startDate: string,
-  endDate: string,
-  monthlyRent: number,
-  status: string,
-}
+  roomTitle: string;
+  landlordName: string;
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  status: string;
+};
 
 export type ContractDetail = {
   id: string;
@@ -223,46 +223,91 @@ export type ContractDetail = {
   landlordName: string;
   depositAmount: number;
   monthlyRent: number;
-  startDate: string; 
+  startDate: string;
   endDate: string;
   status: number;
   contractImage?: string;
   landlordPaymentInfo: {
-        bankName: string;
-        bankNumber: string;
-        binCode: string;
-        accountHolderName: string;
-        phoneNumber: string;
-    }
-}
+    bankName: string;
+    bankNumber: string;
+    binCode: string;
+    accountHolderName: string;
+    phoneNumber: string;
+  };
+};
 
 export type TenantInfo = {
   id: string;
   name: string;
   phone?: string;
   roomTitle?: string;
-}
+};
 
 export type LandlordPaymentInfo = {
-      bankName: string,
-      bankNumber: string,
-      binCode: string,
-      accountHolderName: string,
-      phoneNumber: string;
-}
+  bankName: string;
+  bankNumber: string;
+  binCode: string;
+  accountHolderName: string;
+  phoneNumber: string;
+  depositAmount?: number;
+  email?: string;
+};
 export type Bill = {
-        id: string;
-        month: string;
-        electricityPrice: number;
-        electricityUsage: number;
-        electricityFee: number;
-        waterPrice: number;
-        waterUsage: number;
-        waterFee: number;
-        damageFee: number;
-        note: string | null;
-        serviceFee: number;
-        totalAmount: number;
-        status: string;
-        imageProof: string | null;
+  id: string;
+  month: string;
+  electricityPrice: number;
+  electricityUsage: number;
+  electricityFee: number;
+  waterPrice: number;
+  waterUsage: number;
+  waterFee: number;
+  damageFee: number;
+  note: string | null;
+  serviceFee: number;
+  totalAmount: number;
+  status: string;
+  imageProof: string | null;
+};
+
+// Resident Types
+export interface Resident {
+  id: string;
+  fullName: string;
+  idNumber: string;
+  relationship: string;
+  startDate: string;
+  endDate: string;
+  note?: string;
+  status: string;
+  contractId: string;
+  idCardFrontUrl?: string;
+  idCardBackUrl?: string;
+}
+
+// Booking Types
+export interface BookingData {
+  bookingId: string;
+  roomName: string;
+  roomId: string;
+  address: string;
+  rentalDate: string;
+  rentalExpires: string;
+  tenantCount: number;
+  monthlyRent: number;
+  status: number;
+  isRemoved: number;
+  landlordName: string;
+  landlordPhone: string;
+  imageProof?: string;
+}
+
+// Contract Info
+export interface ContractInfo {
+  id: string;
+  contractName?: string;
+  roomTitle?: string;
+  roomAddress?: string;
+  monthlyRent?: number;
+  startDate?: string;
+  endDate?: string;
 }

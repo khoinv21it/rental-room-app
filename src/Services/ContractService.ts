@@ -5,8 +5,8 @@ import { ListContract } from "../types/types";
 const formatDate = (isoString: string): string => {
   try {
     const date = new Date(isoString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   } catch (error) {
@@ -15,19 +15,21 @@ const formatDate = (isoString: string): string => {
   }
 };
 
-export async function fetchListContracts(userId?: string): Promise<ListContract[]> {
+export async function fetchListContracts(
+  userId?: string
+): Promise<ListContract[]> {
   try {
     const res: any = await apiClient.get(`/contracts/tenant/${userId}`);
-    
+
     // Format dates trong response
     if (Array.isArray(res)) {
       return res.map((contract: ListContract) => ({
         ...contract,
         startDate: formatDate(contract.startDate),
-        endDate: formatDate(contract.endDate)
+        endDate: formatDate(contract.endDate),
       }));
     }
-    
+
     return res || [];
   } catch (error) {
     console.error("fetchListContracts error:", error);
@@ -42,5 +44,21 @@ export async function fetchContractDetail(contractId: string): Promise<any> {
   } catch (error) {
     console.error("fetchContractDetail error:", error);
     return null;
+  }
+}
+
+export async function getByTenant(tenantId: string): Promise<any[]> {
+  try {
+    console.log("Fetching contracts for tenant:", tenantId);
+    const response: any = await apiClient.get(`/contracts/tenant/${tenantId}`);
+    console.log("Contracts fetched:", response?.length || 0);
+    return response || [];
+  } catch (error: any) {
+    console.error("Error fetching contracts by tenant:", error);
+    throw new Error(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch contracts"
+    );
   }
 }

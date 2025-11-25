@@ -18,30 +18,7 @@ import {
 import { URL_IMAGE } from "../../../Services/Constants";
 import { fetchContractDetail } from "../../../Services/ContractService";
 import Toast from "react-native-toast-message";
-
-interface Resident {
-  id: string;
-  fullName: string;
-  idNumber: string;
-  relationship: string;
-  startDate: string;
-  endDate: string;
-  note?: string;
-  status: string;
-  contractId: string;
-  idCardFrontUrl?: string;
-  idCardBackUrl?: string;
-}
-
-interface ContractInfo {
-  id: string;
-  contractName?: string;
-  roomTitle?: string;
-  roomAddress?: string;
-  monthlyRent?: number;
-  startDate?: string;
-  endDate?: string;
-}
+import { Resident, ContractInfo } from "../../../types/types";
 
 interface Props {
   navigation: any;
