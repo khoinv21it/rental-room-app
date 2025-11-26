@@ -115,21 +115,27 @@ const SearchBar: React.FC<SearchBarProps> = ({
   // Info popup state
   const [showInfoPopup, setShowInfoPopup] = useState(false);
 
+  // Track if preferences have been loaded
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+
   // Load provinces on mount
   useEffect(() => {
     loadProvinces();
     if (userId) {
       loadUserPreferences();
       loadEmailNotificationSettings();
+    } else {
+      // If not logged in, mark as loaded so prop can be used
+      setPreferencesLoaded(true);
     }
   }, [userId]);
 
-  // Update display area when prop changes
+  // Update display area when prop changes - but only if preferences not loaded yet
   useEffect(() => {
-    if (currentArea) {
+    if (currentArea && !preferencesLoaded) {
       setDisplayArea(currentArea);
     }
-  }, [currentArea]);
+  }, [currentArea, preferencesLoaded]);
 
   const loadProvinces = async () => {
     setLoadingProvinces(true);
@@ -230,13 +236,30 @@ const SearchBar: React.FC<SearchBarProps> = ({
       if (prefs) {
         console.log("✅ [SearchBar] User preferences loaded:", prefs);
 
-        // Update current area display
+        // Update current area display FIRST - this is the most important
         if (prefs.searchAddress) {
+          console.log("📍 [SearchBar] Setting displayArea to:", prefs.searchAddress);
           setDisplayArea(prefs.searchAddress);
+          
           // Notify parent component if callback provided
           if (onCurrentAreaChange) {
             onCurrentAreaChange(prefs.searchAddress);
+            console.log("📍 [SearchBar] Updated parent currentArea to:", prefs.searchAddress);
           }
+        }
+
+        // Update location store if coordinates available
+        if (prefs.latitude && prefs.longitude) {
+          setLocation({
+            lat: prefs.latitude,
+            lng: prefs.longitude,
+            address: prefs.searchAddress || "Saved Location",
+          });
+          console.log("📍 [SearchBar] Updated location store:", {
+            lat: prefs.latitude,
+            lng: prefs.longitude,
+            address: prefs.searchAddress,
+          });
         }
 
         // If preferences contain province/district/ward IDs, load them
@@ -265,8 +288,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
           }
         }
       }
+      
+      // Mark preferences as loaded (whether found or not)
+      setPreferencesLoaded(true);
     } catch (error) {
       console.error("❌ [SearchBar] Error loading user preferences:", error);
+      // Still mark as loaded even on error
+      setPreferencesLoaded(true);
     }
   };
   // Load email notification settings
@@ -596,28 +624,59 @@ const SearchBar: React.FC<SearchBarProps> = ({
       }
 
       // Update location store with geocoded coordinates
+      // Use the user's entered address instead of formatted address from API
       setLocation({
         lat: geoResult.lat,
         lng: geoResult.lng,
-        address: geoResult.formattedAddress || searchAddress,
+        address: searchAddress, // Keep user's input address
       });
 
       console.log("📍 [SearchBar] Search coordinates:", {
         lat: geoResult.lat,
         lng: geoResult.lng,
-        formattedAddress: geoResult.formattedAddress,
+        userEnteredAddress: searchAddress,
       });
 
-      // Update display area
-      const finalAddress = geoResult.formattedAddress || searchAddress;
-      setDisplayArea(finalAddress);
+      // Update display area with user's entered address (not API's formatted address)
+      setDisplayArea(searchAddress);
       if (onCurrentAreaChange) {
-        onCurrentAreaChange(finalAddress);
+        onCurrentAreaChange(searchAddress);
+      }
+
+      // Save search address to user preferences if logged in
+      if (userId) {
+        try {
+          const prefsToSave: any = {
+            searchAddress: searchAddress,
+            latitude: geoResult.lat,
+            longitude: geoResult.lng,
+          };
+
+          // Add province/district/ward IDs if selected
+          if (selectedProvince) prefsToSave.provinceId = selectedProvince;
+          if (selectedDistrict) prefsToSave.districtId = selectedDistrict;
+          if (selectedWard) prefsToSave.wardId = selectedWard;
+
+          console.log("💾 [SearchBar] Saving search preferences:", prefsToSave);
+          await updateUserPreferences(userId, prefsToSave);
+          console.log("✅ [SearchBar] Search preferences saved successfully");
+        } catch (error) {
+          console.error("❌ [SearchBar] Error saving search preferences:", error);
+          // Don't block the search if saving fails
+        }
       }
 
       // Trigger search to fetch rooms
       console.log("🔍 [SearchBar] Fetching rooms for searched address...");
       onSearch();
+
+      Toast.show({
+        type: "success",
+        text1: "Searching",
+        text2: `Looking for rooms near: ${searchAddress}`,
+        position: "top",
+        visibilityTime: 2000,
+      });
     } catch (error) {
       console.error("❌ [SearchBar] Error searching by address:", error);
       Toast.show({
