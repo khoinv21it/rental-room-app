@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,12 @@ import {
   Linking,
   Platform,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import {
+  NavigationProp,
+  ParamListBase,
+  useFocusEffect,
+  useNavigation,
+} from "@react-navigation/native";
 import {
   fetchFavoriteRooms,
   fetchAndUpdateFavorites,
@@ -26,6 +31,11 @@ import { API_URL, URL_IMAGE } from "../../../Services/Constants";
 type Props = { navigation: any };
 
 const RoomCard = ({ item, isFavorite, onToggle }: any) => {
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
+
+  const handleOpenRoomDetail = (roomId: string) => {
+    navigation.navigate("RoomDetailScreen", { roomId });
+  };
   const getAvatarSrc = (avatar?: any) => {
     // accept string, object like {url,path,uri}, or array
     if (!avatar) return null;
@@ -356,7 +366,7 @@ const RoomCard = ({ item, isFavorite, onToggle }: any) => {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
-                /* navigate to detail if navigation passed */
+                handleOpenRoomDetail(item.id);
               }}
               style={styles.detailBtn}
             >
@@ -488,7 +498,7 @@ const FavoriteScreen = ({ navigation }: Props) => {
             <View>
               <Text style={styles.headerTitle}>Favorites</Text>
               <Text style={styles.headerSubtitle}>
-                {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'} saved
+                {rooms.length} {rooms.length === 1 ? "room" : "rooms"} saved
               </Text>
             </View>
             <View style={styles.headerIcon}>
@@ -539,10 +549,10 @@ const FavoriteScreen = ({ navigation }: Props) => {
             disabled={page === 0}
             style={[styles.pageBtn, page === 0 && styles.disabledBtn]}
           >
-            <Icon 
-              name="chevron-left" 
-              size={20} 
-              color={page === 0 ? "#CBD5E1" : "#1A1A2E"} 
+            <Icon
+              name="chevron-left"
+              size={20}
+              color={page === 0 ? "#CBD5E1" : "#1A1A2E"}
             />
             <Text style={[styles.pageText, page === 0 && styles.disabledText]}>
               Previous
@@ -573,10 +583,10 @@ const FavoriteScreen = ({ navigation }: Props) => {
             >
               Next
             </Text>
-            <Icon 
-              name="chevron-right" 
-              size={20} 
-              color={page + 1 >= (totalPages || 1) ? "#CBD5E1" : "#1A1A2E"} 
+            <Icon
+              name="chevron-right"
+              size={20}
+              color={page + 1 >= (totalPages || 1) ? "#CBD5E1" : "#1A1A2E"}
             />
           </TouchableOpacity>
         </View>
@@ -613,9 +623,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  headerTitle: { 
-    fontSize: 28, 
-    fontWeight: "800", 
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "800",
     color: "#1A1A2E",
     marginBottom: 4,
   },
@@ -717,9 +727,9 @@ const styles = StyleSheet.create({
   },
   addressLink: { color: "#3B82F6" },
   roomTitleMultiline: {},
-  roomPriceSmall: { 
-    color: "#EF4444", 
-    fontWeight: "800", 
+  roomPriceSmall: {
+    color: "#EF4444",
+    fontWeight: "800",
     fontSize: 16,
   },
   rowRight: { flexDirection: "row", alignItems: "center" },
@@ -829,13 +839,13 @@ const styles = StyleSheet.create({
     maxWidth: 120,
     overflow: "hidden",
   },
-  detailText: { 
-    color: "#FFFFFF", 
+  detailText: {
+    color: "#FFFFFF",
     fontWeight: "700",
     fontSize: 13,
   },
-  empty: { 
-    padding: 48, 
+  empty: {
+    padding: 48,
     alignItems: "center",
     marginTop: 40,
   },
@@ -848,14 +858,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 24,
   },
-  emptyTitle: { 
-    color: "#1A1A2E", 
-    fontSize: 22, 
+  emptyTitle: {
+    color: "#1A1A2E",
+    fontSize: 22,
     fontWeight: "800",
     marginBottom: 8,
   },
-  emptySub: { 
-    color: "#6B7280", 
+  emptySub: {
+    color: "#6B7280",
     marginTop: 4,
     textAlign: "center",
     fontSize: 15,
@@ -888,8 +898,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   disabledBtn: { opacity: 0.5 },
-  pageText: { 
-    color: "#1A1A2E", 
+  pageText: {
+    color: "#1A1A2E",
     fontWeight: "700",
     fontSize: 14,
   },
@@ -906,8 +916,8 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  pageInfo: { 
-    color: "#1A1A2E", 
+  pageInfo: {
+    color: "#1A1A2E",
     fontWeight: "700",
     fontSize: 14,
   },
