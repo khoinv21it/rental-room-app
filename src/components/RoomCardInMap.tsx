@@ -58,7 +58,7 @@ const RoomCardInMap: React.FC<RoomCardInMapProps> = ({
           type: "success",
           text1: "Removed from favorites",
           text2: `${room.title || "Room"} has been removed from your favorites`,
-          position: "bottom",
+          position: "top",
           visibilityTime: 2000,
         });
       } else {

@@ -58,6 +58,7 @@ const MapScreen: React.FC = () => {
   };
 
   const handleRoomPress = (roomId: string) => {
+    navigation.navigate("RoomDetailScreen", { roomId });
     console.log("Navigate to room detail:", roomId);
   };
 
