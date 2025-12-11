@@ -76,12 +76,23 @@ const MapScreen: React.FC = () => {
         : [...prev, roomId]
     );
   };
-  const onTouchMap = async (event: any) => {
-    const { latitude, longitude } = event.nativeEvent.coordinate;
-    const response = await fetchRoomInMap(latitude, longitude);
-    const room = response.data || response;
-    console.log("Room in map:", room);
-    setRoomInMap(room);
+
+  const onMapPress = async (event: any) => {
+    const { geometry } = event;
+    if (!geometry || !geometry.coordinates) return;
+
+    const [longitude, latitude] = geometry.coordinates;
+    console.log("Map pressed at:", { latitude, longitude });
+
+    try {
+      const response = await fetchRoomInMap(latitude, longitude);
+      const room = response.data || response;
+      console.log("Loaded rooms:", room?.length);
+      setRoomInMap(room);
+      setMapRegion({ latitude, longitude });
+    } catch (error) {
+      console.error("Error loading rooms:", error);
+    }
   };
 
   const formatPrice = (price: number) => {
@@ -175,6 +186,7 @@ const MapScreen: React.FC = () => {
           styleURL={mapStyle}
           pitchEnabled={false}
           rotateEnabled={false}
+          onPress={onMapPress}
         >
           <Camera
             ref={cameraRef}

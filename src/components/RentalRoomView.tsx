@@ -10,6 +10,8 @@ import {
   TextInput,
   Image,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { fontSize, layout, normalize, spacing } from "../utils/responsive";
@@ -22,6 +24,7 @@ import { URL_IMAGE } from "../Services/Constants";
 import { PaymentModal } from "./index";
 import { CommonActions } from "@react-navigation/native";
 import { BookingData } from "../types/types";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Props {
   navigation: any;
@@ -395,67 +398,72 @@ const RentalRoomView = ({ navigation, route }: Props) => {
         animationType="slide"
         transparent={true}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>New Request</Text>
-              <TouchableOpacity onPress={handleCloseRequestModal}>
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>New Request</Text>
+                <TouchableOpacity onPress={handleCloseRequestModal}>
+                  <Ionicons name="close" size={24} color="#333" />
+                </TouchableOpacity>
+              </View>
 
-            <ScrollView style={styles.modalBody}>
-              <Text style={styles.modalSectionTitle}>
-                Describe your request
-              </Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Enter your request description..."
-                multiline
-                numberOfLines={4}
-                value={requestDescription}
-                onChangeText={setRequestDescription}
-              />
-
-              <Text style={styles.modalSectionTitle}>
-                Attach Image (Optional)
-              </Text>
-              <TouchableOpacity
-                style={styles.uploadButton}
-                onPress={handlePickRequestImage}
-              >
-                <Ionicons name="image" size={20} color="#fff" />
-                <Text style={styles.uploadButtonText}>
-                  {requestImageUri ? "Change Image" : "Pick Image"}
+              <ScrollView style={styles.modalBody}>
+                <Text style={styles.modalSectionTitle}>
+                  Describe your request
                 </Text>
-              </TouchableOpacity>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter your request description..."
+                  multiline
+                  numberOfLines={4}
+                  value={requestDescription}
+                  onChangeText={setRequestDescription}
+                />
 
-              {requestImageUri && (
-                <View style={styles.uploadedImageContainer}>
-                  <Image
-                    source={{ uri: requestImageUri }}
-                    style={styles.uploadedImage}
-                  />
-                </View>
-              )}
+                <Text style={styles.modalSectionTitle}>
+                  Attach Image (Optional)
+                </Text>
+                <TouchableOpacity
+                  style={styles.uploadButton}
+                  onPress={handlePickRequestImage}
+                >
+                  <Ionicons name="image" size={20} color="#fff" />
+                  <Text style={styles.uploadButtonText}>
+                    {requestImageUri ? "Change Image" : "Pick Image"}
+                  </Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  requestSubmitting && styles.submitButtonDisabled,
-                ]}
-                onPress={handleSubmitRequest}
-                disabled={requestSubmitting}
-              >
-                {requestSubmitting ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Submit Request</Text>
+                {requestImageUri && (
+                  <View style={styles.uploadedImageContainer}>
+                    <Image
+                      source={{ uri: requestImageUri }}
+                      style={styles.uploadedImage}
+                    />
+                  </View>
                 )}
-              </TouchableOpacity>
-            </ScrollView>
+
+                <TouchableOpacity
+                  style={[
+                    styles.submitButton,
+                    requestSubmitting && styles.submitButtonDisabled,
+                  ]}
+                  onPress={handleSubmitRequest}
+                  disabled={requestSubmitting}
+                >
+                  {requestSubmitting ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.submitButtonText}>Submit Request</Text>
+                  )}
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Image Preview Modal */}
