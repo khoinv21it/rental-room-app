@@ -8,6 +8,7 @@ export interface UserProfile {
   // fill according to your backend
   id: string;
   fullName?: string;
+  email?: string;
   avatar?: string;
 }
 
@@ -43,6 +44,7 @@ export interface AuthState {
 const STORAGE_KEY = "auth-storage";
 
 export const useAuthStore = create<AuthState>()(
+  // @ts-expect-error - Zustand v4 middleware type inference limitation
   devtools(
     persist(
       (set) => ({
@@ -108,11 +110,11 @@ export const useAuthStore = create<AuthState>()(
             if (onSuccess) onSuccess();
           } catch (error: any) {
             // Log the full error for debugging
-            console.log('Auth store error details:', {
+            console.log("Auth store error details:", {
               error,
               response: error?.response,
               data: error?.response?.data,
-              status: error?.response?.status
+              status: error?.response?.status,
             });
 
             // Map common HTTP errors to user-friendly messages
@@ -120,20 +122,20 @@ export const useAuthStore = create<AuthState>()(
             if (error?.response) {
               const status = error.response.status;
               const data = error.response.data;
-              
+
               // Always check errors array first since that's what the server is sending
               if (Array.isArray(data?.errors) && data.errors.length > 0) {
                 // Use the error message directly from the server
                 message = data.errors[0];
-                console.log('Using error from server:', message);
-              } 
+                console.log("Using error from server:", message);
+              }
             } else if (error?.message) {
               // Network or other errors
               message = error.message;
             }
-            
+
             // Additional debug logging
-            console.log('Final error message:', message);
+            console.log("Final error message:", message);
 
             set({
               error: message,
@@ -155,13 +157,15 @@ export const useAuthStore = create<AuthState>()(
             set({ loading: true, error: null });
 
             const response: any = await apiClient.post("/auth/google-login", {
-              credential: token,
+              token,
             });
             console.log("Google login response:", response);
 
             set({
-              access_token: response.accessToken ?? response.access_token ?? null,
-              refresh_token: response.refreshToken ?? response.refresh_token ?? null,
+              access_token:
+                response.accessToken ?? response.access_token ?? null,
+              refresh_token:
+                response.refreshToken ?? response.refresh_token ?? null,
               loggedInUser: response.userProfile
                 ? {
                     id: response.id ?? "",
@@ -185,17 +189,20 @@ export const useAuthStore = create<AuthState>()(
                 loggedInUser: undefined,
                 error: "No permission",
               });
-              if (onError) onError("You do not have permission to access this area.");
-              return Promise.reject("You do not have permission to access this area.");
+              if (onError)
+                onError("You do not have permission to access this area.");
+              return Promise.reject(
+                "You do not have permission to access this area."
+              );
             }
 
             if (onSuccess) onSuccess();
           } catch (error: any) {
-            console.log('Google login error details:', {
+            console.log("Google login error details:", {
               error,
               response: error?.response,
               data: error?.response?.data,
-              status: error?.response?.status
+              status: error?.response?.status,
             });
 
             let message = "Google login failed";
@@ -208,8 +215,8 @@ export const useAuthStore = create<AuthState>()(
               }
             }
 
-            console.log('Final Google login error message:', message);
-            
+            console.log("Final Google login error message:", message);
+
             set({
               error: message,
               access_token: undefined,
@@ -222,10 +229,12 @@ export const useAuthStore = create<AuthState>()(
 
         updateUserProfile: (profile: UserProfile) => {
           set((state) => ({
-            loggedInUser: state.loggedInUser ? {
-              ...state.loggedInUser,
-              userProfile: profile
-            } : state.loggedInUser
+            loggedInUser: state.loggedInUser
+              ? {
+                  ...state.loggedInUser,
+                  userProfile: profile,
+                }
+              : state.loggedInUser,
           }));
         },
 
