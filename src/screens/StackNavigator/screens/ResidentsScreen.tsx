@@ -615,12 +615,13 @@ const ResidentsScreen = ({ navigation }: Props) => {
         transparent={true}
         onRequestClose={() => setShowAddModal(false)}
       >
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          <View style={styles.modalOverlay}>
-            <SafeAreaView>
+        <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+          >
+            <SafeAreaView style={{ flex: 1, justifyContent: "flex-end" }}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Add Resident</Text>
@@ -629,13 +630,18 @@ const ResidentsScreen = ({ navigation }: Props) => {
                   </TouchableOpacity>
                 </View>
 
-                <ScrollView style={styles.modalBody}>
+                <ScrollView
+                  style={styles.modalBody}
+                  contentContainerStyle={{ paddingBottom: spacing.xl * 3 }}
+                  showsVerticalScrollIndicator={false}
+                >
                   <Text style={styles.inputLabel}>
                     Full Name <Text style={styles.required}>*</Text>
                   </Text>
                   <TextInput
                     style={styles.input}
                     placeholder="Enter full name"
+                    placeholderTextColor="#999"
                     value={formData.fullName}
                     onChangeText={(text) =>
                       setFormData({ ...formData, fullName: text })
@@ -648,6 +654,7 @@ const ResidentsScreen = ({ navigation }: Props) => {
                   <TextInput
                     style={styles.input}
                     placeholder="Enter 12-digit ID number"
+                    placeholderTextColor="#999"
                     value={formData.idNumber}
                     onChangeText={(text) =>
                       setFormData({ ...formData, idNumber: text })
@@ -802,6 +809,7 @@ const ResidentsScreen = ({ navigation }: Props) => {
                   <TextInput
                     style={[styles.input, styles.textArea]}
                     placeholder="Enter note"
+                    placeholderTextColor="#999"
                     value={formData.note}
                     onChangeText={(text) =>
                       setFormData({ ...formData, note: text })
@@ -832,8 +840,8 @@ const ResidentsScreen = ({ navigation }: Props) => {
                 </View>
               </View>
             </SafeAreaView>
-          </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
 
       {/* Edit Resident Modal */}
@@ -843,12 +851,13 @@ const ResidentsScreen = ({ navigation }: Props) => {
         transparent={true}
         onRequestClose={() => setShowEditModal(false)}
       >
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          <View style={styles.modalOverlay}>
-            <SafeAreaView>
+        <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+          >
+            <SafeAreaView style={{ flex: 1, justifyContent: "flex-end" }}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Edit Resident</Text>
@@ -857,13 +866,18 @@ const ResidentsScreen = ({ navigation }: Props) => {
                   </TouchableOpacity>
                 </View>
 
-                <ScrollView style={styles.modalBody}>
+                <ScrollView
+                  style={styles.modalBody}
+                  contentContainerStyle={{ paddingBottom: spacing.xl * 3 }}
+                  showsVerticalScrollIndicator={false}
+                >
                   <Text style={styles.inputLabel}>
                     Full Name <Text style={styles.required}>*</Text>
                   </Text>
                   <TextInput
                     style={styles.input}
                     placeholder="Enter full name"
+                    placeholderTextColor="#999"
                     value={formData.fullName}
                     onChangeText={(text) =>
                       setFormData({ ...formData, fullName: text })
@@ -876,6 +890,7 @@ const ResidentsScreen = ({ navigation }: Props) => {
                   <TextInput
                     style={styles.input}
                     placeholder="Enter 12-digit ID number"
+                    placeholderTextColor="#999"
                     value={formData.idNumber}
                     onChangeText={(text) =>
                       setFormData({ ...formData, idNumber: text })
@@ -1000,6 +1015,7 @@ const ResidentsScreen = ({ navigation }: Props) => {
                   <TextInput
                     style={[styles.input, styles.textArea]}
                     placeholder="Enter note"
+                    placeholderTextColor="#999"
                     value={formData.note}
                     onChangeText={(text) =>
                       setFormData({ ...formData, note: text })
@@ -1032,8 +1048,8 @@ const ResidentsScreen = ({ navigation }: Props) => {
                 </View>
               </View>
             </SafeAreaView>
-          </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </View>
   );
