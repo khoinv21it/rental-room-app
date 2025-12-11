@@ -167,16 +167,16 @@ const HomeScreen: React.FC = () => {
           )) as unknown as PaginatedResponse;
         }
 
-        console.log("📦 [VIP] Response received:", {
-          hasData: !!response,
-          dataLength: response?.data?.length || 0,
-          totalPages: response?.totalPages,
-          totalRecords: response?.totalRecords,
-          responseType: typeof response,
-          isArray: Array.isArray(response),
-          responseKeys: response ? Object.keys(response) : [],
-          firstItem: response?.data?.[0] || null,
-        });
+        // console.log("📦 [VIP] Response received:", {
+        //   hasData: !!response,
+        //   dataLength: response?.data?.length || 0,
+        //   totalPages: response?.totalPages,
+        //   totalRecords: response?.totalRecords,
+        //   responseType: typeof response,
+        //   isArray: Array.isArray(response),
+        //   responseKeys: response ? Object.keys(response) : [],
+        //   firstItem: response?.data?.[0] || null,
+        // });
 
         // Handle different response structures
         let rooms: ListRoom[] = [];
@@ -277,16 +277,16 @@ const HomeScreen: React.FC = () => {
           )) as unknown as PaginatedResponse;
         }
 
-        console.log("📦 [NORMAL] Response received:", {
-          hasData: !!response,
-          dataLength: response?.data?.length || 0,
-          totalPages: response?.totalPages,
-          totalRecords: response?.totalRecords,
-          responseType: typeof response,
-          isArray: Array.isArray(response),
-          responseKeys: response ? Object.keys(response) : [],
-          firstItem: response?.data?.[0] || null,
-        });
+        // console.log("📦 [NORMAL] Response received:", {
+        //   hasData: !!response,
+        //   dataLength: response?.data?.length || 0,
+        //   totalPages: response?.totalPages,
+        //   totalRecords: response?.totalRecords,
+        //   responseType: typeof response,
+        //   isArray: Array.isArray(response),
+        //   responseKeys: response ? Object.keys(response) : [],
+        //   firstItem: response?.data?.[0] || null,
+        // });
 
         // Handle different response structures
         let rooms: ListRoom[] = [];
@@ -304,10 +304,10 @@ const HomeScreen: React.FC = () => {
           console.warn("⚠️ [NORMAL] Unexpected response structure:", response);
         }
 
-        console.log("📦 [NORMAL] Processed rooms:", {
-          roomsCount: rooms.length,
-          totalPages: pages,
-        });
+        // console.log("📦 [NORMAL] Processed rooms:", {
+        //   roomsCount: rooms.length,
+        //   totalPages: pages,
+        // });
 
         setRoomNormal(rooms);
         setNormalTotalPages(pages);

@@ -6,16 +6,16 @@ export async function fetchRoomVip(page = 0, size = 6, userId?: string) {
     if (userId) {
       url += `&userId=${userId}`;
     }
-    console.log("🌐 [fetchRoomVip] API URL:", url);
+    // console.log("🌐 [fetchRoomVip] API URL:", url);
     const res = await apiClient.get(url);
-    console.log("✅ [fetchRoomVip] Full Response:", res);
-    console.log("✅ [fetchRoomVip] Response structure:", {
-      hasData: !!res,
-      isArray: Array.isArray(res),
-      hasDataProp: res && "data" in res,
-      dataLength: res?.data?.length || (Array.isArray(res) ? res.length : 0),
-      keys: res ? Object.keys(res) : [],
-    });
+    // console.log("✅ [fetchRoomVip] Full Response:", res);
+    // console.log("✅ [fetchRoomVip] Response structure:", {
+    //   hasData: !!res,
+    //   isArray: Array.isArray(res),
+    //   hasDataProp: res && "data" in res,
+    //   dataLength: res?.data?.length || (Array.isArray(res) ? res.length : 0),
+    //   keys: res ? Object.keys(res) : [],
+    // });
     return res;
   } catch (error) {
     console.error("❌ [fetchRoomVip] Error:", error);
@@ -29,16 +29,16 @@ export async function fetchRoomNormal(page = 0, size = 6, userId?: string) {
     if (userId) {
       url += `&userId=${userId}`;
     }
-    console.log("🌐 [fetchRoomNormal] API URL:", url);
+    // console.log("🌐 [fetchRoomNormal] API URL:", url);
     const res = await apiClient.get(url);
-    console.log("✅ [fetchRoomNormal] Full Response:", res);
-    console.log("✅ [fetchRoomNormal] Response structure:", {
-      hasData: !!res,
-      isArray: Array.isArray(res),
-      hasDataProp: res && "data" in res,
-      dataLength: res?.data?.length || (Array.isArray(res) ? res.length : 0),
-      keys: res ? Object.keys(res) : [],
-    });
+    // console.log("✅ [fetchRoomNormal] Full Response:", res);
+    // console.log("✅ [fetchRoomNormal] Response structure:", {
+    //   hasData: !!res,
+    //   isArray: Array.isArray(res),
+    //   hasDataProp: res && "data" in res,
+    //   dataLength: res?.data?.length || (Array.isArray(res) ? res.length : 0),
+    //   keys: res ? Object.keys(res) : [],
+    // });
     return res;
   } catch (error) {
     console.error("❌ [fetchRoomNormal] Error:", error);

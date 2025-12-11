@@ -17,6 +17,10 @@ import * as ImagePicker from "expo-image-picker";
 import { Bill, LandlordPaymentInfo } from "../types/types";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { uploadBillTransferImage } from "../Services/BillService";
+import emailjs from "@emailjs/react-native";
+import { SERVICE_ID, TEMPLATE_ID, PUBLIC_KEY } from "@env";
+import OTPVerificationModal from "./OTPVerificationModal";
+import { useAuthStore } from "../Stores/useAuthStore";
 
 interface PaymentModalProps {
   visible: boolean;
@@ -41,6 +45,13 @@ const PaymentBill = ({
     useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // OTP states
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [generatedOTP, setGeneratedOTP] = useState("");
+  const [isSendingOTP, setIsSendingOTP] = useState(false);
+
+  const { loggedInUser } = useAuthStore();
 
   const handlePickImage = async () => {
     const permissionResult =
@@ -109,6 +120,66 @@ const PaymentBill = ({
       );
       return;
     }
+
+    // Generate OTP and send email
+    await sendOTPEmail();
+  };
+
+  const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
+
+  const sendOTPEmail = async () => {
+    // Get email from user profile or use a default
+    const userEmail = loggedInUser?.userProfile?.email;
+
+    if (!userEmail) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "User email not found",
+      });
+      return;
+    }
+
+    setIsSendingOTP(true);
+    const otp = generateOTP();
+    setGeneratedOTP(otp);
+
+    try {
+      const templateParams = {
+        to_email: userEmail,
+        to_name: loggedInUser?.userProfile?.fullName || "Customer",
+        otp_code: otp,
+        bill_month: bill?.month || "",
+        amount: totalAmount?.toLocaleString("vi-VN"),
+      };
+
+      await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, {
+        publicKey: PUBLIC_KEY,
+      });
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "OTP has been sent to your email",
+      });
+
+      setShowOTPModal(true);
+    } catch (error: any) {
+      console.error("Failed to send OTP:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to send OTP. Please try again",
+      });
+    } finally {
+      setIsSendingOTP(false);
+    }
+  };
+
+  const handleOTPVerifySuccess = () => {
+    setShowOTPModal(false);
     onConfirm && onConfirm(bill.id);
   };
 
@@ -247,13 +318,23 @@ const PaymentBill = ({
                   style={[
                     styles.submitButton,
                     // (!transferConfirmed || !imageUploadedSuccessfully) &&
-                    !transferConfirmed && styles.submitButtonDisabled,
+                    (!transferConfirmed || isSendingOTP) &&
+                      styles.submitButtonDisabled,
                   ]}
                   onPress={() => handleConfirmPayment()}
                   //   disabled={!transferConfirmed || !imageUploadedSuccessfully}
-                  disabled={!transferConfirmed}
+                  disabled={!transferConfirmed || isSendingOTP}
                 >
-                  <Text style={styles.submitButtonText}>Confirm Payment</Text>
+                  {isSendingOTP ? (
+                    <View style={styles.buttonContent}>
+                      <ActivityIndicator size="small" color="#fff" />
+                      <Text style={styles.submitButtonText}>
+                        Sending OTP...
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.submitButtonText}>Confirm Payment</Text>
+                  )}
                 </TouchableOpacity>
                 <View style={{ height: spacing.xl }} />
               </>
@@ -262,6 +343,15 @@ const PaymentBill = ({
           <SafeAreaView edges={["bottom"]} />
         </View>
       </View>
+
+      {/* OTP Verification Modal */}
+      <OTPVerificationModal
+        visible={showOTPModal}
+        email={loggedInUser?.userProfile?.email || ""}
+        generatedOTP={generatedOTP}
+        onClose={() => setShowOTPModal(false)}
+        onVerifySuccess={handleOTPVerifySuccess}
+      />
     </Modal>
   );
 };
@@ -428,6 +518,11 @@ const styles = StyleSheet.create({
     fontSize: fontSize.lg,
     color: "#fff",
     fontWeight: "700",
+  },
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
   },
 });
 
