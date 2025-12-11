@@ -9,6 +9,7 @@ import {
   Modal,
   Alert,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import React, { useState, useEffect, useCallback } from "react";
@@ -32,6 +33,7 @@ import {
 import { getByTenant as getContractsByTenant } from "../../../Services/ContractService";
 import { useFocusEffect } from "@react-navigation/native";
 import { Resident } from "../../../types/types";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = {
   navigation: any;
@@ -613,216 +615,225 @@ const ResidentsScreen = ({ navigation }: Props) => {
         transparent={true}
         onRequestClose={() => setShowAddModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Resident</Text>
-              <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.modalOverlay}>
+            <SafeAreaView>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Add Resident</Text>
+                  <TouchableOpacity onPress={() => setShowAddModal(false)}>
+                    <Ionicons name="close" size={24} color="#333" />
+                  </TouchableOpacity>
+                </View>
 
-            <ScrollView style={styles.modalBody}>
-              <Text style={styles.inputLabel}>
-                Full Name <Text style={styles.required}>*</Text>
-              </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter full name"
-                value={formData.fullName}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, fullName: text })
-                }
-              />
-
-              <Text style={styles.inputLabel}>
-                ID Number <Text style={styles.required}>*</Text>
-              </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter 12-digit ID number"
-                value={formData.idNumber}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, idNumber: text })
-                }
-                keyboardType="numeric"
-                maxLength={12}
-              />
-
-              <Text style={styles.inputLabel}>
-                Relationship <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={formData.relationship}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, relationship: value })
-                  }
-                  style={styles.picker}
-                >
-                  <Picker.Item label="MySelf" value="MySelf" />
-                  <Picker.Item label="Wife/Husband" value="Wife/Husband" />
-                  <Picker.Item label="Child" value="Child" />
-                  <Picker.Item label="Parent" value="Parent" />
-                  <Picker.Item label="Sibling" value="Sibling" />
-                  <Picker.Item label="Friend" value="Friend" />
-                  <Picker.Item label="Other" value="Other" />
-                </Picker>
-              </View>
-
-              <Text style={styles.inputLabel}>
-                Contract <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.pickerContainer}>
-                {loadingContracts ? (
-                  <ActivityIndicator
-                    size="small"
-                    color="#4A90E2"
-                    style={{ padding: spacing.md }}
-                  />
-                ) : availableContracts.length === 0 ? (
-                  <Text style={styles.noContractsText}>
-                    No contracts available. Please create a contract first.
+                <ScrollView style={styles.modalBody}>
+                  <Text style={styles.inputLabel}>
+                    Full Name <Text style={styles.required}>*</Text>
                   </Text>
-                ) : (
-                  <Picker
-                    selectedValue={formData.contractId}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, contractId: value })
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter full name"
+                    value={formData.fullName}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, fullName: text })
                     }
-                    style={styles.picker}
-                  >
-                    <Picker.Item label="Select a contract" value="" />
-                    {availableContracts.map((contract) => (
-                      <Picker.Item
-                        key={contract.id}
-                        label={`${contract.roomTitle || "Unknown Room"} - ${
-                          contract.contractName || "No Contract Name"
-                        }`}
-                        value={contract.id}
+                  />
+
+                  <Text style={styles.inputLabel}>
+                    ID Number <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter 12-digit ID number"
+                    value={formData.idNumber}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, idNumber: text })
+                    }
+                    keyboardType="numeric"
+                    maxLength={12}
+                  />
+
+                  <Text style={styles.inputLabel}>
+                    Relationship <Text style={styles.required}>*</Text>
+                  </Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={formData.relationship}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, relationship: value })
+                      }
+                      style={styles.picker}
+                    >
+                      <Picker.Item label="MySelf" value="MySelf" />
+                      <Picker.Item label="Wife/Husband" value="Wife/Husband" />
+                      <Picker.Item label="Child" value="Child" />
+                      <Picker.Item label="Parent" value="Parent" />
+                      <Picker.Item label="Sibling" value="Sibling" />
+                      <Picker.Item label="Friend" value="Friend" />
+                      <Picker.Item label="Other" value="Other" />
+                    </Picker>
+                  </View>
+
+                  <Text style={styles.inputLabel}>
+                    Contract <Text style={styles.required}>*</Text>
+                  </Text>
+                  <View style={styles.pickerContainer}>
+                    {loadingContracts ? (
+                      <ActivityIndicator
+                        size="small"
+                        color="#4A90E2"
+                        style={{ padding: spacing.md }}
                       />
-                    ))}
-                  </Picker>
-                )}
-              </View>
+                    ) : availableContracts.length === 0 ? (
+                      <Text style={styles.noContractsText}>
+                        No contracts available. Please create a contract first.
+                      </Text>
+                    ) : (
+                      <Picker
+                        selectedValue={formData.contractId}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, contractId: value })
+                        }
+                        style={styles.picker}
+                      >
+                        <Picker.Item label="Select a contract" value="" />
+                        {availableContracts.map((contract) => (
+                          <Picker.Item
+                            key={contract.id}
+                            label={`${contract.roomTitle || "Unknown Room"} - ${
+                              contract.contractName || "No Contract Name"
+                            }`}
+                            value={contract.id}
+                          />
+                        ))}
+                      </Picker>
+                    )}
+                  </View>
 
-              <Text style={styles.inputLabel}>
-                Start Date <Text style={styles.required}>*</Text>
-              </Text>
-              <TouchableOpacity
-                style={styles.datePickerButton}
-                onPress={() => setShowStartDatePicker(true)}
-              >
-                <Ionicons name="calendar-outline" size={20} color="#666" />
-                <Text style={styles.datePickerText}>
-                  {formData.startDate
-                    ? new Date(formData.startDate).toLocaleDateString()
-                    : "Select start date"}
-                </Text>
-              </TouchableOpacity>
-              {showStartDatePicker && (
-                <DateTimePicker
-                  value={startDate}
-                  mode="date"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  onChange={handleStartDateChange}
-                />
-              )}
-
-              <Text style={styles.inputLabel}>
-                End Date <Text style={styles.required}>*</Text>
-              </Text>
-              <TouchableOpacity
-                style={styles.datePickerButton}
-                onPress={() => setShowEndDatePicker(true)}
-              >
-                <Ionicons name="calendar-outline" size={20} color="#666" />
-                <Text style={styles.datePickerText}>
-                  {formData.endDate
-                    ? new Date(formData.endDate).toLocaleDateString()
-                    : "Select end date"}
-                </Text>
-              </TouchableOpacity>
-              {showEndDatePicker && (
-                <DateTimePicker
-                  value={endDate}
-                  mode="date"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  onChange={handleEndDateChange}
-                  minimumDate={startDate}
-                />
-              )}
-
-              {/* ID Card Upload */}
-              <Text style={styles.inputLabel}>ID Card Images (Optional)</Text>
-              <View style={styles.imageUploadContainer}>
-                <TouchableOpacity
-                  style={styles.imageUploadButton}
-                  onPress={pickFrontImage}
-                >
-                  {frontImageUri ? (
-                    <View style={styles.imagePreviewContainer}>
-                      <Text style={styles.imagePreviewText}>Front ✓</Text>
-                    </View>
-                  ) : (
-                    <>
-                      <Ionicons name="camera" size={24} color="#4A90E2" />
-                      <Text style={styles.imageUploadText}>Front ID</Text>
-                    </>
+                  <Text style={styles.inputLabel}>
+                    Start Date <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.datePickerButton}
+                    onPress={() => setShowStartDatePicker(true)}
+                  >
+                    <Ionicons name="calendar-outline" size={20} color="#666" />
+                    <Text style={styles.datePickerText}>
+                      {formData.startDate
+                        ? new Date(formData.startDate).toLocaleDateString()
+                        : "Select start date"}
+                    </Text>
+                  </TouchableOpacity>
+                  {showStartDatePicker && (
+                    <DateTimePicker
+                      value={startDate}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={handleStartDateChange}
+                    />
                   )}
-                </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.imageUploadButton}
-                  onPress={pickBackImage}
-                >
-                  {backImageUri ? (
-                    <View style={styles.imagePreviewContainer}>
-                      <Text style={styles.imagePreviewText}>Back ✓</Text>
-                    </View>
-                  ) : (
-                    <>
-                      <Ionicons name="camera" size={24} color="#4A90E2" />
-                      <Text style={styles.imageUploadText}>Back ID</Text>
-                    </>
+                  <Text style={styles.inputLabel}>
+                    End Date <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.datePickerButton}
+                    onPress={() => setShowEndDatePicker(true)}
+                  >
+                    <Ionicons name="calendar-outline" size={20} color="#666" />
+                    <Text style={styles.datePickerText}>
+                      {formData.endDate
+                        ? new Date(formData.endDate).toLocaleDateString()
+                        : "Select end date"}
+                    </Text>
+                  </TouchableOpacity>
+                  {showEndDatePicker && (
+                    <DateTimePicker
+                      value={endDate}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={handleEndDateChange}
+                      minimumDate={startDate}
+                    />
                   )}
-                </TouchableOpacity>
+
+                  {/* ID Card Upload */}
+                  <Text style={styles.inputLabel}>
+                    ID Card Images (Optional)
+                  </Text>
+                  <View style={styles.imageUploadContainer}>
+                    <TouchableOpacity
+                      style={styles.imageUploadButton}
+                      onPress={pickFrontImage}
+                    >
+                      {frontImageUri ? (
+                        <View style={styles.imagePreviewContainer}>
+                          <Text style={styles.imagePreviewText}>Front ✓</Text>
+                        </View>
+                      ) : (
+                        <>
+                          <Ionicons name="camera" size={24} color="#4A90E2" />
+                          <Text style={styles.imageUploadText}>Front ID</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.imageUploadButton}
+                      onPress={pickBackImage}
+                    >
+                      {backImageUri ? (
+                        <View style={styles.imagePreviewContainer}>
+                          <Text style={styles.imagePreviewText}>Back ✓</Text>
+                        </View>
+                      ) : (
+                        <>
+                          <Ionicons name="camera" size={24} color="#4A90E2" />
+                          <Text style={styles.imageUploadText}>Back ID</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={styles.inputLabel}>Note</Text>
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Enter note"
+                    value={formData.note}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, note: text })
+                    }
+                    multiline
+                    numberOfLines={3}
+                  />
+                </ScrollView>
+
+                <View style={styles.modalFooter}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => setShowAddModal(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleAddResident}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.submitButtonText}>Add Resident</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
-
-              <Text style={styles.inputLabel}>Note</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Enter note"
-                value={formData.note}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, note: text })
-                }
-                multiline
-                numberOfLines={3}
-              />
-            </ScrollView>
-
-            <View style={styles.modalFooter}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowAddModal(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleAddResident}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Add Resident</Text>
-                )}
-              </TouchableOpacity>
-            </View>
+            </SafeAreaView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Edit Resident Modal */}
@@ -832,180 +843,197 @@ const ResidentsScreen = ({ navigation }: Props) => {
         transparent={true}
         onRequestClose={() => setShowEditModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Resident</Text>
-              <TouchableOpacity onPress={() => setShowEditModal(false)}>
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.modalOverlay}>
+            <SafeAreaView>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Edit Resident</Text>
+                  <TouchableOpacity onPress={() => setShowEditModal(false)}>
+                    <Ionicons name="close" size={24} color="#333" />
+                  </TouchableOpacity>
+                </View>
 
-            <ScrollView style={styles.modalBody}>
-              <Text style={styles.inputLabel}>
-                Full Name <Text style={styles.required}>*</Text>
-              </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter full name"
-                value={formData.fullName}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, fullName: text })
-                }
-              />
+                <ScrollView style={styles.modalBody}>
+                  <Text style={styles.inputLabel}>
+                    Full Name <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter full name"
+                    value={formData.fullName}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, fullName: text })
+                    }
+                  />
 
-              <Text style={styles.inputLabel}>
-                ID Number <Text style={styles.required}>*</Text>
-              </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter 12-digit ID number"
-                value={formData.idNumber}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, idNumber: text })
-                }
-                keyboardType="numeric"
-                maxLength={12}
-              />
+                  <Text style={styles.inputLabel}>
+                    ID Number <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter 12-digit ID number"
+                    value={formData.idNumber}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, idNumber: text })
+                    }
+                    keyboardType="numeric"
+                    maxLength={12}
+                  />
 
-              <Text style={styles.inputLabel}>
-                Relationship <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={formData.relationship}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, relationship: value })
-                  }
-                  style={styles.picker}
-                >
-                  <Picker.Item label="MySelf" value="MySelf" />
-                  <Picker.Item label="Wife/Husband" value="Wife/Husband" />
-                  <Picker.Item label="Child" value="Child" />
-                  <Picker.Item label="Father/Mother" value="Father/Mother" />
-                  <Picker.Item label="Brother/Sister" value="Brother/Sister" />
-                  <Picker.Item label="Friend" value="Friend" />
-                  <Picker.Item label="Other" value="Other" />
-                </Picker>
-              </View>
+                  <Text style={styles.inputLabel}>
+                    Relationship <Text style={styles.required}>*</Text>
+                  </Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={formData.relationship}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, relationship: value })
+                      }
+                      style={styles.picker}
+                    >
+                      <Picker.Item label="MySelf" value="MySelf" />
+                      <Picker.Item label="Wife/Husband" value="Wife/Husband" />
+                      <Picker.Item label="Child" value="Child" />
+                      <Picker.Item
+                        label="Father/Mother"
+                        value="Father/Mother"
+                      />
+                      <Picker.Item
+                        label="Brother/Sister"
+                        value="Brother/Sister"
+                      />
+                      <Picker.Item label="Friend" value="Friend" />
+                      <Picker.Item label="Other" value="Other" />
+                    </Picker>
+                  </View>
 
-              <Text style={styles.inputLabel}>
-                Start Date <Text style={styles.required}>*</Text>
-              </Text>
-              <TouchableOpacity
-                style={styles.datePickerButton}
-                onPress={() => setShowStartDatePicker(true)}
-              >
-                <Ionicons name="calendar-outline" size={20} color="#666" />
-                <Text style={styles.datePickerText}>
-                  {formData.startDate
-                    ? new Date(formData.startDate).toLocaleDateString()
-                    : "Select start date"}
-                </Text>
-              </TouchableOpacity>
-              {showStartDatePicker && (
-                <DateTimePicker
-                  value={startDate}
-                  mode="date"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  onChange={handleStartDateChange}
-                />
-              )}
-
-              <Text style={styles.inputLabel}>
-                End Date <Text style={styles.required}>*</Text>
-              </Text>
-              <TouchableOpacity
-                style={styles.datePickerButton}
-                onPress={() => setShowEndDatePicker(true)}
-              >
-                <Ionicons name="calendar-outline" size={20} color="#666" />
-                <Text style={styles.datePickerText}>
-                  {formData.endDate
-                    ? new Date(formData.endDate).toLocaleDateString()
-                    : "Select end date"}
-                </Text>
-              </TouchableOpacity>
-              {showEndDatePicker && (
-                <DateTimePicker
-                  value={endDate}
-                  mode="date"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  onChange={handleEndDateChange}
-                  minimumDate={startDate}
-                />
-              )}
-
-              {/* ID Card Upload */}
-              <Text style={styles.inputLabel}>ID Card Images (Optional)</Text>
-              <View style={styles.imageUploadContainer}>
-                <TouchableOpacity
-                  style={styles.imageUploadButton}
-                  onPress={pickFrontImage}
-                >
-                  {frontImageUri ? (
-                    <View style={styles.imagePreviewContainer}>
-                      <Text style={styles.imagePreviewText}>Front ✓</Text>
-                    </View>
-                  ) : (
-                    <>
-                      <Ionicons name="camera" size={24} color="#4A90E2" />
-                      <Text style={styles.imageUploadText}>Front ID</Text>
-                    </>
+                  <Text style={styles.inputLabel}>
+                    Start Date <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.datePickerButton}
+                    onPress={() => setShowStartDatePicker(true)}
+                  >
+                    <Ionicons name="calendar-outline" size={20} color="#666" />
+                    <Text style={styles.datePickerText}>
+                      {formData.startDate
+                        ? new Date(formData.startDate).toLocaleDateString()
+                        : "Select start date"}
+                    </Text>
+                  </TouchableOpacity>
+                  {showStartDatePicker && (
+                    <DateTimePicker
+                      value={startDate}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={handleStartDateChange}
+                    />
                   )}
-                </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.imageUploadButton}
-                  onPress={pickBackImage}
-                >
-                  {backImageUri ? (
-                    <View style={styles.imagePreviewContainer}>
-                      <Text style={styles.imagePreviewText}>Back ✓</Text>
-                    </View>
-                  ) : (
-                    <>
-                      <Ionicons name="camera" size={24} color="#4A90E2" />
-                      <Text style={styles.imageUploadText}>Back ID</Text>
-                    </>
+                  <Text style={styles.inputLabel}>
+                    End Date <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.datePickerButton}
+                    onPress={() => setShowEndDatePicker(true)}
+                  >
+                    <Ionicons name="calendar-outline" size={20} color="#666" />
+                    <Text style={styles.datePickerText}>
+                      {formData.endDate
+                        ? new Date(formData.endDate).toLocaleDateString()
+                        : "Select end date"}
+                    </Text>
+                  </TouchableOpacity>
+                  {showEndDatePicker && (
+                    <DateTimePicker
+                      value={endDate}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={handleEndDateChange}
+                      minimumDate={startDate}
+                    />
                   )}
-                </TouchableOpacity>
+
+                  {/* ID Card Upload */}
+                  <Text style={styles.inputLabel}>
+                    ID Card Images (Optional)
+                  </Text>
+                  <View style={styles.imageUploadContainer}>
+                    <TouchableOpacity
+                      style={styles.imageUploadButton}
+                      onPress={pickFrontImage}
+                    >
+                      {frontImageUri ? (
+                        <View style={styles.imagePreviewContainer}>
+                          <Text style={styles.imagePreviewText}>Front ✓</Text>
+                        </View>
+                      ) : (
+                        <>
+                          <Ionicons name="camera" size={24} color="#4A90E2" />
+                          <Text style={styles.imageUploadText}>Front ID</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.imageUploadButton}
+                      onPress={pickBackImage}
+                    >
+                      {backImageUri ? (
+                        <View style={styles.imagePreviewContainer}>
+                          <Text style={styles.imagePreviewText}>Back ✓</Text>
+                        </View>
+                      ) : (
+                        <>
+                          <Ionicons name="camera" size={24} color="#4A90E2" />
+                          <Text style={styles.imageUploadText}>Back ID</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={styles.inputLabel}>Note</Text>
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Enter note"
+                    value={formData.note}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, note: text })
+                    }
+                    multiline
+                    numberOfLines={3}
+                  />
+                </ScrollView>
+
+                <View style={styles.modalFooter}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => setShowEditModal(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleEditResident}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.submitButtonText}>
+                        Update Resident
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
-
-              <Text style={styles.inputLabel}>Note</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Enter note"
-                value={formData.note}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, note: text })
-                }
-                multiline
-                numberOfLines={3}
-              />
-            </ScrollView>
-
-            <View style={styles.modalFooter}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowEditModal(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleEditResident}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Update Resident</Text>
-                )}
-              </TouchableOpacity>
-            </View>
+            </SafeAreaView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -1227,7 +1255,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: normalize(20),
     borderTopRightRadius: normalize(20),
-    maxHeight: "90%",
+    maxHeight: "98%",
     paddingBottom: spacing.xl,
   },
   modalHeader: {
@@ -1274,15 +1302,22 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
   },
   pickerContainer: {
-    backgroundColor: "#f5f5f5",
-    borderRadius: normalize(10),
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
+    backgroundColor: "#ffffff",
+    borderRadius: normalize(12),
+    borderWidth: 1.5,
+    borderColor: "#d0d0d0",
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   picker: {
     height: Platform.OS === "ios" ? normalize(180) : normalize(50),
     width: "100%",
+    color: "#000000",
+    backgroundColor: "transparent",
   },
   noContractsText: {
     fontSize: fontSize.sm,
