@@ -9,8 +9,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import RoomSection from "../../../components/RoomSection";
 import SearchBar from "../../../components/SearchBar";
 import {
-  fetchRoomNormal,
-  fetchRoomVip,
   fetchRoomsSmart,
   fetchRoomsByLocation,
 } from "../../../Services/RoomService";

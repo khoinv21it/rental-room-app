@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Alert,
   Image,
@@ -11,12 +11,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import Mapbox, { Camera, MapView, MarkerView } from "@rnmapbox/maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import RoomCardInMap from "../../../components/RoomCardInMap";
 import { fetchRoomInMap } from "../../../Services/RoomService";
 import { ListRoomInMap } from "../../../types/types";
+import { MAPBOX_ACCESS_TOKEN } from "@env";
 import {
   fontSize,
   hp,
@@ -26,40 +27,47 @@ import {
   wp,
 } from "../../../utils/responsive";
 
+// Configure Mapbox
+Mapbox.setAccessToken(MAPBOX_ACCESS_TOKEN);
+
 const MapScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const mapRef = useRef<MapView>(null);
+  const cameraRef = useRef<Camera>(null);
   const [selectedRoom, setSelectedRoom] = useState<ListRoomInMap | null>(null);
   const [showRoomList, setShowRoomList] = useState(false);
   const [favoriteRoomIds, setFavoriteRoomIds] = useState<string[]>([]);
   const [mapRegion, setMapRegion] = useState({
     latitude: 16.0544,
     longitude: 108.2022,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
   });
   const [roomInMap, setRoomInMap] = useState<ListRoomInMap[]>([]);
+
   useEffect(() => {
     const fetchRoomInMaps = async () => {
       const response = await fetchRoomInMap(16.0544, 108.2022);
       const room = response.data || response;
       console.log("Room in map:", room);
+      console.log("Total rooms:", room?.length);
       setRoomInMap(room);
     };
     fetchRoomInMaps();
   }, []);
 
-  const [mapType, setMapType] = useState<"standard" | "satellite" | "hybrid">(
-    "standard"
+  const [mapStyle, setMapStyle] = useState<string>(
+    "mapbox://styles/mapbox/streets-v12"
   );
   const [isLocating, setIsLocating] = useState(false);
 
   const handleMarkerPress = (room: ListRoomInMap) => {
+    console.log("Marker pressed:", room.id);
     setSelectedRoom(room);
   };
 
   const handleRoomPress = (roomId: string) => {
     navigation.navigate("RoomDetailScreen", { roomId });
     console.log("Navigate to room detail:", roomId);
+    navigation.navigate("RoomDetailScreen", { roomId });
   };
 
   const handleFavorite = (roomId: string) => {
@@ -108,11 +116,17 @@ const MapScreen: React.FC = () => {
       const newRegion = {
         latitude,
         longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
       };
 
       setMapRegion(newRegion);
+
+      // Move camera to current location
+      cameraRef.current?.setCamera({
+        centerCoordinate: [longitude, latitude],
+        zoomLevel: 16,
+        animationDuration: 1000,
+      });
+
       const response = await fetchRoomInMap(latitude, longitude);
       const room = response.data || response;
       console.log("Room in map:", room);
@@ -157,44 +171,45 @@ const MapScreen: React.FC = () => {
 
         {/* Map */}
         <MapView
+          ref={mapRef}
           style={styles.map}
-          provider={PROVIDER_GOOGLE}
-          region={mapRegion}
-          onRegionChangeComplete={(region) => {
-            // Chỉ update khi thay đổi đáng kể để tránh chớp
-            if (!isLocating) {
-              setMapRegion(region);
-            }
-          }}
-          onPress={(event) => {
-            onTouchMap(event);
-          }}
-          showsUserLocation={true}
-          showsMyLocationButton={false}
-          mapType={mapType}
-          showsCompass={false}
-          showsScale={false}
-          showsBuildings={true}
-          showsTraffic={false}
-          moveOnMarkerPress={false}
+          styleURL={mapStyle}
+          pitchEnabled={false}
+          rotateEnabled={false}
         >
+          <Camera
+            ref={cameraRef}
+            centerCoordinate={[mapRegion.longitude, mapRegion.latitude]}
+            zoomLevel={12}
+            minZoomLevel={8}
+            maxZoomLevel={20}
+            animationMode="flyTo"
+            animationDuration={1000}
+          />
+
           {roomInMap.map((room) => (
-            <Marker
+            <MarkerView
               key={room.id}
-              coordinate={{
-                latitude: room.lat || 0,
-                longitude: room.lng || 0,
-              }}
-              onPress={() => handleMarkerPress(room)}
-              //   anchor={{ x: 0.5, y: 0.5 }}
+              coordinate={[room.lng || 0, room.lat || 0]}
+              anchor={{ x: 0.5, y: 1 }}
+              allowOverlap={true}
+              allowOverlapWithPuck={true}
             >
-              {/* <MapMarker price={room.priceMonth || 0} isVip={room.isVip} /> */}
-              <Image
-                source={require("../../../../assets/red_position_ants.png")}
-                style={{ width: normalize(50), height: normalize(45) }}
-                resizeMode="contain"
-              />
-            </Marker>
+              <View
+                style={styles.markerContainer}
+                onStartShouldSetResponder={() => true}
+                onResponderRelease={() => {
+                  console.log("=== MARKER PRESSED ===", room.id);
+                  setSelectedRoom(room);
+                }}
+              >
+                <Image
+                  source={require("../../../../assets/red_position_ants.png")}
+                  style={styles.markerImage}
+                  resizeMode="contain"
+                />
+              </View>
+            </MarkerView>
           ))}
         </MapView>
 
@@ -251,8 +266,14 @@ const MapScreen: React.FC = () => {
                       setMapRegion({
                         latitude: room.lat || mapRegion.latitude,
                         longitude: room.lng || mapRegion.longitude,
-                        latitudeDelta: 0.01,
-                        longitudeDelta: 0.01,
+                      });
+                      cameraRef.current?.setCamera({
+                        centerCoordinate: [
+                          room.lng || mapRegion.longitude,
+                          room.lat || mapRegion.latitude,
+                        ],
+                        zoomLevel: 16,
+                        animationDuration: 1000,
                       });
                     }}
                     onFavorite={() => handleFavorite(room.id)}
@@ -291,16 +312,16 @@ const MapScreen: React.FC = () => {
           <TouchableOpacity
             style={styles.controlButton}
             onPress={() => {
-              setMapType((prev) => {
+              setMapStyle((prev) => {
                 switch (prev) {
-                  case "standard":
-                    return "satellite";
-                  case "satellite":
-                    return "hybrid";
-                  case "hybrid":
-                    return "standard";
+                  case "mapbox://styles/mapbox/streets-v12":
+                    return "mapbox://styles/mapbox/satellite-streets-v12";
+                  case "mapbox://styles/mapbox/satellite-streets-v12":
+                    return "mapbox://styles/mapbox/outdoors-v12";
+                  case "mapbox://styles/mapbox/outdoors-v12":
+                    return "mapbox://styles/mapbox/streets-v12";
                   default:
-                    return "standard";
+                    return "mapbox://styles/mapbox/streets-v12";
                 }
               });
             }}
@@ -507,9 +528,17 @@ const styles = StyleSheet.create({
     borderColor: "#4A90E2",
   },
   compassText: {
-    fontSize: fontSize.base,
+    fontSize: fontSize.xs,
     fontWeight: "700",
     color: "#4A90E2",
+  },
+  markerContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  markerImage: {
+    width: normalize(50),
+    height: normalize(45),
   },
 });
 

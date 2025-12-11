@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Linking,
+  Image,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import Mapbox, { Camera, MapView, MarkerView } from "@rnmapbox/maps";
 import { Ionicons } from "@expo/vector-icons";
+import { MAPBOX_ACCESS_TOKEN } from "@env";
+
+// Configure Mapbox
+Mapbox.setAccessToken(MAPBOX_ACCESS_TOKEN);
 
 interface Address {
   id?: string;
@@ -37,6 +42,7 @@ const RoomLocationMap: React.FC<RoomLocationMapProps> = ({
   roomTitle,
   roomPrice,
 }) => {
+  const cameraRef = useRef<Camera>(null);
   const [coordinates, setCoordinates] = useState({
     lat: 16.0471,
     lng: 108.2068,
@@ -147,33 +153,32 @@ const RoomLocationMap: React.FC<RoomLocationMapProps> = ({
       <View style={styles.mapContainer}>
         <MapView
           style={styles.map}
-          region={{
-            latitude: coordinates.lat,
-            longitude: coordinates.lng,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
+          styleURL="mapbox://styles/mapbox/streets-v12"
+          pitchEnabled={false}
+          rotateEnabled={false}
           scrollEnabled={true}
           zoomEnabled={true}
-          rotateEnabled={false}
-          pitchEnabled={false}
         >
-          <Marker
-            coordinate={{
-              latitude: coordinates.lat,
-              longitude: coordinates.lng,
-            }}
-            title={roomTitle}
-            description={
-              roomPrice
-                ? `${roomPrice.toLocaleString("vi-VN")}₫/month`
-                : undefined
-            }
+          <Camera
+            ref={cameraRef}
+            centerCoordinate={[coordinates.lng, coordinates.lat]}
+            zoomLevel={15}
+            animationMode="flyTo"
+            animationDuration={1000}
+          />
+
+          <MarkerView
+            coordinate={[coordinates.lng, coordinates.lat]}
+            anchor={{ x: 0.5, y: 1 }}
           >
-            {/* <View style={styles.customMarker}> */}
-            <Ionicons name="location" size={24} color="#ef4444" />
-            {/* </View> */}
-          </Marker>
+            <View style={styles.markerContainer}>
+              <Image
+                source={require("../../assets/red_position_ants.png")}
+                style={styles.markerImage}
+                resizeMode="contain"
+              />
+            </View>
+          </MarkerView>
         </MapView>
 
         {/* Geocoding Loading Overlay */}
@@ -246,16 +251,14 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
-  //   customMarker: {
-  //     backgroundColor: "#fff",
-  //     borderRadius: 20,
-  //     padding: 8,
-  //     elevation: 4,
-  //     shadowColor: "#000",
-  //     shadowOffset: { width: 0, height: 2 },
-  //     shadowOpacity: 0.25,
-  //     shadowRadius: 4,
-  //   },
+  markerContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  markerImage: {
+    width: 40,
+    height: 36,
+  },
   loadingOverlay: {
     position: "absolute",
     top: 0,

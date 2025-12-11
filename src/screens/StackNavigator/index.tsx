@@ -17,7 +17,7 @@ import RoomDetailScreen from "./screens/RoomDetailScreen";
 import RentalRoomView from "../../components/RentalRoomView";
 import { useNotifications } from "../../hooks/useNotifications";
 
-// Define the param list for the stack navigator
+// Define the param list for the stack navigator a
 export type RootStackParamList = {
   LoginScreen: undefined;
   HomeScreen: undefined;

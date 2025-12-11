@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import React, { useState, useEffect, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,6 +29,7 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
   const currentUser = useAuthStore((s) => s.loggedInUser);
   const [bookings, setBookings] = useState<BookingData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -42,6 +44,11 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
       }
     }, [currentUser?.id])
   );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadBookings(1).then(() => setRefreshing(false));
+  }, []);
 
   const loadBookings = async (page = 1) => {
     if (!currentUser?.id) return;
@@ -251,7 +258,12 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {loading ? (
           <View style={styles.emptyContainer}>
             <ActivityIndicator size="large" color="#4A90E2" />

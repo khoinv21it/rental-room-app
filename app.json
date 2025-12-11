@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "rental-room-app",
+    "name": "Ants Rental Room",
     "slug": "rental-room-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/playstore-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "splash": {
@@ -26,9 +26,9 @@
       }
     },
     "android": {
-      "package": "com.khoinguyen010503.rentalroomapp",
+      "package": "com.ants.rentalroomapp",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/playstore-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -58,17 +58,28 @@
           "color": "#3B82F6"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps._some_id_here_"
+        }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMAPBOX_MAPS_DOWNLOAD_TOKEN": "sk.eyJ1IjoidGluaHNvbWEiLCJhIjoiY21oc3ZyeDh6MHp4azJzcjRvMnh3Y2hjcSJ9.dMpsDobmAX1HDLU4BrzBew"
+        }
+      ]
     ],
-    "scheme": "rental-room-app",
     "experiments": {
       "tsconfigPaths": true
     },
-    "owner": "khoinguyen010503",
     "extra": {
       "eas": {
-        "projectId": "3442b704-f199-48f9-b3ce-d96f840616f9"
+        "projectId": "ca73dec2-946c-4968-a5e5-b15f9cca8420"
       }
-    }
+    },
+    "owner": "nhan12163"
   }
 }

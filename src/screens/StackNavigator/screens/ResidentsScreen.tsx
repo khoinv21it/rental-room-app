@@ -660,13 +660,13 @@ const ResidentsScreen = ({ navigation }: Props) => {
                   }
                   style={styles.picker}
                 >
-                  <Picker.Item label="Bản thân" value="Bản thân" />
-                  <Picker.Item label="Vợ/Chồng" value="Vợ/Chồng" />
-                  <Picker.Item label="Con" value="Con" />
-                  <Picker.Item label="Bố/Mẹ" value="Bố/Mẹ" />
-                  <Picker.Item label="Anh/Em" value="Anh/Em" />
-                  <Picker.Item label="Bạn bè" value="Bạn bè" />
-                  <Picker.Item label="Khác" value="Khác" />
+                  <Picker.Item label="MySelf" value="MySelf" />
+                  <Picker.Item label="Wife/Husband" value="Wife/Husband" />
+                  <Picker.Item label="Child" value="Child" />
+                  <Picker.Item label="Parent" value="Parent" />
+                  <Picker.Item label="Sibling" value="Sibling" />
+                  <Picker.Item label="Friend" value="Friend" />
+                  <Picker.Item label="Other" value="Other" />
                 </Picker>
               </View>
 
@@ -879,13 +879,13 @@ const ResidentsScreen = ({ navigation }: Props) => {
                   }
                   style={styles.picker}
                 >
-                  <Picker.Item label="Bản thân" value="Bản thân" />
-                  <Picker.Item label="Vợ/Chồng" value="Vợ/Chồng" />
-                  <Picker.Item label="Con" value="Con" />
-                  <Picker.Item label="Bố/Mẹ" value="Bố/Mẹ" />
-                  <Picker.Item label="Anh/Em" value="Anh/Em" />
-                  <Picker.Item label="Bạn bè" value="Bạn bè" />
-                  <Picker.Item label="Khác" value="Khác" />
+                  <Picker.Item label="MySelf" value="MySelf" />
+                  <Picker.Item label="Wife/Husband" value="Wife/Husband" />
+                  <Picker.Item label="Child" value="Child" />
+                  <Picker.Item label="Father/Mother" value="Father/Mother" />
+                  <Picker.Item label="Brother/Sister" value="Brother/Sister" />
+                  <Picker.Item label="Friend" value="Friend" />
+                  <Picker.Item label="Other" value="Other" />
                 </Picker>
               </View>
 

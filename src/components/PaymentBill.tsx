@@ -115,8 +115,8 @@ const PaymentBill = ({
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <View style={styles.modalOverlay}>
-        <SafeAreaView />
         <View style={styles.modalContent}>
+          <SafeAreaView edges={["top"]} />
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Payment Bill</Text>
             <TouchableOpacity onPress={onClose}>
@@ -255,10 +255,11 @@ const PaymentBill = ({
                 >
                   <Text style={styles.submitButtonText}>Confirm Payment</Text>
                 </TouchableOpacity>
+                <View style={{ height: spacing.xl }} />
               </>
             ) : null}
           </ScrollView>
-          <SafeAreaView />
+          <SafeAreaView edges={["bottom"]} />
         </View>
       </View>
     </Modal>
@@ -275,7 +276,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: normalize(20),
     borderTopRightRadius: normalize(20),
-    maxHeight: "90%",
+    maxHeight: "95%",
   },
   modalHeader: {
     flexDirection: "row",

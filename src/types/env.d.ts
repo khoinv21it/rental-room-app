@@ -15,7 +15,8 @@ declare module '@env' {
   // map
   export const GOONG_API_KEY: string;
   export const GOONG_MAPS_API_KEY: string;
-  
+  export const MAPBOX_ACCESS_TOKEN: string;
+  export const MAPBOX_DOWNLOADS_TOKEN: string;
 
   // Thêm các biến môi trường khác nếu cần
 }
