@@ -1,7 +1,8 @@
 import { GOOGLE_OAUTH_CLIENT_ID, GOOGLE_WEB_CLIENT_ID } from "@env";
+import { Feather as Icon } from "@expo/vector-icons";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { useNavigation } from "@react-navigation/native";
-import * as Google from "expo-auth-session/providers/google";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -18,7 +19,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-import { Feather as Icon } from "@expo/vector-icons";
 import * as yup from "yup";
 import useAuthStore from "../../../Stores/useAuthStore";
 // import * as AuthSession from "expo-auth-session";
@@ -46,35 +46,86 @@ const LoginScreen: React.FC = () => {
   const [remember, setRemember] = useState(false);
   const [isInProgress, setIsInProgress] = useState(false);
 
+  // Configure Google Sign-In
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: GOOGLE_WEB_CLIENT_ID, // From Google Cloud Console
+      offlineAccess: true, // If you want to access Google API on behalf of the user FROM YOUR SERVER
+      forceCodeForRefreshToken: true, // [Android] related to `serverAuthCode`, read the docs link below *.
+      iosClientId: GOOGLE_OAUTH_CLIENT_ID, // [iOS] if you want to specify the client ID of type iOS (otherwise, it is taken from GoogleService-Info.plist)
+    });
+  }, []);
+
   // const redirectUri = AuthSession.makeRedirectUri({
   //   useProxy: false,
   // } as any);
 
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    androidClientId: GOOGLE_OAUTH_CLIENT_ID,
-    iosClientId: GOOGLE_OAUTH_CLIENT_ID,
-    scopes: ["profile", "email"],
-    selectAccount: true,
-    // redirectUri,
-  });
+  // const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+  //   webClientId: GOOGLE_WEB_CLIENT_ID,
+  //   iosClientId: GOOGLE_WEB_CLIENT_ID,
+  //   androidClientId: GOOGLE_WEB_CLIENT_ID, // Thêm dòng này
+  //   scopes: ["profile", "email"],
+  //   selectAccount: true,
+  //   // redirectUri,
+  // });
 
   // useEffect(() => {
   //   console.log("👉 Redirect URI:", redirectUri);
   // }, []);
 
-  useEffect(() => {
-    if (response?.type === "success") {
-      const { id_token } = response.params;
-      console.log("Google Sign-In Response:", response);
-      handleGoogleSignIn(id_token);
-    } else if (response?.type === "error") {
-      console.error("Google Sign-In Error:", response.error);
-      showError(
-        "Google Sign-in failed: " + response.error?.message || "Unknown error"
-      );
+  const onPressLoginGG = async () => {
+    try {
+      await GoogleSignin.signOut();
+      console.log("Previous session cleared");
+    } catch (e) {
+      console.log("No previous session to clear");
     }
-  }, [response]);
+
+    try {
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+      console.log("Play Services verified");
+
+      const userInfo = await GoogleSignin.signIn();
+      console.log("Google Sign-In result", userInfo);
+
+      // Kiểm tra xem user có thực sự đăng nhập không
+      if (!userInfo || !userInfo.data) {
+        console.log("Sign-in cancelled or no user data");
+        return;
+      }
+
+      console.log("Google Sign-In successful", userInfo);
+
+      const { idToken } = await GoogleSignin.getTokens();
+      console.log("ID Token obtained:", idToken ? "Yes" : "No");
+      console.log("User info:", userInfo.data);
+
+      // Gửi idToken lên backend để authenticate
+      if (idToken) {
+        await handleGoogleSignIn(idToken);
+      }
+    } catch (error: any) {
+      if (error.code === "SIGN_IN_CANCELLED") {
+        console.log("User cancelled the login");
+        // Không show error khi user tự cancel
+        return;
+      }
+
+      console.error("Google Sign-In error:", error);
+      if (error.code === "IN_PROGRESS") {
+        console.log("Sign in is already in progress");
+        showError("Sign in is already in progress");
+      } else if (error.code === "PLAY_SERVICES_NOT_AVAILABLE") {
+        console.log("Play services not available");
+        showError("Google Play Services not available");
+      } else {
+        console.log("Unknown error:", error.message);
+        showError(error.message || "Google sign-in failed");
+      }
+    }
+  };
 
   // Get auth state from store
   const accessToken = useAuthStore((s) => s.access_token);
@@ -319,23 +370,36 @@ const LoginScreen: React.FC = () => {
               >
                 <Text style={styles.loginText}>Login</Text>
               </TouchableOpacity>
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={styles.googleBtn}
-                onPress={() => promptAsync()}
+                onPress={() => onPressLoginGG()}
               >
                 <View style={styles.googleIcon}>
                   <Text style={styles.googleG}>G</Text>
                 </View>
                 <Text style={styles.googleText}>Sign in with Google</Text>
+              </TouchableOpacity> */}
+              <TouchableOpacity
+                style={styles.googleBtn}
+                onPress={onPressLoginGG}
+              >
+                <View style={styles.googleIcon}>
+                  <Image
+                    source={require("../../../../assets/google.png")}
+                    style={styles.googleLogo}
+                  />
+                </View>
+                <Text style={styles.googleText}>Sign in with Google</Text>
               </TouchableOpacity>
-              <View style={styles.signUpRow}>
+
+              {/* <View style={styles.signUpRow}>
                 <Text style={styles.noAcc}>Don't have an account?</Text>
                 <TouchableOpacity
                   onPress={() => navigation.navigate("Register")}
                 >
                   <Text style={styles.signUp}> Sign up now</Text>
                 </TouchableOpacity>
-              </View>
+              </View> */}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -413,24 +477,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     paddingVertical: 12,
-    borderRadius: 10,
-    marginBottom: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#DADCE0",
+    marginBottom: 12,
   },
+
   googleIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#fff",
+    width: 24,
+    height: 24,
+    marginRight: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: "#e6e6e6",
   },
-  googleG: { color: "#DB4437", fontWeight: "700" },
-  googleText: { color: "#222", fontWeight: "600" },
+
+  googleLogo: {
+    width: 22,
+    height: 22,
+    resizeMode: "contain",
+  },
+
+  googleText: {
+    fontSize: 15,
+    color: "#3C4043",
+    fontWeight: "500",
+  },
+
   loginBtn: {
     backgroundColor: "#4f8ef7",
     paddingVertical: 14,

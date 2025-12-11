@@ -49,8 +49,19 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-web-browser"
+ "plugins": [
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps._some_id_here_"
+        }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMAPBOX_MAPS_DOWNLOAD_TOKEN": "sk.eyJ1IjoidGluaHNvbWEiLCJhIjoiY21oc3ZyeDh6MHp4azJzcjRvMnh3Y2hjcSJ9.dMpsDobmAX1HDLU4BrzBew"
+        }
+      ]
     ],
     "scheme": "rental-room-app",
     "experiments": {
