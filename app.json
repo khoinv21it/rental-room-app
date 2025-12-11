@@ -27,6 +27,7 @@
     },
     "android": {
       "package": "com.ants.rentalroomapp",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/playstore-icon.png",
         "backgroundColor": "#ffffff"

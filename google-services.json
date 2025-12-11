@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "105036235632",
+    "project_id": "my-login-app-b768e",
+    "storage_bucket": "my-login-app-b768e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:105036235632:android:f3c1c2363227eb485d05b5",
+        "android_client_info": {
+          "package_name": "com.ants.rentalroomapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "105036235632-6pvvn4j52p3mi2gvrodu2r41p3emgdsk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0kVQcSC2q-EQ5LSYj4ZRI1YjpKYjJdgQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "105036235632-6pvvn4j52p3mi2gvrodu2r41p3emgdsk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
