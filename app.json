@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -26,7 +26,7 @@
       }
     },
     "android": {
-      "package": "host.exp.exponent",
+      "package": "com.khoinguyen010503.rentalroomapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -50,17 +50,25 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#3B82F6"
+        }
+      ],
+      "expo-font"
     ],
     "scheme": "rental-room-app",
     "experiments": {
       "tsconfigPaths": true
     },
+    "owner": "khoinguyen010503",
     "extra": {
       "eas": {
-        "projectId": "ca73dec2-946c-4968-a5e5-b15f9cca8420"
+        "projectId": "3442b704-f199-48f9-b3ce-d96f840616f9"
       }
-    },
-    "owner": "nhan12163"
+    }
   }
 }

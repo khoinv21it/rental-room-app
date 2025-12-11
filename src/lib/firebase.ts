@@ -2,7 +2,13 @@
 import { initializeApp, setLogLevel } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getAuth } from "firebase/auth";
+import {
+  initializeAuth,
+  getAuth,
+  // @ts-ignore - React Native persistence is available but TypeScript types might not be updated
+  getReactNativePersistence,
+} from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   FIREBASE_API_KEY,
   FIREBASE_AUTH_DOMAIN,
@@ -36,4 +42,25 @@ try {
 }
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-export const auth = getAuth(app); // Thêm dòng này để export auth
+
+// Initialize Firebase Auth with AsyncStorage persistence for React Native
+let authInstance;
+try {
+  // Try to initialize auth with React Native persistence
+  authInstance = initializeAuth(app, {
+    // @ts-ignore
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+  console.log("✅ Firebase Auth initialized with AsyncStorage persistence");
+} catch (error: any) {
+  // If already initialized, just get the existing instance
+  if (error?.code === "auth/already-initialized") {
+    authInstance = getAuth(app);
+    console.log("ℹ️ Firebase Auth already initialized");
+  } else {
+    console.error("❌ Firebase Auth initialization error:", error);
+    throw error;
+  }
+}
+
+export const auth = authInstance;

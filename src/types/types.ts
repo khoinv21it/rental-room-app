@@ -44,10 +44,14 @@ export type UserProfile = {
 // Notification
 export type Notification = {
   id: string;
-  receiverId: string;
-  message: string;
+  userId?: string; // New field name (preferred)
+  receiverId?: string; // Old field name (deprecated but supported)
+  title?: string; // Notification title
+  body?: string; // Notification body
+  message?: string; // Alternative body field (deprecated)
   createdAt: any; // Firebase Timestamp
-  isRead: boolean;
+  read?: boolean; // New field name (preferred)
+  isRead?: boolean; // Old field name (deprecated but supported)
   type?: string;
   senderId?: string;
   data?: any;

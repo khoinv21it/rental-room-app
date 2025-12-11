@@ -15,6 +15,7 @@ import ResidentsScreen from "./screens/ResidentsScreen";
 import ResidentsDetailView from "./screens/ResidentsDetailView";
 import RoomDetailScreen from "./screens/RoomDetailScreen";
 import RentalRoomView from "../../components/RentalRoomView";
+import { useNotifications } from "../../hooks/useNotifications";
 
 // Define the param list for the stack navigator
 export type RootStackParamList = {
@@ -63,6 +64,9 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const StackNavigator = () => {
+  // Initialize push notifications (must be inside NavigationContainer)
+  useNotifications();
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Stack.Navigator
