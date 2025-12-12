@@ -44,7 +44,6 @@ export interface AuthState {
 const STORAGE_KEY = "auth-storage";
 
 export const useAuthStore = create<AuthState>()(
-  // @ts-expect-error - Zustand v4 middleware type inference limitation
   devtools(
     persist(
       (set) => ({
