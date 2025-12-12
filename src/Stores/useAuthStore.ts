@@ -157,7 +157,7 @@ export const useAuthStore = create<AuthState>()(
             set({ loading: true, error: null });
 
             const response: any = await apiClient.post("/auth/google-login", {
-              credential: token,
+              credential:token,
             });
             console.log("Google login response:", response);
 
