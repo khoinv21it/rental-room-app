@@ -30,6 +30,20 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Background notification handler - handles notifications when app is backgrounded or killed
+Notifications.setNotificationHandler({
+  handleNotification: async (notification) => {
+    console.log("🔔 [Background] Notification received:", notification);
+    return {
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    };
+  },
+});
+
 export function useNotifications() {
   const [expoPushToken, setExpoPushToken] = useState<string>("");
   const [notification, setNotification] = useState<
@@ -44,15 +58,32 @@ export function useNotifications() {
 
   useEffect(() => {
     // Register for push notifications
-    registerForPushNotificationsAsync().then((token) => {
-      if (token) {
-        setExpoPushToken(token);
-        // Save token to backend if user is logged in
-        if (userId) {
-          savePushTokenToBackend(userId, token);
+    registerForPushNotificationsAsync()
+      .then((token) => {
+        console.log("🎫 [useNotifications] Token received:", token);
+        if (token) {
+          setExpoPushToken(token);
+          console.log("✅ [useNotifications] Token set to state");
+          // Save token to backend if user is logged in
+          if (userId) {
+            console.log(
+              "💾 [useNotifications] User logged in, saving token for userId:",
+              userId
+            );
+            savePushTokenToBackend(userId, token);
+          } else {
+            console.log("⚠️ [useNotifications] No userId, token not saved");
+          }
+        } else {
+          console.log("❌ [useNotifications] No token received");
         }
-      }
-    });
+      })
+      .catch((error) => {
+        console.error(
+          "❌ [useNotifications] Error registering for push notifications:",
+          error
+        );
+      });
 
     // Listener for notifications received while app is foregrounded
     notificationListener.current =
@@ -163,43 +194,61 @@ export function useNotifications() {
     const partnerName = data?.partnerName as string;
 
     console.log("🎯 [useNotifications] Handling notification type:", type);
+    console.log("🎯 [useNotifications] Notification data:", data);
 
-    // Navigate based on notification type
-    switch (type) {
-      case "booking_success":
-        navigation.navigate("RentalHistoryScreen");
-        break;
-      case "request_success":
-        navigation.navigate("RequestStatusScreen");
-        break;
-      case "resident_success":
-        navigation.navigate("ResidentsScreen");
-        break;
-      case "payment_success":
-        if (contractId) {
-          navigation.navigate("ContractOverviewScreen", {
-            contractId,
-            initialTab: "bills",
-          });
+    // Use setTimeout to ensure navigation is ready
+    setTimeout(() => {
+      try {
+        // Navigate based on notification type
+        switch (type) {
+          case "booking_success":
+            navigation.navigate("RentalHistoryScreen");
+            break;
+          case "request_success":
+            navigation.navigate("RequestStatusScreen");
+            break;
+          case "resident_success":
+            navigation.navigate("ResidentsScreen");
+            break;
+          case "payment_success":
+            if (contractId) {
+              navigation.navigate("ContractOverviewScreen", {
+                contractId,
+                initialTab: "bills",
+              });
+            }
+            break;
+          case "new_message":
+            if (partnerId) {
+              // Navigate to MessageScreen with specific conversation
+              navigation.navigate("MessageScreen", {
+                partnerId,
+                partnerName: partnerName || "User",
+              });
+            } else {
+              // Just open MessageScreen
+              navigation.navigate("MessageScreen");
+            }
+            break;
+          default:
+            // Open NotificationScreen for other types
+            navigation.navigate("NotificationScreen");
+            break;
         }
-        break;
-      case "new_message":
-        if (partnerId) {
-          // Navigate to MessageScreen with specific conversation
-          navigation.navigate("MessageScreen", {
-            partnerId,
-            partnerName: partnerName || "User",
-          });
-        } else {
-          // Just open MessageScreen
-          navigation.navigate("MessageScreen");
+        console.log("✅ [useNotifications] Navigation completed successfully");
+      } catch (error) {
+        console.error("❌ [useNotifications] Navigation error:", error);
+        // Fallback to NotificationScreen if navigation fails
+        try {
+          navigation.navigate("NotificationScreen");
+        } catch (fallbackError) {
+          console.error(
+            "❌ [useNotifications] Fallback navigation error:",
+            fallbackError
+          );
         }
-        break;
-      default:
-        // Open NotificationScreen for other types
-        navigation.navigate("NotificationScreen");
-        break;
-    }
+      }
+    }, 500); // Wait 500ms for navigation to be ready
   };
 
   const savePushTokenToBackend = async (userId: string, token: string) => {
@@ -238,13 +287,26 @@ export function useNotifications() {
 async function registerForPushNotificationsAsync() {
   let token;
 
+  // Set up notification channel for Android (MUST be before getting permissions)
   if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#FF231F7C",
-    });
+    try {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "Default Notifications",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+        sound: "default",
+        enableVibrate: true,
+        enableLights: true,
+        showBadge: true,
+      });
+      console.log("✅ [useNotifications] Android notification channel created");
+    } catch (error) {
+      console.error(
+        "❌ [useNotifications] Error creating notification channel:",
+        error
+      );
+    }
   }
 
   if (Device.isDevice) {
@@ -256,7 +318,9 @@ async function registerForPushNotificationsAsync() {
       finalStatus = status;
     }
     if (finalStatus !== "granted") {
-      console.warn("❌ [useNotifications] Failed to get push token!");
+      console.warn(
+        "❌ [useNotifications] Failed to get push token - permission denied!"
+      );
       return;
     }
 
