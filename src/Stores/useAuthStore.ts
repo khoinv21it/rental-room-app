@@ -44,7 +44,6 @@ export interface AuthState {
 const STORAGE_KEY = "auth-storage";
 
 export const useAuthStore = create<AuthState>()(
-  // @ts-expect-error - Zustand v4 middleware type inference limitation
   devtools(
     persist(
       (set) => ({
@@ -157,7 +156,7 @@ export const useAuthStore = create<AuthState>()(
             set({ loading: true, error: null });
 
             const response: any = await apiClient.post("/auth/google-login", {
-              token,
+              credential:token,
             });
             console.log("Google login response:", response);
 
