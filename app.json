@@ -77,11 +77,11 @@
     "experiments": {
       "tsconfigPaths": true
     },
-    "owner": "khoinguyen010503",
     "extra": {
       "eas": {
-        "projectId": "3442b704-f199-48f9-b3ce-d96f840616f9"
+        "projectId": "ca73dec2-946c-4968-a5e5-b15f9cca8420"
       }
-    }
+    },
+    "owner": "nhan12163"
   }
 }
