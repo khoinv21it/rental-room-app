@@ -2,22 +2,13 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
     "jsx": "react-native",
-    "typeRoots": ["./src/types", "./node_modules/@types"],
-    "paths": {
-      "@env": ["./node_modules/react-native-dotenv"]
-    }
+    "allowJs": true,
+    "skipLibCheck": true,
+    "types": []
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx",
-    "src/types/env.d.ts"
+    "**/*.tsx"
   ]
 }
