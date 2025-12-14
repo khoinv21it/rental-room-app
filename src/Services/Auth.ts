@@ -7,3 +7,13 @@ return apiClient.patch(`/auth/change-password`, {
     newPassword,
   });
 };
+
+export const registerUser = async (fullName: string, email: string, username: string, password: string) => {
+  return apiClient.post(`/auth/register`, {
+    fullName,
+    email,
+    username,
+    password,
+    accountType: 0
+  });
+};

@@ -15,11 +15,13 @@ import ResidentsScreen from "./screens/ResidentsScreen";
 import ResidentsDetailView from "./screens/ResidentsDetailView";
 import RoomDetailScreen from "./screens/RoomDetailScreen";
 import RentalRoomView from "../../components/RentalRoomView";
+import RegisterScreen from "./screens/RegisterScreen";
 
 // Define the param list for the stack navigator a
 export type RootStackParamList = {
   LoginScreen: undefined;
   HomeScreen: undefined;
+  RegisterScreen: undefined;
   TestLogin: undefined;
   EditProfileScreen: {
     userProfile?: UserProfile;
@@ -76,6 +78,11 @@ const StackNavigator = () => {
         <Stack.Screen
           name="LoginScreen"
           component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="RegisterScreen"
+          component={RegisterScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

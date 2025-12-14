@@ -358,11 +358,11 @@ const LoginScreen: React.FC = () => {
                   <Text style={styles.rememberText}>Remember me</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   onPress={() => navigation.navigate("LoginHelp")}
                 >
                   <Text style={styles.forgot}>Forgot password?</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
               <TouchableOpacity
                 style={styles.loginBtn}
@@ -400,6 +400,20 @@ const LoginScreen: React.FC = () => {
                   <Text style={styles.signUp}> Sign up now</Text>
                 </TouchableOpacity>
               </View> */}
+
+              {/* if do not account  you can register now */}
+
+              <Text
+                style={{ color: "#cbd5df", textAlign: "center", marginTop: 12 }}
+              >
+                Don't have an account?
+                <Text
+                  style={{ color: "#fff", fontWeight: "700" }}
+                  onPress={() => navigation.navigate("RegisterScreen")}
+                >
+                  Sign up now
+                </Text>
+              </Text>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
