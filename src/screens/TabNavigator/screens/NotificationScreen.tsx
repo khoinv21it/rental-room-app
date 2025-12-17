@@ -94,17 +94,17 @@ const NotificationScreen = ({ navigation }: Props) => {
       const unread = notifications.filter((n) => !n.isRead);
 
       if (unread.length === 0) {
-        showToast("success", "Info", "No unread notifications");
+        showToast("success", "Thông báo", "Không có thông báo chưa đọc");
         return;
       }
 
       for (const n of unread) {
         await updateDoc(doc(db, "notifications", n.id), { isRead: true });
       }
-      showToast("success", "Success", "Marked all notifications as read");
+      showToast("success", "Thành công", "Đã đánh dấu tất cả là đã đọc");
     } catch (err) {
       console.error("Error mark all as read:", err);
-      showToast("error", "Error", "Failed to mark all as read");
+      showToast("error", "Lỗi", "Không thể đánh dấu tất cả là đã đọc");
     }
   };
 
@@ -177,10 +177,10 @@ const NotificationScreen = ({ navigation }: Props) => {
       const hours = Math.floor(minutes / 60);
       const days = Math.floor(hours / 24);
 
-      if (seconds < 60) return "Just now";
-      if (minutes < 60) return `${minutes}m ago`;
-      if (hours < 24) return `${hours}h ago`;
-      if (days < 7) return `${days}d ago`;
+      if (seconds < 60) return "Vừa xong";
+      if (minutes < 60) return `${minutes} phút trước`;
+      if (hours < 24) return `${hours} giờ trước`;
+      if (days < 7) return `${days} ngày trước`;
 
       return date.toLocaleDateString();
     } catch (error) {
@@ -225,9 +225,9 @@ const NotificationScreen = ({ navigation }: Props) => {
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <Icon name="bell-off" size={64} color="#cbd5e1" />
-      <Text style={styles.emptyText}>No notifications yet</Text>
+      <Text style={styles.emptyText}>Chưa có thông báo nào</Text>
       <Text style={styles.emptySubtext}>
-        You'll see your notifications here
+        Bạn sẽ thấy các thông báo của mình tại đây
       </Text>
     </View>
   );
@@ -238,7 +238,7 @@ const NotificationScreen = ({ navigation }: Props) => {
     return (
       <View style={styles.footerLoader}>
         <TouchableOpacity onPress={loadMore} style={styles.loadMoreButton}>
-          <Text style={styles.loadMoreText}>Load More</Text>
+          <Text style={styles.loadMoreText}>Xem thêm</Text>
         </TouchableOpacity>
       </View>
     );
@@ -265,7 +265,7 @@ const NotificationScreen = ({ navigation }: Props) => {
           <Icon name="arrow-left" size={24} color="#0f172a" />
         </TouchableOpacity>
         <View style={styles.headerTitle}>
-          <Text style={styles.title}>Notifications</Text>
+          <Text style={styles.title}>Thông báo</Text>
           {unreadCount > 0 && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{unreadCount}</Text>

@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from "react-native";
 import { RequestBooking } from "../types/types";
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 interface BookingModalProps {
   visible: boolean;
@@ -59,26 +60,22 @@ const BookingModal: React.FC<BookingModalProps> = ({
     >
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.title}>Book Room</Text>
+          <Text style={styles.title}>Đặt Phòng</Text>
           <View style={styles.roomInfoBox}>
             <Text style={styles.roomTitle}>{roomTitle}</Text>
             <Text style={styles.roomPrice}>
-              {pricePerMonth.toLocaleString("vi-VN")} VND/month
+              {pricePerMonth.toLocaleString("vi-VN")} ₫/tháng
             </Text>
           </View>
 
           <View style={styles.sectionBox}>
-            <Text style={styles.sectionTitle}>Rental Period</Text>
-            <Text style={styles.periodText}>
-              Start Date: <Text style={styles.bold}>{startDate} (Today)</Text>
-            </Text>
-            <Text style={styles.periodText}>
-              End Date: <Text style={styles.bold}>{endDate}</Text>
-            </Text>
+            <Text style={styles.sectionTitle}>Thời Gian Thuê</Text>
+            <Text style={styles.periodText}>Ngày Bắt Đầu: {startDate}</Text>
+            <Text style={styles.periodText}>Ngày Kết Thúc: {endDate}</Text>
           </View>
 
           <View style={styles.sectionBox}>
-            <Text style={styles.sectionTitle}>Rental Duration (Months)</Text>
+            <Text style={styles.sectionTitle}>Thời Hạn Thuê (Tháng)</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -94,12 +91,13 @@ const BookingModal: React.FC<BookingModalProps> = ({
                   onPress={() => setDuration(opt)}
                 >
                   <Text
-                    style={[
-                      styles.durationOptionText,
-                      duration === opt && styles.durationOptionTextActive,
-                    ]}
+                    style={
+                      duration === opt
+                        ? styles.durationOptionTextActive
+                        : styles.durationOptionText
+                    }
                   >
-                    {opt} Month{opt > 1 ? "s" : ""}
+                    {opt}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -107,35 +105,33 @@ const BookingModal: React.FC<BookingModalProps> = ({
           </View>
 
           <View style={styles.sectionBox}>
-            <Text style={styles.sectionTitle}>Total Cost</Text>
+            <Text style={styles.sectionTitle}>Tổng Chi Phí</Text>
             <View style={styles.totalCostBox}>
               <Text style={styles.totalCost}>
-                {totalCost.toLocaleString("vi-VN")} VND
+                {totalCost.toLocaleString("vi-VN")} ₫
               </Text>
               <Text style={styles.totalCostDesc}>
-                {duration} month{duration > 1 ? "s" : ""} ×
-                {pricePerMonth.toLocaleString("vi-VN")} VND/month
+                (Dựa trên giá thuê {pricePerMonth.toLocaleString("vi-VN")}{" "}
+                ₫/tháng)
               </Text>
             </View>
           </View>
 
           <View style={styles.sectionBox}>
-            <Text style={styles.sectionTitle}>Number of Tenants</Text>
+            <Text style={styles.sectionTitle}>Số Người Thuê</Text>
             <View style={styles.tenantsRow}>
-              <Text style={styles.tenantsIcon}>👤</Text>
+              <Ionicons
+                name="people"
+                style={styles.tenantsIcon}
+                color="#4A90E2"
+              />
               <TextInput
                 style={styles.tenantsInput}
                 keyboardType="number-pad"
                 value={tenants === 0 ? "" : tenants.toString()}
                 onChangeText={(v) => {
-                  // Nếu input rỗng, set 0 (để value thành '')
-                  if (v === "" || v.replace(/[^0-9]/g, "") === "") {
-                    setTenants(0);
-                  } else {
-                    // Loại bỏ số 0 đầu, chỉ nhận số nguyên dương
-                    const cleaned = v.replace(/^0+/, "").replace(/[^0-9]/g, "");
-                    setTenants(cleaned ? parseInt(cleaned) : 0);
-                  }
+                  const parsed = parseInt(v, 10);
+                  setTenants(isNaN(parsed) ? 0 : parsed);
                 }}
                 maxLength={2}
                 placeholder="1"
@@ -145,10 +141,10 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
           <View style={styles.buttonRow}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
+              <Text style={styles.cancelBtnText}>Hủy</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirm}>
-              <Text style={styles.confirmBtnText}>Confirm Booking</Text>
+              <Text style={styles.confirmBtnText}>Xác Nhận</Text>
             </TouchableOpacity>
           </View>
         </View>

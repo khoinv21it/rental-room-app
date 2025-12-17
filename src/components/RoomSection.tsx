@@ -127,7 +127,7 @@ const RoomSection: React.FC<RoomSectionProps> = ({
                 currentPage === 0 && styles.pageButtonTextDisabled,
               ]}
             >
-              Prev
+              Trước
             </Text>
           </TouchableOpacity>
 
@@ -149,7 +149,7 @@ const RoomSection: React.FC<RoomSectionProps> = ({
                 currentPage === totalPages - 1 && styles.pageButtonTextDisabled,
               ]}
             >
-              Next
+              Tiếp theo
             </Text>
             <Ionicons
               name="chevron-forward"

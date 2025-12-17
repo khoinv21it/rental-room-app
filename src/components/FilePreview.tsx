@@ -21,7 +21,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   const handleViewFile = () => {
     Linking.openURL(googleViewerUrl).catch(() => {
       Linking.openURL(fileUrl).catch(() => {
-        alert("Cannot open file");
+        alert("Không thể mở tệp");
       });
     });
   };
@@ -37,7 +37,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
           />
         </View>
         <View style={styles.fileDetails}>
-          <Text style={styles.fileName}>{fileName || "No file available"}</Text>
+          <Text style={styles.fileName}>{fileName || "Không có tệp nào"}</Text>
           {fileId && <Text style={styles.fileId}>{fileId}</Text>}
         </View>
       </View>
@@ -47,7 +47,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
           onPress={handleViewFile}
         >
           <Ionicons name="eye-outline" size={20} color="#fff" />
-          <Text style={styles.downloadText}>View File</Text>
+          <Text style={styles.downloadText}>Xem Tệp</Text>
         </TouchableOpacity>
       )}
     </View>

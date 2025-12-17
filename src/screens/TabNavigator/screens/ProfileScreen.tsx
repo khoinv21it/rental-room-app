@@ -151,15 +151,15 @@ const ProfileScreen = ({ navigation }: Props) => {
 
     // Validation
     if (!oldPassword || !newPassword || !confirmPassword) {
-      showToast("error", "Validation Error", "Please fill in all fields");
+      showToast("error", "Lỗi xác thực", "Vui lòng điền đầy đủ tất cả các trường");
       return;
     }
 
     if (newPassword !== confirmPassword) {
       showToast(
         "error",
-        "Validation Error",
-        "New password and confirm password do not match"
+        "Lỗi xác thực",
+        "Mật khẩu mới và xác nhận mật khẩu không khớp"
       );
       return;
     }
@@ -167,8 +167,8 @@ const ProfileScreen = ({ navigation }: Props) => {
     if (newPassword.length < 6) {
       showToast(
         "error",
-        "Validation Error",
-        "New password must be at least 6 characters"
+        "Lỗi xác thực",
+        "Mật khẩu mới phải có ít nhất 6 ký tự"
       );
       return;
     }
@@ -187,7 +187,7 @@ const ProfileScreen = ({ navigation }: Props) => {
 
       // Check if we have data
       if (!data) {
-        showToast("error", "Server Error", "Invalid response from server");
+        showToast("error", "Lỗi máy chủ", "Phản hồi không hợp lệ từ máy chủ");
         return;
       }
 
@@ -199,13 +199,13 @@ const ProfileScreen = ({ navigation }: Props) => {
         setConfirmPassword("");
         setShowPasswordModal(false);
 
-        showToast("success", "Success", data.message);
+        showToast("success", "Thành công", data.message);
         return;
       }
 
       // Error case: response has error field (from 400 status)
       if (data.error) {
-        let errorMessage = "Failed to change password";
+        let errorMessage = "Đổi mật khẩu thất bại";
 
         if (Array.isArray(data.message)) {
           errorMessage = data.message[0]; // Get first error message
@@ -213,18 +213,18 @@ const ProfileScreen = ({ navigation }: Props) => {
           errorMessage = data.message;
         }
 
-        showToast("error", "Change Password Failed", errorMessage);
+        showToast("error", "Đổi mật khẩu thất bại", errorMessage);
         return;
       }
 
       // Fallback case - if we reach here, something unexpected happened
       console.log("Unexpected response format:", data);
-      showToast("error", "Unexpected Error", "Unexpected response format");
+      showToast("error", "Lỗi không xác định", "Định dạng phản hồi không xác định");
     } catch (error: any) {
       console.error("Change password error:", error);
 
       // Handle network errors or other exceptions
-      let errorMessage = "Failed to change password";
+      let errorMessage = "Đổi mật khẩu thất bại";
 
       if (error?.response?.data?.message) {
         if (Array.isArray(error.response.data.message)) {
@@ -236,7 +236,7 @@ const ProfileScreen = ({ navigation }: Props) => {
         errorMessage = error.message;
       }
 
-      showToast("error", "Change Password Failed", errorMessage);
+      showToast("error", "Đổi mật khẩu thất bại", errorMessage);
     }
   };
 
@@ -270,9 +270,9 @@ const ProfileScreen = ({ navigation }: Props) => {
         {/* Modern Header with Gradient */}
         <View style={styles.headerGradient}>
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Profile</Text>
+            <Text style={styles.headerTitle}>Hồ sơ</Text>
             <Text style={styles.headerSubtitle}>
-              Manage your account settings
+              Quản lý thông tin tài khoản của bạn
             </Text>
           </View>
         </View>
@@ -303,10 +303,10 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Text style={styles.userName}>
                   {userProfile?.fullName ||
                     authStore.loggedInUser?.userProfile?.fullName ||
-                    "No name"}
+                    "Chưa có tên"}
                 </Text>
                 <Text style={styles.userEmail}>
-                  {userProfile?.email || "No email"}
+                  {userProfile?.email || "Chưa có email"}
                 </Text>
               </View>
             </View>
@@ -327,13 +327,13 @@ const ProfileScreen = ({ navigation }: Props) => {
               <View style={styles.sectionIconContainer}>
                 <Icon name="phone" size={18} color="#3B82F6" />
               </View>
-              <Text style={styles.sectionTitle}>Contact Information</Text>
+              <Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
             </View>
             <View style={styles.fieldGroup}>
               <View style={styles.field}>
                 <View style={styles.fieldHeader}>
                   <Icon name="phone" size={14} color="#6B7280" />
-                  <Text style={styles.fieldLabel}>Phone Number</Text>
+                  <Text style={styles.fieldLabel}>Số điện thoại</Text>
                 </View>
                 <Text
                   style={[
@@ -341,14 +341,14 @@ const ProfileScreen = ({ navigation }: Props) => {
                     !userProfile?.phoneNumber && styles.emptyValue,
                   ]}
                 >
-                  {userProfile?.phoneNumber || "Not added yet"}
+                  {userProfile?.phoneNumber || "Chưa cập nhật"}
                 </Text>
               </View>
               <View style={styles.fieldSeparator} />
               <View style={styles.field}>
                 <View style={styles.fieldHeader}>
                   <Icon name="map-pin" size={14} color="#6B7280" />
-                  <Text style={styles.fieldLabel}>Address</Text>
+                  <Text style={styles.fieldLabel}>Địa chỉ</Text>
                 </View>
                 <Text
                   style={[
@@ -358,7 +358,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                 >
                   {userProfile?.address
                     ? `${userProfile.address.street}, ${userProfile.address.ward.name}, ${userProfile.address.ward.district.name}, ${userProfile.address.ward.district.province.name}`
-                    : "Not added yet"}
+                    : "Chưa cập nhật"}
                 </Text>
               </View>
             </View>
@@ -370,7 +370,7 @@ const ProfileScreen = ({ navigation }: Props) => {
               <View style={styles.sectionIconContainer}>
                 <Icon name="settings" size={18} color="#3B82F6" />
               </View>
-              <Text style={styles.sectionTitle}>Settings & Actions</Text>
+              <Text style={styles.sectionTitle}>Cài đặt & thao tác</Text>
             </View>
             <View style={styles.fieldGroup}>
               <TouchableOpacity
@@ -382,7 +382,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                   <View style={styles.actionIconContainer}>
                     <Icon name="lock" size={18} color="#3B82F6" />
                   </View>
-                  <Text style={styles.actionLabel}>Change Password</Text>
+                  <Text style={styles.actionLabel}>Đổi mật khẩu</Text>
                 </View>
                 <Icon name="chevron-right" size={20} color="#CBD5E1" />
               </TouchableOpacity>
@@ -407,7 +407,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                       )}
                     </View>
                   </View>
-                  <Text style={styles.actionLabel}>Notifications</Text>
+                  <Text style={styles.actionLabel}>Thông báo</Text>
                   {unreadNotificationCount > 0 && (
                     <View style={styles.unreadCountBadge}>
                       <Text style={styles.unreadCountText}>
@@ -434,7 +434,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                     <Icon name="log-out" size={18} color="#EF4444" />
                   </View>
                   <Text style={[styles.actionLabel, styles.dangerText]}>
-                    Sign Out
+                    Đăng xuất
                   </Text>
                 </View>
                 <Icon name="chevron-right" size={20} color="#FECACA" />
@@ -453,15 +453,15 @@ const ProfileScreen = ({ navigation }: Props) => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Change Password</Text>
+            <Text style={styles.modalTitle}>Đổi mật khẩu</Text>
 
             {/* Old Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Old Password</Text>
+              <Text style={styles.inputLabel}>Mật khẩu cũ</Text>
               <View style={styles.passwordInputContainer}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder="Enter your old password"
+                  placeholder="Nhập mật khẩu cũ"
                   placeholderTextColor="#9ca3af"
                   secureTextEntry={!showOldPassword}
                   value={oldPassword}
@@ -479,17 +479,17 @@ const ProfileScreen = ({ navigation }: Props) => {
                 </TouchableOpacity>
               </View>
               <TouchableOpacity style={styles.forgotLink}>
-                <Text style={styles.forgotText}>Forgot Password?</Text>
+                <Text style={styles.forgotText}>Quên mật khẩu?</Text>
               </TouchableOpacity>
             </View>
 
             {/* New Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>New Password</Text>
+              <Text style={styles.inputLabel}>Mật khẩu mới</Text>
               <View style={styles.passwordInputContainer}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder="Enter your new password"
+                  placeholder="Nhập mật khẩu mới"
                   placeholderTextColor="#9ca3af"
                   secureTextEntry={!showNewPassword}
                   value={newPassword}
@@ -510,11 +510,11 @@ const ProfileScreen = ({ navigation }: Props) => {
 
             {/* Confirm New Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Confirm New Password</Text>
+              <Text style={styles.inputLabel}>Xác nhận mật khẩu mới</Text>
               <View style={styles.passwordInputContainer}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder="Enter your confirm new password"
+                  placeholder="Nhập lại mật khẩu mới"
                   placeholderTextColor="#9ca3af"
                   secureTextEntry={!showConfirmPassword}
                   value={confirmPassword}
@@ -539,13 +539,13 @@ const ProfileScreen = ({ navigation }: Props) => {
                 style={styles.cancelButton}
                 onPress={handleCloseModal}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={styles.cancelButtonText}>Hủy</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.saveButton}
                 onPress={handleSavePassword}
               >
-                <Text style={styles.saveButtonText}>Save</Text>
+                <Text style={styles.saveButtonText}>Lưu</Text>
               </TouchableOpacity>
             </View>
           </View>

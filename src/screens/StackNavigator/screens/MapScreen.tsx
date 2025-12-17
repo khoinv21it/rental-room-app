@@ -109,8 +109,8 @@ const MapScreen: React.FC = () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
-          "Permission Denied",
-          "The app needs location access to show your current location on the map."
+          "Quyền Truy Cập Bị Từ Chối",
+          "Ứng dụng cần quyền truy cập vị trí để hiển thị vị trí hiện tại của bạn trên bản đồ."
         );
         setIsLocating(false);
         return;
@@ -142,7 +142,7 @@ const MapScreen: React.FC = () => {
       console.log("Room in map:", room);
       setRoomInMap(room);
     } catch (error) {
-      Alert.alert("Error", "Cannot get your current location");
+      Alert.alert("Lỗi", "Không thể lấy vị trí hiện tại của bạn");
       console.error(error);
     } finally {
       setIsLocating(false);
@@ -169,12 +169,12 @@ const MapScreen: React.FC = () => {
               onPress={() => setShowRoomList(true)}
             >
               <Ionicons name="list" size={normalize(16)} color="#fff" />
-              <Text style={styles.headerButtonText}>List</Text>
+              <Text style={styles.headerButtonText}>Danh Sách</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.headerButton, styles.mapButton]}>
               <Ionicons name="map" size={normalize(16)} color="#fff" />
-              <Text style={styles.headerButtonText}>Map</Text>
+              <Text style={styles.headerButtonText}>Bản Đồ</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -254,7 +254,7 @@ const MapScreen: React.FC = () => {
         >
           <SafeAreaView style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>List Rooms</Text>
+              <Text style={styles.modalTitle}>Danh Sách Phòng</Text>
               <TouchableOpacity
                 style={styles.modalCloseButton}
                 onPress={() => setShowRoomList(false)}

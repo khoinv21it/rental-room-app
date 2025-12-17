@@ -142,26 +142,26 @@ const TabNavigator = () => {
 
   return (
     <Tab.Navigator
-      initialRouteName="Home"
+      initialRouteName="Trang chủ"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
         tabBarIcon: ({ color, size, focused }) => {
           let name: React.ComponentProps<typeof Icon>["name"] = "circle";
           switch (route.name) {
-            case "Home":
+            case "Trang chủ":
               name = "home-outline";
               break;
-            case "Favorites":
+            case "Yêu thích":
               name = "heart-outline";
               break;
-            case "Profile":
+            case "Hồ sơ":
               name = "account-outline";
               break;
-            case "Message":
+            case "Tin nhắn":
               name = "message-text-outline";
               break;
-            case "Manage":
+            case "Quản lý":
               name = "briefcase-outline";
               break;
             default:
@@ -203,11 +203,11 @@ const TabNavigator = () => {
         tabBarStyle: styles.tabBar,
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Favorites" component={FavoriteScreen} />
-      <Tab.Screen name="Manage" component={ManageScreen} />
-      <Tab.Screen name="Message" component={MessageScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Trang chủ" component={HomeScreen} />
+      <Tab.Screen name="Yêu thích" component={FavoriteScreen} />
+      <Tab.Screen name="Quản lý" component={ManageScreen} />
+      <Tab.Screen name="Tin nhắn" component={MessageScreen} />
+      <Tab.Screen name="Hồ sơ" component={ProfileScreen} />
     </Tab.Navigator>
   );
 };

@@ -57,20 +57,20 @@ const RentalRoomView = ({ navigation, route }: Props) => {
     rentalDate?: string,
     rentalExpires?: string
   ): string => {
-    if (status === 0) return "Pending";
-    if (status === 1) return "Accepted";
-    if (status === 2) return "Rejected";
-    if (status === 3) return "Waiting Confirmation";
+    if (status === 0) return "Đang chờ xử lý";
+    if (status === 1) return "Đã chấp nhận";
+    if (status === 2) return "Đã từ chối";
+    if (status === 3) return "Đang chờ xác nhận";
     if (status === 4) {
       if (rentalExpires && new Date() > new Date(rentalExpires)) {
-        return "Expired";
+        return "Đã hết hạn";
       }
       if (rentalDate && new Date() < new Date(rentalDate)) {
-        return "Upcoming";
+        return "Sắp tới";
       }
-      return "Renting";
+      return "Đang thuê";
     }
-    return "Unknown";
+    return "Không xác định";
   };
 
   const getStatusColor = (status: number): string => {
@@ -119,8 +119,8 @@ const RentalRoomView = ({ navigation, route }: Props) => {
 
       Toast.show({
         type: "success",
-        text1: "Success",
-        text2: "Payment confirmation submitted successfully!",
+        text1: "Thành công",
+        text2: "Xác nhận thanh toán đã được gửi thành công!",
       });
 
       // Navigate back and trigger refresh via navigation state
@@ -161,8 +161,8 @@ const RentalRoomView = ({ navigation, route }: Props) => {
 
     if (!permissionResult.granted) {
       Alert.alert(
-        "Permission Required",
-        "Please grant camera roll permissions to upload images."
+        "Yêu cầu quyền truy cập",
+        "Vui lòng cấp quyền truy cập thư viện ảnh để tải lên hình ảnh."
       );
       return;
     }
@@ -180,13 +180,13 @@ const RentalRoomView = ({ navigation, route }: Props) => {
 
   const handleSubmitRequest = async () => {
     if (!requestDescription.trim()) {
-      Alert.alert("Error", "Please enter a request description");
+      Alert.alert("Lỗi", "Vui lòng nhập mô tả yêu cầu");
       return;
     }
 
     const currentUser = useAuthStore.getState().loggedInUser;
     if (!currentUser?.id) {
-      Alert.alert("Error", "User not found");
+      Alert.alert("Lỗi", "Không tìm thấy người dùng");
       return;
     }
 
@@ -202,17 +202,17 @@ const RentalRoomView = ({ navigation, route }: Props) => {
 
       Toast.show({
         type: "success",
-        text1: "Success",
-        text2: "Request submitted successfully!",
+        text1: "Thành công",
+        text2: "Yêu cầu đã được gửi thành công!",
       });
 
       handleCloseRequestModal();
     } catch (error) {
-      console.error("Failed to submit request:", error);
+      console.error("Không thể gửi yêu cầu:", error);
       Toast.show({
         type: "error",
-        text1: "Error",
-        text2: "Failed to submit request",
+        text1: "Lỗi",
+        text2: "Không thể gửi yêu cầu",
       });
     } finally {
       setRequestSubmitting(false);
@@ -229,7 +229,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Booking Details</Text>
+        <Text style={styles.headerTitle}>Chi Tiết Đặt Phòng</Text>
         <View style={styles.headerRight} />
       </View>
 
@@ -264,22 +264,22 @@ const RentalRoomView = ({ navigation, route }: Props) => {
 
         {/* Landlord Info Card */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Landlord Information</Text>
+          <Text style={styles.sectionTitle}>Thông Tin Chủ Nhà</Text>
           <View style={styles.infoRow}>
             <Ionicons name="person" size={18} color="#4A90E2" />
-            <Text style={styles.infoLabel}>Name:</Text>
+            <Text style={styles.infoLabel}>Tên:</Text>
             <Text style={styles.infoValue}>{booking.landlordName}</Text>
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="call" size={18} color="#4A90E2" />
-            <Text style={styles.infoLabel}>Phone:</Text>
+            <Text style={styles.infoLabel}>Số Điện Thoại:</Text>
             <Text style={styles.infoValue}>{booking.landlordPhone}</Text>
           </View>
         </View>
 
         {/* Location Card */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Location</Text>
+          <Text style={styles.sectionTitle}>Vị Trí</Text>
           <View style={styles.infoRow}>
             <Ionicons name="location" size={18} color="#4A90E2" />
             <Text style={styles.infoValue}>{booking.address}</Text>
@@ -288,40 +288,40 @@ const RentalRoomView = ({ navigation, route }: Props) => {
 
         {/* Rental Period Card */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Rental Period</Text>
+          <Text style={styles.sectionTitle}>Thời Gian Thuê</Text>
           <View style={styles.infoRow}>
             <Ionicons name="calendar" size={18} color="#4A90E2" />
-            <Text style={styles.infoLabel}>Start:</Text>
+            <Text style={styles.infoLabel}>Bắt Đầu:</Text>
             <Text style={styles.infoValue}>
               {booking.rentalDate
                 ? new Date(booking.rentalDate).toLocaleDateString()
-                : "N/A"}
+                : "Không có"}
             </Text>
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="calendar-outline" size={18} color="#4A90E2" />
-            <Text style={styles.infoLabel}>End:</Text>
+            <Text style={styles.infoLabel}>Kết Thúc:</Text>
             <Text style={styles.infoValue}>
               {booking.rentalExpires
                 ? new Date(booking.rentalExpires).toLocaleDateString()
-                : "N/A"}
+                : "Không có"}
             </Text>
           </View>
         </View>
 
         {/* Financial Info Card */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Financial Details</Text>
+          <Text style={styles.sectionTitle}>Chi Tiết Tài Chính</Text>
           <View style={styles.infoRow}>
             <Ionicons name="cash" size={18} color="#4A90E2" />
-            <Text style={styles.infoLabel}>Monthly Rent:</Text>
+            <Text style={styles.infoLabel}>Tiền Thuê Hàng Tháng:</Text>
             <Text style={styles.priceValue}>
               {booking.monthlyRent.toLocaleString("vi-VN")} ₫
             </Text>
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="people" size={18} color="#4A90E2" />
-            <Text style={styles.infoLabel}>Tenants:</Text>
+            <Text style={styles.infoLabel}>Số Người Thuê:</Text>
             <Text style={styles.infoValue}>{booking.tenantCount}</Text>
           </View>
         </View>
@@ -329,7 +329,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
         {/* Payment Proof */}
         {booking.imageProof && booking.status === 3 && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Payment Proof</Text>
+            <Text style={styles.sectionTitle}>Bằng Chứng Thanh Toán</Text>
             <TouchableOpacity
               style={styles.imagePreviewButton}
               onPress={() =>
@@ -343,7 +343,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
               />
               <View style={styles.imagePreviewTextContainer}>
                 <Ionicons name="eye" size={20} color="#4A90E2" />
-                <Text style={styles.imagePreviewText}>View Full Image</Text>
+                <Text style={styles.imagePreviewText}>Xem Hình Ảnh Đầy Đủ</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -354,7 +354,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
           <View style={styles.warningCard}>
             <Ionicons name="warning" size={22} color="#F44336" />
             <Text style={styles.warningText}>
-              This room is no longer available
+              Phòng này không còn khả dụng
             </Text>
           </View>
         )}
@@ -368,7 +368,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
                 onPress={handleOpenPaymentModal}
               >
                 <Ionicons name="card" size={20} color="#fff" />
-                <Text style={styles.primaryButtonText}>Confirm Deposit</Text>
+                <Text style={styles.primaryButtonText}>Xác Nhận Đặt Cọc</Text>
               </TouchableOpacity>
             )}
             {canRequest && (
@@ -377,7 +377,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
                 onPress={handleOpenRequestModal}
               >
                 <Ionicons name="add-circle" size={20} color="#4A90E2" />
-                <Text style={styles.secondaryButtonText}>New Request</Text>
+                <Text style={styles.secondaryButtonText}>Yêu Cầu Mới</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -405,7 +405,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>New Request</Text>
+                <Text style={styles.modalTitle}>Yêu Cầu Mới</Text>
                 <TouchableOpacity onPress={handleCloseRequestModal}>
                   <Ionicons name="close" size={24} color="#333" />
                 </TouchableOpacity>
@@ -413,11 +413,11 @@ const RentalRoomView = ({ navigation, route }: Props) => {
 
               <ScrollView style={styles.modalBody}>
                 <Text style={styles.modalSectionTitle}>
-                  Describe your request
+                  Mô Tả Yêu Cầu Của Bạn
                 </Text>
                 <TextInput
                   style={styles.textInput}
-                  placeholder="Enter your request description..."
+                  placeholder="Nhập mô tả yêu cầu của bạn..."
                   multiline
                   numberOfLines={4}
                   value={requestDescription}
@@ -425,7 +425,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
                 />
 
                 <Text style={styles.modalSectionTitle}>
-                  Attach Image (Optional)
+                  Đính Kèm Hình Ảnh (Tùy Chọn)
                 </Text>
                 <TouchableOpacity
                   style={styles.uploadButton}
@@ -433,7 +433,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
                 >
                   <Ionicons name="image" size={20} color="#fff" />
                   <Text style={styles.uploadButtonText}>
-                    {requestImageUri ? "Change Image" : "Pick Image"}
+                    {requestImageUri ? "Thay Đổi Hình Ảnh" : "Chọn Hình Ảnh"}
                   </Text>
                 </TouchableOpacity>
 
@@ -457,7 +457,7 @@ const RentalRoomView = ({ navigation, route }: Props) => {
                   {requestSubmitting ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
-                    <Text style={styles.submitButtonText}>Submit Request</Text>
+                    <Text style={styles.submitButtonText}>Gửi Yêu Cầu</Text>
                   )}
                 </TouchableOpacity>
               </ScrollView>

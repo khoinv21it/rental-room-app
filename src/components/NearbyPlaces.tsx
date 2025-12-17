@@ -54,13 +54,13 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<any>> = {
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  school: "Schools",
-  market: "Shopping",
-  supermarket: "Shopping",
-  hospital: "Healthcare",
-  bank: "Banks",
-  restaurant: "Dining",
-  park: "Recreation",
+  school: "Trường học",
+  market: "Chợ",
+  supermarket: "Siêu thị",
+  hospital: "Y tế",
+  bank: "Ngân hàng",
+  restaurant: "Ăn uống",
+  park: "Giải trí",
 };
 
 const NearbyPlaces: React.FC<NearbyPlacesProps> = ({ address, roomId }) => {
@@ -317,11 +317,11 @@ const NearbyPlaces: React.FC<NearbyPlacesProps> = ({ address, roomId }) => {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <MapPin size={24} color="#4f46e5" />
-          <Text style={styles.sectionTitle}>Nearby Places</Text>
+          <Text style={styles.sectionTitle}>Địa điểm gần đây</Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color="#4f46e5" />
-          <Text style={styles.loadingText}>Searching for places...</Text>
+          <Text style={styles.loadingText}>Đang tìm kiếm địa điểm...</Text>
         </View>
       </View>
     );
@@ -349,7 +349,7 @@ const NearbyPlaces: React.FC<NearbyPlacesProps> = ({ address, roomId }) => {
         onPress={() => setIsCollapsed(!isCollapsed)}
       >
         <MapPin size={20} color="#4f46e5" />
-        <Text style={styles.sectionTitle}>Nearby Places</Text>
+        <Text style={styles.sectionTitle}>Địa điểm gần đây</Text>
         <Text style={styles.placesCount}>({totalPlaces})</Text>
         {isCollapsed ? (
           <ChevronDown size={18} color="#6b7280" />
@@ -360,8 +360,8 @@ const NearbyPlaces: React.FC<NearbyPlacesProps> = ({ address, roomId }) => {
 
       {isCollapsed ? (
         <Text style={styles.collapsedSummary}>
-          {totalPlaces} places • Nearest:
-          {nearestDistance !== null ? formatDistance(nearestDistance) : "N/A"}
+          {totalPlaces} địa điểm • Gần nhất:
+          {nearestDistance !== null ? formatDistance(nearestDistance) : "Không có"}
         </Text>
       ) : nearbyPlaces.length > 0 ? (
         <View style={styles.nearbyList}>
@@ -426,7 +426,7 @@ const NearbyPlaces: React.FC<NearbyPlacesProps> = ({ address, roomId }) => {
                     style={styles.showMoreButton}
                   >
                     <Text style={styles.showMoreText}>
-                      +{places.length - 1} more
+                      +{places.length - 1} thêm
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -437,13 +437,13 @@ const NearbyPlaces: React.FC<NearbyPlacesProps> = ({ address, roomId }) => {
           {/* Summary */}
           <View style={styles.summaryContainer}>
             <Text style={styles.summaryText}>
-              <Text style={styles.summaryBold}>{totalPlaces} places</Text>
+              <Text style={styles.summaryBold}>{totalPlaces} địa điểm</Text>
               <Text style={styles.summarySeparator}> • </Text>
               <Text>
-                Nearest:
+                Gần nhất:
                 {nearestDistance !== null
                   ? formatDistance(nearestDistance)
-                  : "N/A"}
+                  : "Không có"}
               </Text>
             </Text>
           </View>
@@ -451,9 +451,9 @@ const NearbyPlaces: React.FC<NearbyPlacesProps> = ({ address, roomId }) => {
       ) : (
         <View style={styles.emptyContainer}>
           <MapPin size={32} color="#d1d5db" />
-          <Text style={styles.emptyTitle}>No nearby places found</Text>
+          <Text style={styles.emptyTitle}>Không tìm thấy địa điểm gần đây</Text>
           <Text style={styles.emptySubtitle}>
-            Address may be inaccurate or area data unavailable
+            Địa chỉ có thể không chính xác hoặc không có dữ liệu khu vực
           </Text>
         </View>
       )}

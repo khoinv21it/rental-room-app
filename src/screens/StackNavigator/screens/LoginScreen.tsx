@@ -31,12 +31,12 @@ const schema = yup
   .object({
     username: yup
       .string()
-      .min(3, "Username must be at least 3 characters")
-      .required("Please enter phone number or email"),
+      .min(3, "Tên đăng nhập phải có ít nhất 3 ký tự")
+      .required("Vui lòng nhập số điện thoại hoặc email"),
     password: yup
       .string()
-      .min(6, "Password must be at least 6 characters")
-      .required("Please enter your password"),
+      .min(6, "Mật khẩu phải có ít nhất 6 ký tự")
+      .required("Vui lòng nhập mật khẩu"),
   })
   .required();
 
@@ -76,31 +76,33 @@ const LoginScreen: React.FC = () => {
   const onPressLoginGG = async () => {
     try {
       await GoogleSignin.signOut();
-      console.log("Previous session cleared");
+      console.log("Đã xóa phiên đăng nhập trước đó");
     } catch (e) {
-      console.log("No previous session to clear");
+      console.log("Không có phiên đăng nhập trước đó để xóa");
     }
 
     try {
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true,
       });
-      console.log("Play Services verified");
+      console.log("Dịch vụ Play đã được xác minh");
 
       const userInfo = await GoogleSignin.signIn();
-      console.log("Google Sign-In result", userInfo);
+      console.log("Kết quả Đăng Nhập Google", userInfo);
 
       // Kiểm tra xem user có thực sự đăng nhập không
       if (!userInfo || !userInfo.data) {
-        console.log("Sign-in cancelled or no user data");
+        console.log(
+          "Người dùng đã hủy đăng nhập hoặc không có dữ liệu người dùng"
+        );
         return;
       }
 
-      console.log("Google Sign-In successful", userInfo);
+      console.log("Đăng Nhập Google thành công", userInfo);
 
       const { idToken } = await GoogleSignin.getTokens();
-      console.log("ID Token obtained:", idToken ? "Yes" : "No");
-      console.log("User info:", userInfo.data);
+      console.log("ID Token đã được lấy:", idToken ? "Có" : "Không");
+      console.log("Thông tin người dùng:", userInfo.data);
 
       // Gửi idToken lên backend để authenticate
       if (idToken) {
@@ -108,21 +110,21 @@ const LoginScreen: React.FC = () => {
       }
     } catch (error: any) {
       if (error.code === "SIGN_IN_CANCELLED") {
-        console.log("User cancelled the login");
-        // Không show error khi user tự cancel
+        console.log("Người dùng đã hủy đăng nhập");
+        // Không hiển thị lỗi khi người dùng tự hủy
         return;
       }
 
-      console.error("Google Sign-In error:", error);
+      console.error("Lỗi đăng nhập Google:", error);
       if (error.code === "IN_PROGRESS") {
-        console.log("Sign in is already in progress");
-        showError("Sign in is already in progress");
+        console.log("Đăng nhập đang được xử lý");
+        showError("Đăng nhập đang được xử lý");
       } else if (error.code === "PLAY_SERVICES_NOT_AVAILABLE") {
-        console.log("Play services not available");
-        showError("Google Play Services not available");
+        console.log("Dịch vụ Google Play không khả dụng");
+        showError("Google Play Services không khả dụng");
       } else {
-        console.log("Unknown error:", error.message);
-        showError(error.message || "Google sign-in failed");
+        console.log("Lỗi không xác định:", error.message);
+        showError(error.message || "Đăng nhập Google thất bại");
       }
     }
   };
@@ -142,7 +144,7 @@ const LoginScreen: React.FC = () => {
     Toast.show({
       type: "error",
       position: "top",
-      text1: "Authentication Error",
+      text1: "Lỗi Xác Thực",
       text2: msg,
       visibilityTime: 4000,
       autoHide: true,
@@ -198,14 +200,14 @@ const LoginScreen: React.FC = () => {
           navigation.replace("HomeScreen");
         },
         onError: () => {
-          // Get error message from the store
+          // Lấy thông báo lỗi từ store
           const storeError = useAuthStore.getState().error;
           showError(storeError);
         },
       });
     } catch (error: any) {
-      // For unexpected errors not handled by the store
-      const errorMessage = "An unexpected error occurred. Please try again.";
+      // Đối với các lỗi không mong muốn không được xử lý bởi store
+      const errorMessage = "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.";
       showError(errorMessage);
     }
   };
@@ -226,7 +228,9 @@ const LoginScreen: React.FC = () => {
       });
     } catch (error: any) {
       console.error("Google Sign-in error:", error);
-      showError("Google Sign-in failed: " + (error.message || "Unknown error"));
+      showError(
+        "Đăng nhập Google thất bại: " + (error.message || "Lỗi không xác định")
+      );
     }
   };
 
@@ -248,8 +252,8 @@ const LoginScreen: React.FC = () => {
               resizeMode="contain"
             />
 
-            <Text style={styles.title}>Welcome to Ant</Text>
-            <Text style={styles.subtitle}>Login to continue</Text>
+            <Text style={styles.title}>Chào Mừng Đến Với Ant</Text>
+            <Text style={styles.subtitle}>Đăng nhập để tiếp tục</Text>
 
             {/* Using native Toast (Android) or Alert (iOS) to show errors */}
 
@@ -260,7 +264,7 @@ const LoginScreen: React.FC = () => {
                 render={({ field: { onChange, value }, fieldState }) => (
                   <>
                     <TextInput
-                      placeholder="Enter Username"
+                      placeholder="Nhập Tên Đăng Nhập"
                       placeholderTextColor="#9aa0a6"
                       style={[
                         styles.input,
@@ -300,7 +304,7 @@ const LoginScreen: React.FC = () => {
                   <>
                     <View style={styles.passwordRow}>
                       <TextInput
-                        placeholder="Password"
+                        placeholder="Mật Khẩu"
                         placeholderTextColor="#9aa0a6"
                         style={[
                           styles.input,
@@ -355,20 +359,20 @@ const LoginScreen: React.FC = () => {
                       remember ? styles.checkboxChecked : null,
                     ]}
                   />
-                  <Text style={styles.rememberText}>Remember me</Text>
+                  <Text style={styles.rememberText}>Ghi nhớ đăng nhập</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => navigation.navigate("LoginHelp")}
                 >
-                  <Text style={styles.forgot}>Forgot password?</Text>
+                  <Text style={styles.forgot}>Quên mật khẩu?</Text>
                 </TouchableOpacity>
               </View>
               <TouchableOpacity
                 style={styles.loginBtn}
                 onPress={handleSubmit(onSubmit)}
               >
-                <Text style={styles.loginText}>Login</Text>
+                <Text style={styles.loginText}>Đăng Nhập</Text>
               </TouchableOpacity>
               {/* <TouchableOpacity
                 style={styles.googleBtn}
@@ -389,7 +393,7 @@ const LoginScreen: React.FC = () => {
                     style={styles.googleLogo}
                   />
                 </View>
-                <Text style={styles.googleText}>Sign in with Google</Text>
+                <Text style={styles.googleText}>Đăng nhập với Google</Text>
               </TouchableOpacity>
 
               {/* <View style={styles.signUpRow}>

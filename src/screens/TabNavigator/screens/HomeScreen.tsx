@@ -59,7 +59,7 @@ const HomeScreen: React.FC = () => {
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedWard, setSelectedWard] = useState("");
-  const [currentArea, setCurrentArea] = useState("Searching all areas");
+  const [currentArea, setCurrentArea] = useState("Đang tìm kiếm ở tất cả các khu vực");
   const [favoriteRoomIds, setFavoriteRoomIds] = useState<string[]>([]);
   const [roomVip, setRoomVip] = useState<ListRoom[]>([]);
   const [roomNormal, setRoomNormal] = useState<ListRoom[]>([]);
@@ -82,22 +82,22 @@ const HomeScreen: React.FC = () => {
   // Load user preferences on mount (for logged-in users)
   useEffect(() => {
     const loadUserPreferences = async () => {
-      console.log("🔧 [HomeScreen] Loading user preferences, userId:", userId);
+      console.log("[HomeScreen] Đang tải thông tin ưu tiên người dùng, userId:", userId);
       if (userId) {
         try {
           const prefs = await getUserPreferences(userId);
-          console.log("📊 [HomeScreen] User preferences loaded:", prefs);
+          console.log("[HomeScreen] Đã tải thông tin ưu tiên người dùng:", prefs);
           if (prefs) {
             setSavedPreferences(prefs);
           }
         } catch (error) {
           console.error(
-            "❌ [HomeScreen] Error loading user preferences:",
+            "[HomeScreen] Lỗi khi tải thông tin ưu tiên người dùng:",
             error
           );
         }
       } else {
-        console.log("👤 [HomeScreen] No userId, skipping preferences load");
+        console.log("[HomeScreen] Không có userId, bỏ qua tải thông tin ưu tiên");
       }
     };
 
@@ -107,8 +107,8 @@ const HomeScreen: React.FC = () => {
   // Fetch VIP rooms with smart location logic
   const fetchVipRooms = useCallback(
     async (page: number = 0) => {
-      console.log("🏠 [VIP] Starting fetch, page:", page);
-      console.log("🏠 [VIP] Current state:", {
+      console.log("[VIP] Bắt đầu tải, trang:", page);
+      console.log("[VIP] Trạng thái hiện tại:", {
         userId,
         hasLocation: !!location,
         locationCoords: location
@@ -130,7 +130,7 @@ const HomeScreen: React.FC = () => {
 
         // Priority 1: Use explicit location from search
         if (location) {
-          console.log("✅ [VIP] Using explicit location from search");
+          console.log("✅ [VIP] Sử dụng vị trí tìm kiếm cụ thể");
           response = (await fetchRoomsSmart(
             page,
             PAGE_SIZE,
@@ -146,7 +146,7 @@ const HomeScreen: React.FC = () => {
           savedPreferences?.latitude &&
           savedPreferences?.longitude
         ) {
-          console.log("✅ [VIP] Using saved preferences");
+          console.log("✅ [VIP] Sử dụng thông tin ưu tiên đã lưu");
           response = (await fetchRoomsSmart(
             page,
             PAGE_SIZE,
@@ -158,7 +158,7 @@ const HomeScreen: React.FC = () => {
         }
         // Priority 3: Default fetch (user-based for logged-in, general for guests)
         else {
-          console.log("✅ [VIP] Using default fetch");
+          console.log("✅ [VIP] Sử dụng tìm kiếm mặc định");
           response = (await fetchRoomsSmart(
             page,
             PAGE_SIZE,
@@ -167,7 +167,7 @@ const HomeScreen: React.FC = () => {
           )) as unknown as PaginatedResponse;
         }
 
-        console.log("📦 [VIP] Response received:", {
+        console.log("[VIP] Đã nhận phản hồi:", {
           hasData: !!response,
           dataLength: response?.data?.length || 0,
           totalPages: response?.totalPages,
@@ -194,7 +194,7 @@ const HomeScreen: React.FC = () => {
           console.warn("⚠️ [VIP] Unexpected response structure:", response);
         }
 
-        console.log("📦 [VIP] Processed rooms:", {
+        console.log("[VIP] Đã xử lý phòng:", {
           roomsCount: rooms.length,
           totalPages: pages,
         });
@@ -202,7 +202,7 @@ const HomeScreen: React.FC = () => {
         setRoomVip(rooms);
         setVipTotalPages(pages);
       } catch (error) {
-        console.error("❌ [VIP] Error fetching VIP rooms:", error);
+        console.error("❌ [VIP] Lỗi khi tải phòng VIP:", error);
       } finally {
         setVipLoading(false);
       }
@@ -217,8 +217,8 @@ const HomeScreen: React.FC = () => {
   // Fetch Normal rooms with smart location logic
   const fetchNormalRooms = useCallback(
     async (page: number = 0) => {
-      console.log("🏡 [NORMAL] Starting fetch, page:", page);
-      console.log("🏡 [NORMAL] Current state:", {
+      console.log("[NORMAL] Bắt đầu tải, trang:", page);
+      console.log("[NORMAL] Trạng thái hiện tại:", {
         userId,
         hasLocation: !!location,
         locationCoords: location
@@ -240,7 +240,7 @@ const HomeScreen: React.FC = () => {
 
         // Priority 1: Use explicit location from search
         if (location) {
-          console.log("✅ [NORMAL] Using explicit location from search");
+          console.log("✅ [NORMAL] Sử dụng vị trí tìm kiếm cụ thể");
           response = (await fetchRoomsSmart(
             page,
             PAGE_SIZE,
@@ -256,7 +256,7 @@ const HomeScreen: React.FC = () => {
           savedPreferences?.latitude &&
           savedPreferences?.longitude
         ) {
-          console.log("✅ [NORMAL] Using saved preferences");
+          console.log("✅ [NORMAL] Sử dụng thông tin ưu tiên đã lưu");
           response = (await fetchRoomsSmart(
             page,
             PAGE_SIZE,
@@ -268,7 +268,7 @@ const HomeScreen: React.FC = () => {
         }
         // Priority 3: Default fetch (user-based for logged-in, general for guests)
         else {
-          console.log("✅ [NORMAL] Using default fetch");
+          console.log("✅ [NORMAL] Sử dụng tìm kiếm mặc định");
           response = (await fetchRoomsSmart(
             page,
             PAGE_SIZE,
@@ -277,7 +277,7 @@ const HomeScreen: React.FC = () => {
           )) as unknown as PaginatedResponse;
         }
 
-        console.log("📦 [NORMAL] Response received:", {
+        console.log("[NORMAL] Đã nhận phản hồi:", {
           hasData: !!response,
           dataLength: response?.data?.length || 0,
           totalPages: response?.totalPages,
@@ -304,7 +304,7 @@ const HomeScreen: React.FC = () => {
           console.warn("⚠️ [NORMAL] Unexpected response structure:", response);
         }
 
-        console.log("📦 [NORMAL] Processed rooms:", {
+        console.log("[NORMAL] Đã xử lý phòng:", {
           roomsCount: rooms.length,
           totalPages: pages,
         });
@@ -312,7 +312,7 @@ const HomeScreen: React.FC = () => {
         setRoomNormal(rooms);
         setNormalTotalPages(pages);
       } catch (error) {
-        console.error("❌ [NORMAL] Error fetching Normal rooms:", error);
+        console.error("❌ [NORMAL] Lỗi khi tải phòng thường:", error);
       } finally {
         setNormalLoading(false);
       }
@@ -325,7 +325,7 @@ const HomeScreen: React.FC = () => {
   }, [normalPage, fetchNormalRooms]);
 
   const handleSearch = async () => {
-    console.log("🔍 [handleSearch] Searching with:", {
+    console.log("🔍 [handleSearch] Đang tìm kiếm với:", {
       searchText,
       selectedProvince,
       selectedDistrict,
@@ -341,7 +341,7 @@ const HomeScreen: React.FC = () => {
     );
 
     if (!addressToSearch.trim()) {
-      console.warn("⚠️ [handleSearch] No address provided");
+      console.warn("⚠️ [handleSearch] Không có địa chỉ được nhập");
       return;
     }
 
@@ -350,12 +350,12 @@ const HomeScreen: React.FC = () => {
       const geoResult = await geocodeAddress(addressToSearch);
 
       if (!geoResult) {
-        console.error("❌ [handleSearch] Failed to geocode address");
+        console.error("❌ [handleSearch] Không thể xác định vị trí địa chỉ");
         // TODO: Show error message to user
         return;
       }
 
-      console.log("✅ [handleSearch] Geocoded successfully:", geoResult);
+      console.log("✅ [handleSearch] Đã xác định vị trí thành công:", geoResult);
 
       // Update location in store
       setLocation({
@@ -376,7 +376,7 @@ const HomeScreen: React.FC = () => {
       );
 
       if (roomsData) {
-        console.log("✅ [handleSearch] Rooms fetched successfully:", {
+        console.log("✅ [handleSearch] Đã tải phòng thành công:", {
           totalRooms: roomsData.totalRooms,
         });
 
@@ -400,11 +400,11 @@ const HomeScreen: React.FC = () => {
 
         // TODO: Show success message to user
         console.log(
-          `🎯 Found ${roomsData.totalRooms} rooms near "${geoResult.formattedAddress}"`
+          `🎯 Đã tìm thấy ${roomsData.totalRooms} phòng gần "${geoResult.formattedAddress}"`
         );
       }
     } catch (error) {
-      console.error("❌ [handleSearch] Error searching rooms:", error);
+      console.error("❌ [handleSearch] Lỗi khi tìm kiếm phòng:", error);
       // TODO: Show error message to user
     }
   };
@@ -520,11 +520,11 @@ const HomeScreen: React.FC = () => {
 
         {/* Premium Listings Section */}
         <RoomSection
-          title="Premium Listings"
-          subtitle="Hand-picked premium rooms for the discerning renter"
+          title="Danh sách phòng VIP"
+          subtitle="Các phòng VIP được chọn lọc dành cho người thuê"
           icon="star"
           rooms={roomVip}
-          onViewAll={() => console.log("View all VIP rooms")}
+          onViewAll={() => console.log("Xem tất cả phòng VIP")}
           onRoomPress={handleRoomPress}
           onFavorite={handleFavorite}
           favoriteRoomIds={favoriteRoomIds}
@@ -537,11 +537,11 @@ const HomeScreen: React.FC = () => {
 
         {/* Featured Properties Section */}
         <RoomSection
-          title="Featured Properties"
-          subtitle="Discover our most popular and highly-rated rental properties"
+          title="Phòng "
+          subtitle="Các phòng nổi bật, được đánh giá cao và phổ biến nhất"
           icon="home"
           rooms={roomNormal}
-          onViewAll={() => console.log("View all featured rooms")}
+          onViewAll={() => console.log("Xem tất cả phòng nổi bật")}
           onRoomPress={handleRoomPress}
           onFavorite={handleFavorite}
           favoriteRoomIds={favoriteRoomIds}

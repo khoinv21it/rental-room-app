@@ -56,8 +56,8 @@ const RoomCardInMap: React.FC<RoomCardInMapProps> = ({
         await removeFavorite(room.id);
         Toast.show({
           type: "success",
-          text1: "Removed from favorites",
-          text2: `${room.title || "Room"} has been removed from your favorites`,
+          text1: "Đã xóa khỏi danh sách yêu thích",
+          text2: `${room.title || "Phòng"} đã được xóa khỏi danh sách yêu thích của bạn`,
           position: "bottom",
           visibilityTime: 2000,
         });
@@ -65,8 +65,8 @@ const RoomCardInMap: React.FC<RoomCardInMapProps> = ({
         await addFavorite(room.id);
         Toast.show({
           type: "success",
-          text1: "Added to favorites",
-          text2: `${room.title || "Room"} has been added to your favorites`,
+          text1: "Đã thêm vào danh sách yêu thích",
+          text2: `${room.title || "Phòng"} đã được thêm vào danh sách yêu thích của bạn`,
           position: "top",
           visibilityTime: 2000,
         });
@@ -80,8 +80,8 @@ const RoomCardInMap: React.FC<RoomCardInMapProps> = ({
       console.error("Failed to toggle favorite:", error);
       Toast.show({
         type: "error",
-        text1: "Action failed",
-        text2: "Could not update favorites. Please try again.",
+        text1: "Thao tác thất bại",
+        text2: "Không thể cập nhật danh sách yêu thích. Vui lòng thử lại.",
         position: "top",
         visibilityTime: 2000,
       });
@@ -131,15 +131,14 @@ const RoomCardInMap: React.FC<RoomCardInMapProps> = ({
       <View style={styles.content}>
         {/* Title */}
         <Text style={styles.title} numberOfLines={2}>
-          {room.title || "Untitled Room"}
+          {room.title || "Phòng chưa có tiêu đề"}
         </Text>
 
         {/* Location */}
         <View style={styles.locationContainer}>
           <Ionicons name="location" size={normalize(14)} color="#666" />
           <Text style={styles.address} numberOfLines={1}>
-            {[room.fullAddress].filter(Boolean).join(", ") ||
-              "No address available"}
+            {[room.fullAddress].filter(Boolean).join(", ") || "Không có địa chỉ"}
           </Text>
           <Text style={styles.area}>• {room.area || 0}m²</Text>
         </View>
@@ -150,7 +149,7 @@ const RoomCardInMap: React.FC<RoomCardInMapProps> = ({
         {/* Price and Button */}
         <View style={styles.footer}>
           <View style={styles.priceContainer}>
-            <Text style={styles.priceLabel}>Price per month</Text>
+            <Text style={styles.priceLabel}>Giá thuê hàng tháng</Text>
             <Text style={styles.price}>
               {formatPrice(room.priceMonth || 0)}
               <Text style={styles.currency}>VND</Text>
@@ -158,7 +157,7 @@ const RoomCardInMap: React.FC<RoomCardInMapProps> = ({
           </View>
 
           <TouchableOpacity style={styles.viewButton} onPress={onPress}>
-            <Text style={styles.viewButtonText}>View room</Text>
+            <Text style={styles.viewButtonText}>Xem phòng</Text>
           </TouchableOpacity>
         </View>
       </View>

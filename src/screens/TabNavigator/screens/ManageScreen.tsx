@@ -33,31 +33,31 @@ const ManageScreen = ({ navigation }: Props) => {
   const menuItems: MenuItem[] = [
     {
       id: "1",
-      title: "My Contracts",
+      title: "Hợp đồng của tôi",
       icon: "document-text-outline",
       screen: "MyContractsScreen",
-      description: "View and manage your rental contracts",
+      description: "Xem và quản lý hợp đồng thuê phòng của bạn",
     },
     {
       id: "2",
-      title: "Rental History",
+      title: "Lịch sử thuê phòng",
       icon: "time-outline",
       screen: "RentalHistoryScreen",
-      description: "Check your past rental records",
+      description: "Xem lại các phòng đã thuê trước đây",
     },
     {
       id: "3",
-      title: "Request Status",
+      title: "Trạng thái yêu cầu",
       icon: "clipboard-outline",
       screen: "RequestStatusScreen",
-      description: "Track your rental requests",
+      description: "Theo dõi các yêu cầu thuê phòng của bạn",
     },
     {
       id: "4",
-      title: "Residents",
+      title: "Người ở",
       icon: "people-outline",
       screen: "ResidentsScreen",
-      description: "Manage resident information",
+      description: "Quản lý thông tin người ở",
     },
   ];
 
@@ -103,9 +103,9 @@ const ManageScreen = ({ navigation }: Props) => {
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View>
-              <Text style={styles.headerTitle}>Manage</Text>
+              <Text style={styles.headerTitle}>Quản lý</Text>
               <Text style={styles.headerSubtitle}>
-                Control your rental activities
+                Kiểm soát các hoạt động thuê phòng của bạn
               </Text>
             </View>
             <View style={styles.headerIcon}>

@@ -73,19 +73,19 @@ const RoomLocationMap: React.FC<RoomLocationMapProps> = ({
         const lng = location.lng;
         setCoordinates({ lat, lng });
         console.log(
-          "✅ Goong geocoded coordinates for:",
+          "✅ Tọa độ được mã hóa từ Goong cho:",
           address,
           "→",
           lat,
           lng
         );
       } else {
-        console.log("❌ No Goong coordinates found for address:", address);
+        console.log("❌ Không tìm thấy tọa độ Goong cho địa chỉ:", address);
         // Fallback to OpenStreetMap Nominatim
         await fallbackGeocode(address);
       }
     } catch (error) {
-      console.log("🔥 Goong geocoding error:", error);
+      console.log("🔥 Lỗi mã hóa địa chỉ từ Goong:", error);
       // Fallback to OpenStreetMap Nominatim
       await fallbackGeocode(address);
     } finally {
@@ -96,7 +96,7 @@ const RoomLocationMap: React.FC<RoomLocationMapProps> = ({
   // Fallback geocoding using OpenStreetMap Nominatim
   const fallbackGeocode = async (address: string) => {
     try {
-      console.log("🔄 Falling back to OpenStreetMap Nominatim...");
+      console.log("🔄 Chuyển sang mã hóa địa chỉ bằng OpenStreetMap Nominatim...");
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           address
@@ -109,7 +109,7 @@ const RoomLocationMap: React.FC<RoomLocationMapProps> = ({
         const lng = parseFloat(data[0].lon);
         setCoordinates({ lat, lng });
         console.log(
-          "✅ Fallback geocoded coordinates for:",
+          "✅ Tọa độ được mã hóa từ OpenStreetMap cho:",
           address,
           "→",
           lat,
@@ -117,7 +117,7 @@ const RoomLocationMap: React.FC<RoomLocationMapProps> = ({
         );
       }
     } catch (error) {
-      console.log("🔥 Fallback geocoding error:", error);
+      console.log("🔥 Lỗi mã hóa địa chỉ từ OpenStreetMap:", error);
     }
   };
 
@@ -135,13 +135,13 @@ const RoomLocationMap: React.FC<RoomLocationMapProps> = ({
 
   const displayAddress = address
     ? `${address.street}, ${address.ward?.name}, ${address.ward?.district?.name}, ${address.ward?.district?.province?.name}`
-    : "Address not available";
+    : "Không có địa chỉ";
 
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Ionicons name="location-outline" size={24} color="#4f46e5" />
-        <Text style={styles.sectionTitle}>Location</Text>
+        <Text style={styles.sectionTitle}>Vị trí</Text>
       </View>
 
       {/* Address Display */}
@@ -186,7 +186,7 @@ const RoomLocationMap: React.FC<RoomLocationMapProps> = ({
           <View style={styles.loadingOverlay}>
             <View style={styles.loadingContainer}>
               <Ionicons name="location-outline" size={20} color="#4f46e5" />
-              <Text style={styles.loadingText}>Finding location...</Text>
+              <Text style={styles.loadingText}>Đang tìm vị trí...</Text>
             </View>
           </View>
         )}
@@ -194,7 +194,7 @@ const RoomLocationMap: React.FC<RoomLocationMapProps> = ({
 
       <TouchableOpacity style={styles.mapButton} onPress={handleOpenGoogleMaps}>
         <Ionicons name="open-outline" size={18} color="#4f46e5" />
-        <Text style={styles.mapButtonText}>Open in Google Maps</Text>
+        <Text style={styles.mapButtonText}>Mở trong Google Maps</Text>
       </TouchableOpacity>
     </View>
   );

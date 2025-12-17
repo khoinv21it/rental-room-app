@@ -74,7 +74,7 @@ const ConversationItem = ({ item, onPress }: any) => {
       </View>
       <View style={{ flex: 1, marginRight: 8 }}>
         <Text style={styles.convTitle} numberOfLines={1}>
-          {item.partner?.name || item.partner?.fullName || "Unknown"}
+          {item.partner?.name || item.partner?.fullName || "Không xác định"}
         </Text>
         <Text
           style={[styles.convLast, unread > 0 ? styles.convLastUnread : null]}
@@ -98,7 +98,8 @@ const MessageScreen = () => {
   const [loadingConvs, setLoadingConvs] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const recentlyMarkedAsRead = useRef<Set<string>>(new Set());
-  const loadConversationsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  //  const loadConversationsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const loadConversationsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadConversations = useCallback(async () => {
     if (!userId) return;
@@ -243,7 +244,7 @@ const MessageScreen = () => {
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Conversation list - always visible */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Messages</Text>
+        <Text style={styles.headerTitle}>Tin nhắn</Text>
         <View style={styles.searchContainer}>
           <Icon
             name="magnify"
@@ -254,7 +255,7 @@ const MessageScreen = () => {
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search conversations..."
+            placeholder="Tìm kiếm cuộc trò chuyện..."
             placeholderTextColor="#9ca3af"
             style={styles.searchInput}
           />
@@ -276,8 +277,8 @@ const MessageScreen = () => {
             <Icon name="message-text-outline" size={64} color="#d1d5db" />
             <Text style={styles.emptyText}>
               {searchQuery.trim()
-                ? "No conversations found"
-                : "No messages yet"}
+                ? "Không tìm thấy cuộc trò chuyện nào"
+                : "Chưa có tin nhắn nào"}
             </Text>
           </View>
         ) : (

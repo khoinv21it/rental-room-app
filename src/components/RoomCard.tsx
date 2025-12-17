@@ -77,8 +77,8 @@ const RoomCard: React.FC<RoomCardProps> = ({
         await removeFavorite(room.id);
         Toast.show({
           type: "success",
-          text1: "Removed from favorites",
-          text2: `${room.title || "Room"} has been removed from your favorites`,
+          text1: "Đã xóa khỏi yêu thích",
+          text2: `${room.title || "Phòng"} đã được xóa khỏi danh sách yêu thích của bạn`,
           position: "top",
           visibilityTime: 2000,
         });
@@ -86,8 +86,8 @@ const RoomCard: React.FC<RoomCardProps> = ({
         await addFavorite(room.id);
         Toast.show({
           type: "success",
-          text1: "Added to favorites",
-          text2: `${room.title || "Room"} has been added to your favorites`,
+          text1: "Đã thêm vào yêu thích",
+          text2: `${room.title || "Phòng"} đã được thêm vào danh sách yêu thích của bạn`,
           position: "top",
           visibilityTime: 2000,
         });
@@ -98,11 +98,11 @@ const RoomCard: React.FC<RoomCardProps> = ({
         onFavorite();
       }
     } catch (error) {
-      console.error("Failed to toggle favorite:", error);
+      console.error("Không thể thay đổi trạng thái yêu thích:", error);
       Toast.show({
         type: "error",
-        text1: "Action failed",
-        text2: "Could not update favorites. Please try again.",
+        text1: "Thao tác thất bại",
+        text2: "Không thể cập nhật danh sách yêu thích. Vui lòng thử lại.",
         position: "top",
         visibilityTime: 2000,
       });
@@ -119,14 +119,6 @@ const RoomCard: React.FC<RoomCardProps> = ({
           source={{ uri: URL_IMAGE + (room.images?.[0]?.url || "") }}
           style={styles.image}
         />
-
-        {/* VIP Badge */}
-        {/* {room.isVip && (
-          <View style={styles.vipBadge}>
-            <Ionicons name="star" size={normalize(12)} color="#fff" />
-            <Text style={styles.vipText}>VIP</Text>
-          </View>
-        )} */}
 
         {/* Image Count */}
         {(room.images?.length || 0) > 1 && (
@@ -163,40 +155,37 @@ const RoomCard: React.FC<RoomCardProps> = ({
       <View style={styles.content}>
         {/* Title */}
         <Text style={styles.title} numberOfLines={2}>
-          {room.title || "Untitled Room"}
+          {room.title || "Phòng không có tiêu đề"}
         </Text>
 
         {/* Location */}
         <View style={styles.locationContainer}>
           <Ionicons name="location" size={normalize(14)} color="#666" />
           <Text style={styles.address} numberOfLines={1}>
-            {[
-              room.address?.street,
-              room.address?.ward?.name,
-              room.address?.ward?.district?.name,
-              room.address?.ward?.district?.province?.name,
-            ]
+            { [
+                room.address?.street,
+                room.address?.ward?.name,
+                room.address?.ward?.district?.name,
+                room.address?.ward?.district?.province?.name,
+              ]
               .filter(Boolean)
-              .join(", ") || "No address available"}
+              .join(", ") || "Không có địa chỉ"}
           </Text>
           <Text style={styles.area}>• {room.area || 0}m²</Text>
         </View>
 
-        {/* Description */}
-        {/* Removed description and amenities for compact card */}
-
         {/* Price and Button */}
         <View style={styles.footer}>
           <View style={styles.priceContainer}>
-            <Text style={styles.priceLabel}>Price per month</Text>
+            <Text style={styles.priceLabel}>Giá thuê hàng tháng</Text>
             <Text style={styles.price}>
               {formatPrice(room.priceMonth || 0)}
-              <Text style={styles.currency}>VND</Text>
+              <Text style={styles.currency}>₫</Text>
             </Text>
           </View>
 
           <TouchableOpacity style={styles.viewButton} onPress={onPress}>
-            <Text style={styles.viewButtonText}>View room</Text>
+            <Text style={styles.viewButtonText}>Xem phòng</Text>
           </TouchableOpacity>
         </View>
 
@@ -221,18 +210,18 @@ const RoomCard: React.FC<RoomCardProps> = ({
             </View>
             <View>
               <Text style={styles.ownerName}>
-                {room.landlord?.landlordProfile?.fullName || "Unknown Owner"}
+                {room.landlord?.landlordProfile?.fullName || "Chủ nhà không xác định"}
               </Text>
             </View>
           </View>
 
           <View style={styles.contactContainer}>
             <View style={styles.onlineStatus} />
-            <Text style={styles.contactText}>Contact</Text>
+            <Text style={styles.contactText}>Liên hệ</Text>
             <Text style={styles.phoneNumber}>
               {room.landlord?.landlordProfile?.phoneNumber ||
                 room.landlord?.landlordProfile?.email ||
-                "No contact"}
+                "Không có thông tin liên hệ"}
             </Text>
           </View>
         </View>

@@ -58,9 +58,9 @@ const MyContractsScreen = ({ navigation }: Props) => {
 
   const getStatusText = (status: number | string) => {
     const s = typeof status === "string" ? parseInt(status) : status;
-    if (s === 0) return "Active";
-    if (s === 2) return "Expired";
-    return "Pending";
+    if (s === 0) return "Đang Hoạt Động";
+    if (s === 2) return "Hết Hạn";
+    return "Chờ Xử Lý";
   };
 
   const renderContract = (contract: ListContract) => (
@@ -94,7 +94,7 @@ const MyContractsScreen = ({ navigation }: Props) => {
         <View style={styles.detailRow}>
           <Ionicons name="cash" size={16} color="#666" />
           <Text style={styles.detailText}>
-            {contract.monthlyRent.toLocaleString("vi-VN")} ₫/month
+            {contract.monthlyRent.toLocaleString("vi-VN")} ₫/tháng
           </Text>
         </View>
       </View>
@@ -124,7 +124,7 @@ const MyContractsScreen = ({ navigation }: Props) => {
           }}
         >
           <Ionicons name="eye" size={16} color="#4A90E2" />
-          <Text style={styles.actionButtonText}>View Details</Text>
+          <Text style={styles.actionButtonText}>Xem Chi Tiết</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -140,21 +140,21 @@ const MyContractsScreen = ({ navigation }: Props) => {
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Contracts</Text>
+        <Text style={styles.headerTitle}>Hợp Đồng Của Tôi</Text>
         <View style={styles.headerRight} />
       </View>
 
       <ScrollView style={styles.content}>
         {loading ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Loading contracts...</Text>
+            <Text style={styles.emptyText}>Đang tải hợp đồng...</Text>
           </View>
         ) : contracts.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="document-text-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No contracts found</Text>
+            <Text style={styles.emptyText}>Không tìm thấy hợp đồng</Text>
             <Text style={styles.emptySubtext}>
-              Your rental contracts will appear here
+              Hợp đồng thuê của bạn sẽ hiển thị ở đây
             </Text>
           </View>
         ) : (

@@ -48,8 +48,8 @@ const PaymentBill = ({
 
     if (!permissionResult.granted) {
       Alert.alert(
-        "Permission Required",
-        "Please grant camera roll permissions to upload images."
+        "Yêu cầu quyền truy cập",
+        "Vui lòng cấp quyền truy cập thư viện ảnh để tải lên hình ảnh."
       );
       return;
     }
@@ -65,21 +65,21 @@ const PaymentBill = ({
       setImageUploading(true);
 
       try {
-        console.log("Uploading bill transfer image for bill:", bill.id);
+        console.log("Đang tải lên hình ảnh chuyển khoản cho hóa đơn:", bill.id);
         const response = await uploadBillTransferImage(bill.id, uri);
-        console.log("Image upload response:", response);
+        console.log("Phản hồi tải lên hình ảnh:", response);
 
         setUploadedImageUri(uri);
         setImageUploadedSuccessfully(true);
 
         Toast.show({
           type: "success",
-          text1: "Success",
-          text2: "Bill transfer image uploaded successfully!",
+          text1: "Thành công",
+          text2: "Hình ảnh chuyển khoản đã được tải lên thành công!",
         });
       } catch (error: any) {
-        console.error("Failed to upload image:", error);
-        console.error("Upload error details:", error?.response?.data);
+        console.error("Không thể tải lên hình ảnh:", error);
+        console.error("Chi tiết lỗi tải lên:", error?.response?.data);
 
         setImageUploadedSuccessfully(false);
 
@@ -87,11 +87,11 @@ const PaymentBill = ({
           error?.response?.data?.message ||
           error?.response?.data?.error ||
           error?.message ||
-          "Failed to upload image";
+          "Không thể tải lên hình ảnh";
 
         Toast.show({
           type: "error",
-          text1: "Error",
+          text1: "Lỗi",
           text2: errorMessage,
         });
       } finally {
@@ -101,11 +101,11 @@ const PaymentBill = ({
   };
 
   const handleConfirmPayment = async () => {
-    console.log("Confirming payment for bill:", bill.id);
+    console.log("Xác nhận thanh toán cho hóa đơn:", bill.id);
     if (!transferConfirmed) {
       Alert.alert(
-        "Confirmation Required",
-        "Please confirm that you have completed the transfer"
+        "Yêu cầu xác nhận",
+        "Vui lòng xác nhận rằng bạn đã hoàn tất chuyển khoản"
       );
       return;
     }
@@ -118,7 +118,7 @@ const PaymentBill = ({
         <View style={styles.modalContent}>
           <SafeAreaView edges={["top"]} />
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Payment Bill</Text>
+            <Text style={styles.modalTitle}>Hóa Đơn Thanh Toán</Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={24} color="#333" />
             </TouchableOpacity>
@@ -129,45 +129,41 @@ const PaymentBill = ({
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#4A90E2" />
                 <Text style={styles.loadingText}>
-                  Loading payment information...
+                  Đang tải thông tin thanh toán...
                 </Text>
               </View>
             ) : infoLandlord ? (
               <>
                 <Text style={styles.modalSectionTitle}>
-                  Landlord Payment Information
+                  Thông Tin Thanh Toán Chủ Nhà
                 </Text>
                 <View style={styles.paymentInfoCard}>
                   <View style={styles.paymentInfoRow}>
-                    <Text style={styles.paymentLabel}>Bank Name:</Text>
+                    <Text style={styles.paymentLabel}>Tên Ngân Hàng:</Text>
                     <Text style={styles.paymentValue}>
                       {infoLandlord.bankName}
                     </Text>
                   </View>
                   <View style={styles.paymentInfoRow}>
-                    <Text style={styles.paymentLabel}>Bank Number:</Text>
+                    <Text style={styles.paymentLabel}>Số Tài Khoản:</Text>
                     <Text style={styles.paymentValue}>
                       {infoLandlord.bankNumber}
                     </Text>
                   </View>
                   <View style={styles.paymentInfoRow}>
-                    <Text style={styles.paymentLabel}>Total Amount:</Text>
+                    <Text style={styles.paymentLabel}>Tổng Số Tiền:</Text>
                     <Text style={styles.paymentPrice}>
                       {totalAmount?.toLocaleString("vi-VN")} ₫
                     </Text>
                   </View>
                   <View style={styles.paymentInfoRow}>
                     <Text style={styles.paymentLabel}>
-                      Account Holder Name:
+                      Tên Chủ Tài Khoản:
                     </Text>
                     <Text style={styles.paymentValue}>
                       {infoLandlord.accountHolderName}
                     </Text>
                   </View>
-                  {/* <View style={styles.paymentInfoRow}>
-                    <Text style={styles.paymentLabel}>Email:</Text>
-                    <Text style={styles.paymentValue}>{paymentInfo.email}</Text>
-                  </View> */}
                 </View>
 
                 {/* QR Code */}
@@ -180,12 +176,12 @@ const PaymentBill = ({
                     resizeMode="contain"
                   />
                   <Text style={styles.qrText}>
-                    Scan QR code to pay for {bill?.month}
+                    Quét mã QR để thanh toán cho tháng {bill?.month}
                   </Text>
                 </View>
 
                 <Text style={styles.modalSectionTitle}>
-                  Upload Payment Proof
+                  Tải Lên Bằng Chứng Thanh Toán
                   <Text style={{ color: "#F44336" }}>*</Text>
                 </Text>
                 <TouchableOpacity
@@ -200,8 +196,8 @@ const PaymentBill = ({
                       <Ionicons name="cloud-upload" size={20} color="#fff" />
                       <Text style={styles.uploadButtonText}>
                         {uploadedImageUri
-                          ? "Change Image"
-                          : "Upload Transfer Bill"}
+                          ? "Thay Đổi Hình Ảnh"
+                          : "Tải Lên Hóa Đơn Chuyển Khoản"}
                       </Text>
                     </>
                   )}
@@ -225,7 +221,7 @@ const PaymentBill = ({
                       color="#4A90E2"
                     />
                     <Text style={styles.checkboxLabel}>
-                      I confirm that I have completed the transfer
+                      Tôi xác nhận rằng tôi đã hoàn tất chuyển khoản
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -238,7 +234,7 @@ const PaymentBill = ({
                       color="#FF9800"
                     />
                     <Text style={styles.reminderText}>
-                      Please confirm that you have completed the transfer
+                      Vui lòng xác nhận rằng bạn đã hoàn tất chuyển khoản
                     </Text>
                   </View>
                 )}
@@ -246,14 +242,12 @@ const PaymentBill = ({
                 <TouchableOpacity
                   style={[
                     styles.submitButton,
-                    // (!transferConfirmed || !imageUploadedSuccessfully) &&
                     !transferConfirmed && styles.submitButtonDisabled,
                   ]}
                   onPress={() => handleConfirmPayment()}
-                  //   disabled={!transferConfirmed || !imageUploadedSuccessfully}
                   disabled={!transferConfirmed}
                 >
-                  <Text style={styles.submitButtonText}>Confirm Payment</Text>
+                  <Text style={styles.submitButtonText}>Xác Nhận Thanh Toán</Text>
                 </TouchableOpacity>
                 <View style={{ height: spacing.xl }} />
               </>

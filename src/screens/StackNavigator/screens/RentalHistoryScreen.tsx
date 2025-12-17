@@ -68,11 +68,11 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
         const address = booking.room?.address;
         const fullAddress = address
           ? `${address.street}, ${address.ward?.name}, ${address.ward?.district?.name}, ${address.ward?.district?.province?.name}`
-          : "N/A";
+          : "Không xác định";
 
         return {
           bookingId: booking.bookingId,
-          roomName: booking.room?.title || "N/A",
+          roomName: booking.room?.title || "Không xác định",
           roomId: booking.room?.roomId || "",
           address: fullAddress,
           rentalDate: booking.rentalDate || "",
@@ -81,8 +81,8 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
           monthlyRent: booking.room?.priceMonth || 0,
           status: booking.status || 0,
           isRemoved: booking.isRemoved || 0,
-          landlordName: booking.room?.ownerName || "N/A",
-          landlordPhone: booking.room?.ownerPhone || "N/A",
+          landlordName: booking.room?.ownerName || "Không xác định",
+          landlordPhone: booking.room?.ownerPhone || "Không xác định",
           imageProof: booking.imageProof || "",
         };
       });
@@ -90,11 +90,11 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
       setBookings(mappedBookings);
       setPagination({ current: page, pageSize: pagination.pageSize, total });
     } catch (error) {
-      console.error("Error loading bookings:", error);
+      console.error("Lỗi tải lịch sử thuê phòng:", error);
       Toast.show({
         type: "error",
-        text1: "Error",
-        text2: "Failed to load rental history",
+        text1: "Lỗi",
+        text2: "Không thể tải lịch sử thuê phòng",
       });
     } finally {
       setLoading(false);
@@ -125,29 +125,29 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
   ) => {
     switch (status) {
       case 0:
-        return "Pending";
+        return "Đang chờ xử lý";
       case 1:
-        return "Accepted";
+        return "Đã chấp nhận";
       case 2:
-        return "Rejected";
+        return "Đã từ chối";
       case 3:
-        return "Waiting Confirmation";
+        return "Đang chờ xác nhận";
       case 4: {
-        if (!rentalDate || !rentalExpires) return "Deposited";
+        if (!rentalDate || !rentalExpires) return "Đã đặt cọc";
         const today = new Date();
         const startDate = new Date(rentalDate);
         const endDate = new Date(rentalExpires);
 
         if (today < startDate) {
-          return "Upcoming";
+          return "Sắp tới";
         } else if (today > endDate) {
-          return "Expired";
+          return "Đã hết hạn";
         } else {
-          return "Renting";
+          return "Đang thuê";
         }
       }
       default:
-        return "Unknown";
+        return "Không xác định";
     }
   };
 
@@ -214,17 +214,17 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
             <Text style={styles.detailText}>
               {item.rentalDate
                 ? new Date(item.rentalDate).toLocaleDateString()
-                : "N/A"}
+                : "Không xác định"}
               -
               {item.rentalExpires
                 ? new Date(item.rentalExpires).toLocaleDateString()
-                : "N/A"}
+                : "Không xác định"}
             </Text>
           </View>
           <View style={styles.detailRow}>
             <Ionicons name="cash" size={14} color="#4CAF50" />
             <Text style={[styles.detailText, styles.priceText]}>
-              {item.monthlyRent.toLocaleString("vi-VN")} ₫/month
+              {item.monthlyRent.toLocaleString("vi-VN")} ₫/tháng
             </Text>
           </View>
         </View>
@@ -232,12 +232,12 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
         {item.isRemoved === 1 && (
           <View style={styles.removedBadge}>
             <Ionicons name="warning" size={16} color="#F44336" />
-            <Text style={styles.removedText}>Room Unavailable</Text>
+            <Text style={styles.removedText}>Phòng không khả dụng</Text>
           </View>
         )}
 
         <View style={styles.viewDetailsContainer}>
-          <Text style={styles.viewDetailsText}>Tap to view details</Text>
+          <Text style={styles.viewDetailsText}>Nhấn để xem chi tiết</Text>
           <Ionicons name="chevron-forward" size={16} color="#4A90E2" />
         </View>
       </TouchableOpacity>
@@ -254,7 +254,7 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Rental History</Text>
+        <Text style={styles.headerTitle}>Lịch sử thuê phòng</Text>
         <View style={styles.headerRight} />
       </View>
 
@@ -267,14 +267,14 @@ const RentalHistoryScreen = ({ navigation }: Props) => {
         {loading ? (
           <View style={styles.emptyContainer}>
             <ActivityIndicator size="large" color="#4A90E2" />
-            <Text style={styles.emptyText}>Loading bookings...</Text>
+            <Text style={styles.emptyText}>Đang tải đặt phòng...</Text>
           </View>
         ) : bookings.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="calendar-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No bookings found</Text>
+            <Text style={styles.emptyText}>Không tìm thấy đặt phòng</Text>
             <Text style={styles.emptySubtext}>
-              Your rental bookings will appear here
+              Các đặt phòng của bạn sẽ xuất hiện tại đây
             </Text>
           </View>
         ) : (

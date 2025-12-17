@@ -47,11 +47,11 @@ const MessageText = ({ text, style }: { text: string; style: any }) => {
       if (supported) {
         await Linking.openURL(url);
       } else {
-        Alert.alert("Error", "Cannot open this URL");
+        Alert.alert("Lỗi", "Không thể mở URL này");
       }
     } catch (error) {
-      console.error("Error opening URL:", error);
-      Alert.alert("Error", "Failed to open link");
+      console.error("Lỗi khi mở URL:", error);
+      Alert.alert("Lỗi", "Không thể mở liên kết");
     }
   };
 
@@ -103,7 +103,6 @@ const MessageBubble = ({
     : null;
 
   if (!me) {
-    // Normalize image URL - add Cloudinary domain if missing
     const imageUri =
       m.messageType === "image" && m.imageUrl
         ? m.imageUrl.startsWith("http")
@@ -148,7 +147,6 @@ const MessageBubble = ({
     );
   }
 
-  // Normalize image URL for current user's messages - add Cloudinary domain if missing
   const imageUri =
     m.messageType === "image" && m.imageUrl
       ? m.imageUrl.startsWith("http")
@@ -457,9 +455,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Icon name="message-text-outline" size={64} color="#d1d5db" />
-                <Text style={styles.emptyText}>No messages yet</Text>
+                <Text style={styles.emptyText}>Chưa có tin nhắn nào</Text>
                 <Text style={styles.emptySubText}>
-                  Start a conversation with {partnerName}
+                  Bắt đầu cuộc trò chuyện với {partnerName}
                 </Text>
               </View>
             }
@@ -481,7 +479,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           <TextInput
             value={text}
             onChangeText={setText}
-            placeholder="Write a message..."
+            placeholder="Viết tin nhắn..."
             placeholderTextColor="#9ca3af"
             style={styles.input}
             multiline

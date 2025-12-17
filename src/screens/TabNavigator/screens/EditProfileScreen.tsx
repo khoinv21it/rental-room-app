@@ -39,14 +39,14 @@ type Props = NativeStackScreenProps<RootStackParamList, "EditProfileScreen">;
 const schema = yup.object({
   fullName: yup
     .string()
-    .required("Full name is required")
-    .min(2, "Full name must be at least 2 characters"),
+    .required("Họ và tên không được để trống")
+    .min(2, "Họ và tên phải có ít nhất 2 ký tự"),
   phoneNumber: yup
     .string()
     .optional()
     .test(
       "is-valid-phone",
-      "Phone number must be 10-11 digits",
+      "Số điện thoại phải có 10-11 số",
       function (value) {
         if (!value || value.trim() === "") return true; // Allow empty
         return /^[0-9]{10,11}$/.test(value);
@@ -54,8 +54,8 @@ const schema = yup.object({
     ),
   email: yup
     .string()
-    .required("Email is required")
-    .email("Please enter a valid email"),
+    .required("Email không được để trống")
+    .email("Vui lòng nhập email hợp lệ"),
   province: yup.string().optional(),
   district: yup.string().optional(),
   ward: yup.string().optional(),
@@ -252,8 +252,8 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
     if (filledFields.length > 0 && filledFields.length < 4) {
       showToast(
         "error",
-        "Address Incomplete",
-        "If you fill any address field, all address fields (Province, District, Ward, Address) must be completed"
+        "Địa chỉ chưa đầy đủ",
+        "Nếu điền bất kỳ trường địa chỉ nào, bạn cần điền đầy đủ Tỉnh/Thành, Quận/Huyện, Phường/Xã và Địa chỉ chi tiết"
       );
       return;
     }
@@ -313,7 +313,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
         route.params.onProfileUpdated(result.data || result);
       }
 
-      showToast("success", "Success", "Profile updated successfully");
+      showToast("success", "Thành công", "Cập nhật hồ sơ thành công");
       navigation.goBack();
     } catch (error: any) {
       const errorMessage =
@@ -322,7 +322,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
         error.message ||
         "Failed to update profile";
 
-      showToast("error", "Update Failed", errorMessage);
+      showToast("error", "Cập nhật thất bại", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -333,17 +333,17 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
   };
 
   const handleUploadImage = () => {
-    Alert.alert("Select Image", "Choose an option", [
+    Alert.alert("Chọn ảnh đại diện", "Chọn một tùy chọn", [
       {
-        text: "Camera",
+        text: "Máy ảnh",
         onPress: openCamera,
       },
       {
-        text: "Gallery",
+        text: "Thư viện",
         onPress: openImageLibrary,
       },
       {
-        text: "Cancel",
+        text: "Hủy",
         style: "cancel",
       },
     ]);
@@ -357,8 +357,8 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
       if (permissionResult.granted === false) {
         showToast(
           "error",
-          "Permission denied",
-          "Camera permission is required to take photos"
+          "Từ chối quyền",
+          "Bạn cần cấp quyền máy ảnh để chụp ảnh"
         );
         return;
       }
@@ -372,11 +372,11 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
 
       if (!result.canceled && result.assets[0]) {
         setSelectedImage(result.assets[0].uri);
-        showToast("success", "Success", "Image selected successfully");
+        showToast("success", "Thành công", "Chọn ảnh thành công");
       }
     } catch (error) {
       console.error("Camera error:", error);
-      showToast("error", "Error", "Failed to open camera");
+      showToast("error", "Lỗi", "Không thể mở máy ảnh");
     }
   };
 
@@ -388,8 +388,8 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
       if (permissionResult.granted === false) {
         showToast(
           "error",
-          "Permission denied",
-          "Gallery permission is required to select photos"
+          "Từ chối quyền",
+          "Bạn cần cấp quyền truy cập thư viện để chọn ảnh"
         );
         return;
       }
@@ -403,11 +403,11 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
 
       if (!result.canceled && result.assets[0]) {
         setSelectedImage(result.assets[0].uri);
-        showToast("success", "Success", "Image selected successfully");
+        showToast("success", "Thành công", "Chọn ảnh thành công");
       }
     } catch (error) {
       console.error("Image library error:", error);
-      showToast("error", "Error", "Failed to open gallery");
+      showToast("error", "Lỗi", "Không thể mở thư viện ảnh");
     }
   };
 
@@ -428,7 +428,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
             <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
               <Icon name="x" size={24} color="#64748b" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Edit Personal Information</Text>
+            <Text style={styles.headerTitle}>Chỉnh sửa thông tin cá nhân</Text>
             <View style={styles.placeholder} />
           </View>
 
@@ -453,7 +453,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
               onPress={handleUploadImage}
             >
               <Icon name="upload" size={16} color="#64748b" />
-              <Text style={styles.uploadText}>Upload Image</Text>
+              <Text style={styles.uploadText}>Tải ảnh lên</Text>
             </TouchableOpacity>
           </View>
 
@@ -462,16 +462,16 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
             {/* Full Name */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
-                <Text style={styles.required}>* </Text>Full Name
+                <Text style={styles.required}>* </Text>Họ và tên
               </Text>
               <Controller
                 control={control}
                 name="fullName"
                 rules={{
-                  required: "Full name is required",
+                  required: "Họ và tên không được để trống",
                   minLength: {
                     value: 2,
-                    message: "Full name must be at least 2 characters",
+                    message: "Họ và tên phải có ít nhất 2 ký tự",
                   },
                 }}
                 render={({ field: { onChange, value, onBlur } }) => (
@@ -487,7 +487,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
                         styles.input,
                         errors.fullName && styles.inputError,
                       ]}
-                      placeholder="Enter your full name"
+                      placeholder="Nhập họ và tên của bạn"
                       placeholderTextColor="#9ca3af"
                       value={value}
                       onChangeText={onChange}
@@ -503,7 +503,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
 
             {/* Phone Number */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Phone Number</Text>
+              <Text style={styles.inputLabel}>Số điện thoại</Text>
               <Controller
                 control={control}
                 name="phoneNumber"
@@ -520,7 +520,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
                         styles.input,
                         errors.phoneNumber && styles.inputError,
                       ]}
-                      placeholder="Enter your phone number"
+                      placeholder="Nhập số điện thoại của bạn"
                       placeholderTextColor="#9ca3af"
                       value={value}
                       onChangeText={onChange}
@@ -546,10 +546,10 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
                 control={control}
                 name="email"
                 rules={{
-                  required: "Email is required",
+                  required: "Email không được để trống",
                   pattern: {
                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Please enter a valid email",
+                    message: "Vui lòng nhập email hợp lệ",
                   },
                 }}
                 render={({ field: { onChange, value, onBlur } }) => (
@@ -562,7 +562,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
                     />
                     <TextInput
                       style={[styles.input, errors.email && styles.inputError]}
-                      placeholder="Enter your email"
+                      placeholder="Nhập email của bạn"
                       placeholderTextColor="#9ca3af"
                       value={value}
                       onChangeText={onChange}
@@ -584,7 +584,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
               <View style={styles.locationRow}>
                 {/* Province */}
                 <View style={styles.locationItem}>
-                  <Text style={styles.inputLabel}>Province</Text>
+                  <Text style={styles.inputLabel}>Tỉnh/Thành phố</Text>
                   <Controller
                     control={control}
                     name="province"
@@ -608,7 +608,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
                             !value && styles.placeholderText,
                           ]}
                         >
-                          {value || "Select Province"}
+                          {value || "Chọn tỉnh/thành phố"}
                         </Text>
                         <Icon name="chevron-down" size={16} color="#64748b" />
                       </TouchableOpacity>
@@ -623,7 +623,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
 
                 {/* District */}
                 <View style={styles.locationItem}>
-                  <Text style={styles.inputLabel}>District</Text>
+                  <Text style={styles.inputLabel}>Quận/Huyện</Text>
                   <Controller
                     control={control}
                     name="district"
@@ -641,7 +641,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
                             !value && styles.placeholderText,
                           ]}
                         >
-                          {value || "Select District"}
+                          {value || "Chọn quận/huyện"}
                         </Text>
                         <Icon name="chevron-down" size={16} color="#64748b" />
                       </TouchableOpacity>
@@ -657,7 +657,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
 
               {/* Ward Row - Full Width */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Ward</Text>
+                <Text style={styles.inputLabel}>Phường/Xã</Text>
                 <Controller
                   control={control}
                   name="ward"
@@ -675,7 +675,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
                           !value && styles.placeholderText,
                         ]}
                       >
-                        {value || "Select Ward"}
+                        {value || "Chọn phường/xã"}
                       </Text>
                       <Icon name="chevron-down" size={16} color="#64748b" />
                     </TouchableOpacity>
@@ -689,7 +689,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
 
             {/* Address */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Address</Text>
+              <Text style={styles.inputLabel}>Địa chỉ chi tiết</Text>
               <Controller
                 control={control}
                 name="address"
@@ -700,7 +700,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
                       styles.addressInput,
                       errors.address && styles.inputError,
                     ]}
-                    placeholder="Enter your address"
+                    placeholder="Nhập địa chỉ chi tiết của bạn"
                     placeholderTextColor="#9ca3af"
                     value={value}
                     onChangeText={onChange}
@@ -722,7 +722,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
               onPress={handleCancel}
               disabled={isLoading}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={styles.cancelButtonText}>Hủy</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -733,7 +733,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
               disabled={isLoading}
             >
               <Text style={styles.saveButtonText}>
-                {isLoading ? "Saving..." : "Save"}
+                {isLoading ? "Đang lưu..." : "Lưu"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -750,7 +750,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Province</Text>
+              <Text style={styles.modalTitle}>Chọn tỉnh/thành phố</Text>
               <TouchableOpacity onPress={() => setShowProvinceModal(false)}>
                 <Icon name="x" size={24} color="#64748b" />
               </TouchableOpacity>
@@ -785,7 +785,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select District</Text>
+              <Text style={styles.modalTitle}>Chọn quận/huyện</Text>
               <TouchableOpacity onPress={() => setShowDistrictModal(false)}>
                 <Icon name="x" size={24} color="#64748b" />
               </TouchableOpacity>
@@ -820,7 +820,7 @@ const EditProfileScreen = ({ navigation, route }: Props) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Ward</Text>
+              <Text style={styles.modalTitle}>Chọn phường/xã</Text>
               <TouchableOpacity onPress={() => setShowWardModal(false)}>
                 <Icon name="x" size={24} color="#64748b" />
               </TouchableOpacity>

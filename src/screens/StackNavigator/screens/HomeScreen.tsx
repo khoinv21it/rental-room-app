@@ -8,16 +8,16 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Home</Text>
-      <Text style={styles.subtitle}>Welcome to the Rental Room App</Text>
+      <Text style={styles.title}>Trang Chủ</Text>
+      <Text style={styles.subtitle}>Chào mừng đến với Ứng Dụng Thuê Phòng</Text>
       {user && (
         <View style={styles.userInfo}>
-          <Text style={styles.userName}>Hello, {user.username}!</Text>
+          <Text style={styles.userName}>Xin chào, {user.username}!</Text>
           <Text style={styles.userEmail}>{user.userProfile.fullName}</Text>
         </View>
       )}
       <Button
-        title="Logout"
+        title="Đăng Xuất"
         onPress={async () => {
           await useAuthStore.getState().logOut();
           // Navigate to login screen or show a message
