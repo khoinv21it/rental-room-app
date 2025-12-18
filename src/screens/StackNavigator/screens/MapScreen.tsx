@@ -47,8 +47,8 @@ const MapScreen: React.FC = () => {
     const fetchRoomInMaps = async () => {
       const response = await fetchRoomInMap(16.0544, 108.2022);
       const room = response.data || response;
-      console.log("Room in map:", room);
-      console.log("Total rooms:", room?.length);
+      // console.log("Room in map:", room);
+      // console.log("Total rooms:", room?.length);
       setRoomInMap(room);
     };
     fetchRoomInMaps();
