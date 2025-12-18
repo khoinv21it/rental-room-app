@@ -25,6 +25,7 @@ import useAuthStore from "../Stores/useAuthStore";
 import { MaterialCommunityIcons as Icon } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface ChatViewProps {
   conversationId: string;
@@ -190,6 +191,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 }) => {
   const currentUser = useAuthStore((s: any) => s.loggedInUser);
   const userId = currentUser?.id;
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<any[]>([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [sending, setSending] = useState(false);
@@ -402,8 +404,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
       )}
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior="padding"
         style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
         {loadingMsgs ? (
           <View style={styles.loadingContainer}>
@@ -464,7 +467,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           />
         )}
 
-        <View style={styles.composer}>
+        <View style={[styles.composer, { paddingBottom: insets.bottom || 12 }]}>
           <TouchableOpacity
             style={[styles.imageBtn, uploadingImage ? { opacity: 0.6 } : null]}
             onPress={pickImageAndSend}
