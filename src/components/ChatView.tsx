@@ -25,7 +25,10 @@ import useAuthStore from "../Stores/useAuthStore";
 import { MaterialCommunityIcons as Icon } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 interface ChatViewProps {
   conversationId: string;
@@ -371,7 +374,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {showHeader && (
         <View style={styles.chatHeader}>
           {onClose && (
@@ -503,7 +506,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 };
 
