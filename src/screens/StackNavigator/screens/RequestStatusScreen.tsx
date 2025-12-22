@@ -293,7 +293,7 @@ const RequestStatusScreen = ({ navigation }: Props) => {
           <Ionicons name="calendar" size={18} color="#666" />
           <Text style={styles.detailText}>
             Ngày tạo:
-            {new Date(request.createdDate).toLocaleDateString("en-US", {
+            {new Date(request.createdDate).toLocaleDateString("vi-VN", {
               year: "numeric",
               month: "short",
               day: "numeric",
